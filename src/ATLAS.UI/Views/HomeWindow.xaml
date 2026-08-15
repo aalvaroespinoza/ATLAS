@@ -1,0 +1,255 @@
+<Window
+    x:Class="ATLAS.UI.Views.HomeWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:ATLAS.UI.ViewModels"
+    mc:Ignorable="d"
+    Title="ATLAS — Inicio">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,28">
+            <StackPanel Spacing="24" MaxWidth="720" HorizontalAlignment="Left">
+                
+                <!-- 1. Header: Greeting & Core question -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock
+                            Text="{x:Bind ViewModel.Greeting, Mode=OneWay}"
+                            FontSize="24"
+                            FontWeight="Bold"
+                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                        <TextBlock
+                            Text="¿Qué necesito saber o hacer ahora?"
+                            FontSize="14"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+
+                    <Button
+                        Grid.Column="1"
+                        Command="{x:Bind ViewModel.RefreshCommand}"
+                        VerticalAlignment="Top"
+                        ToolTipService.ToolTip="Actualizar información">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE72C;" FontSize="13" />
+                            <TextBlock Text="Actualizar" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+
+                <MenuFlyoutSeparator Margin="0,-8,0,0" />
+
+                <!-- 2. Section: HOY (Hábitos) -->
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="HOY — HÁBITOS"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            CharacterSpacing="60"
+                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{x:Bind ViewModel.HabitsSummaryText, Mode=OneWay}"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.HabitsToday, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:HabitTodayItemViewModel">
+                                <Grid Padding="0,6" ColumnDefinitions="Auto,*,Auto">
+                                    <!-- Symbol [✓] or [ ] -->
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Text="{x:Bind StatusSymbol}"
+                                        FontFamily="Cascadia Code, Consolas, Courier New"
+                                        FontWeight="Bold"
+                                        FontSize="13"
+                                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                        Margin="0,0,10,0" />
+
+                                    <!-- Habit Name & Details -->
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock
+                                            Text="{x:Bind Name}"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                        <TextBlock
+                                            Text="{x:Bind CompletionDetail}"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+
+                                    <!-- Frequency badge -->
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        Text="{x:Bind FrequencyText}"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        VerticalAlignment="Top" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock
+                        Text="• No tenés hábitos registrados. Podés crear uno en el Launcher con: /habit [nombre]"
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Visibility="{x:Bind ViewModel.NoHabitsVisibility, Mode=OneWay}" />
+                </StackPanel>
+
+                <MenuFlyoutSeparator />
+
+                <!-- 3. Section: METAS ACTIVAS -->
+                <StackPanel Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock
+                            Grid.Column="0"
+                            Text="METAS ACTIVAS"
+                            FontSize="12"
+                            FontWeight="SemiBold"
+                            CharacterSpacing="60"
+                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{x:Bind ViewModel.GoalsSummaryText, Mode=OneWay}"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.ActiveGoals, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:GoalActiveItemViewModel">
+                                <Grid Padding="0,6" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Spacing="2">
+                                        <TextBlock
+                                            Text="{x:Bind Title}"
+                                            FontSize="14"
+                                            FontWeight="SemiBold"
+                                            Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                        <TextBlock
+                                            Text="{x:Bind TargetDateText}"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                            Visibility="{x:Bind TargetDateVisibility}" />
+                                    </StackPanel>
+
+                                    <!-- Progress representation -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                        <TextBlock
+                                            Text="{x:Bind ProgressBarAscii}"
+                                            FontFamily="Cascadia Code, Consolas, Courier New"
+                                            FontSize="12"
+                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <TextBlock
+                                            Text="{x:Bind ProgressText}"
+                                            FontFamily="Cascadia Code, Consolas, Courier New"
+                                            FontWeight="Bold"
+                                            FontSize="13"
+                                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock
+                        Text="• No tenés metas activas. Podés crear una en el Launcher con: /goal [título]"
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Visibility="{x:Bind ViewModel.NoGoalsVisibility, Mode=OneWay}" />
+                </StackPanel>
+
+                <MenuFlyoutSeparator />
+
+                <!-- 4. Section: ACCIONES RÁPIDAS -->
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        Text="ACCIONES RÁPIDAS"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        CharacterSpacing="60"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <HyperlinkButton Command="{x:Bind ViewModel.OpenLauncherCommand}" Padding="0">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE70F;" FontSize="13" />
+                                <TextBlock Text="Launcher (Ctrl+Space)" FontSize="13" />
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <TextBlock Text="•" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+
+                        <HyperlinkButton Command="{x:Bind ViewModel.OpenActivityCommand}" Padding="0">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE81C;" FontSize="13" />
+                                <TextBlock Text="Actividad (Ctrl+Shift+Space)" FontSize="13" />
+                            </StackPanel>
+                        </HyperlinkButton>
+
+                        <TextBlock Text="•" Foreground="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
+
+                        <HyperlinkButton Command="{x:Bind ViewModel.OpenSettingsCommand}" Padding="0">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE713;" FontSize="13" />
+                                <TextBlock Text="Configuración IA" FontSize="13" />
+                            </StackPanel>
+                        </HyperlinkButton>
+                    </StackPanel>
+                </StackPanel>
+
+                <MenuFlyoutSeparator />
+
+                <!-- 5. Section: ACTIVIDAD RECIENTE -->
+                <StackPanel Spacing="10">
+                    <TextBlock
+                        Text="ACTIVIDAD RECIENTE"
+                        FontSize="12"
+                        FontWeight="SemiBold"
+                        CharacterSpacing="60"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.RecentActivity, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="viewmodels:RecentActivityItemViewModel">
+                                <Grid Padding="0,4" ColumnDefinitions="Auto,*,Auto">
+                                    <TextBlock
+                                        Grid.Column="0"
+                                        Text="•"
+                                        FontSize="13"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Margin="0,0,8,0" />
+                                    <TextBlock
+                                        Grid.Column="1"
+                                        Text="{x:Bind Title}"
+                                        FontSize="13"
+                                        TextTrimming="CharacterEllipsis"
+                                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    <TextBlock
+                                        Grid.Column="2"
+                                        Text="{x:Bind RelativeTime}"
+                                        FontSize="11"
+                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                        Margin="12,0,0,0" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <TextBlock
+                        Text="• Sin actividad reciente registrada."
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Visibility="{x:Bind ViewModel.NoRecentActivityVisibility, Mode=OneWay}" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

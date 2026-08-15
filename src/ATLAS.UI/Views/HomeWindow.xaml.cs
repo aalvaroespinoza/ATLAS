@@ -9,14 +9,16 @@ using WinRT.Interop;
 
 namespace ATLAS.UI.Views;
 
-public sealed partial class SettingsWindow : Window
+public sealed partial class HomeWindow : Window
 {
     private readonly AppWindow _appWindow;
     private readonly IntPtr _hwnd;
+    private const int DefaultWidth = 780;
+    private const int DefaultHeight = 640;
 
-    public SettingsViewModel ViewModel { get; }
+    public HomeViewModel ViewModel { get; }
 
-    public SettingsWindow(SettingsViewModel viewModel)
+    public HomeWindow(HomeViewModel viewModel)
     {
         InitializeComponent();
         ViewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
@@ -26,16 +28,25 @@ public sealed partial class SettingsWindow : Window
         _appWindow = AppWindow.GetFromWindowId(windowId);
 
         ConfigureWindow();
+
+        Activated += OnWindowActivated;
     }
 
     private void ConfigureWindow()
     {
-        Title = "Configuración — ATLAS";
+        // 1. Title bar configuration
+        _appWindow.Title = "ATLAS — Inicio";
+        _appWindow.TitleBar.ExtendsContentIntoTitleBar = false;
+
+        // 2. Backdrop
         SystemBackdrop = new MicaBackdrop();
 
-        const int width = 580;
-        const int height = 540;
+        // 3. Center Window
+        CenterWindow(DefaultWidth, DefaultHeight);
+    }
 
+    private void CenterWindow(int width, int height)
+    {
         var windowId = Win32Interop.GetWindowIdFromWindow(_hwnd);
         var displayArea = DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Primary);
 
@@ -44,21 +55,24 @@ public sealed partial class SettingsWindow : Window
             var workArea = displayArea.WorkArea;
             var x = workArea.X + (workArea.Width - width) / 2;
             var y = workArea.Y + (workArea.Height - height) / 2;
+
             _appWindow.MoveAndResize(new RectInt32(x, y, width, height));
         }
-
-        _appWindow.Closing += (s, e) =>
-        {
-            e.Cancel = true;
-            _appWindow.Hide();
-        };
     }
 
     public void ShowAndActivate()
     {
-        ViewModel.LoadAllSecretStatuses();
+        _ = ViewModel.RefreshAsync();
         _appWindow.Show();
         Activate();
         NativeMethods.SetForegroundWindow(_hwnd);
+    }
+
+    private void OnWindowActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState != WindowActivationState.Deactivated)
+        {
+            _ = ViewModel.RefreshAsync();
+        }
     }
 }

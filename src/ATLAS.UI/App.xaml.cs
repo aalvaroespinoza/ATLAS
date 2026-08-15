@@ -22,6 +22,7 @@ public partial class App : Application
     private LauncherWindow? _launcherWindow;
     private ActivityWindow? _activityWindow;
     private SettingsWindow? _settingsWindow;
+    private HomeWindow? _homeWindow;
     private HotKeyService? _hotKeyService;
 
     /// <summary>
@@ -58,6 +59,8 @@ public partial class App : Application
         services.AddAtlasStorage();
 
         // UI ViewModels and Views
+        services.AddTransient<HomeViewModel>();
+        services.AddSingleton<HomeWindow>();
         services.AddTransient<LauncherViewModel>();
         services.AddSingleton<LauncherWindow>();
         services.AddTransient<ActivityViewModel>();
@@ -92,6 +95,7 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         // 1. Instantiate Windows
+        _homeWindow = Services.GetRequiredService<HomeWindow>();
         _launcherWindow = Services.GetRequiredService<LauncherWindow>();
         _activityWindow = Services.GetRequiredService<ActivityWindow>();
         _settingsWindow = Services.GetRequiredService<SettingsWindow>();
@@ -114,6 +118,31 @@ public partial class App : Application
             NativeMethods.VK_SPACE,
             OnActivityHotKeyPressed);
 
+        // Connect Home navigation actions
+        _homeWindow.ViewModel.OpenLauncherRequested += () =>
+        {
+            _homeWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                _launcherWindow?.ShowLauncher();
+            });
+        };
+
+        _homeWindow.ViewModel.OpenActivityRequested += () =>
+        {
+            _homeWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                _activityWindow?.ShowAndActivate();
+            });
+        };
+
+        _homeWindow.ViewModel.OpenSettingsRequested += () =>
+        {
+            _homeWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                _settingsWindow?.ShowAndActivate();
+            });
+        };
+
         // Connect launcher action to open activity window
         _launcherWindow.ViewModel.OpenActivityRequested += () =>
         {
@@ -134,6 +163,9 @@ public partial class App : Application
 
         // 3. Keep launcher hidden in background initially (ready for hotkeys)
         _launcherWindow.HideLauncher();
+
+        // 4. Show Home / Inicio window on launch
+        _homeWindow.ShowAndActivate();
     }
 
     private void OnLauncherHotKeyPressed()

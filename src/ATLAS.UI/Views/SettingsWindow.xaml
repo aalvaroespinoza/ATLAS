@@ -8,81 +8,139 @@
     mc:Ignorable="d"
     Title="Configuración — ATLAS">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="28,24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="28,24">
+            <StackPanel Spacing="20" MaxWidth="600" HorizontalAlignment="Left">
 
-        <!-- Header -->
-        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,20">
-            <TextBlock
-                Text="Configuración de IA"
-                FontSize="20"
-                FontWeight="SemiBold"
-                Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-            <TextBlock
-                Text="Guardá tu API key de Google Gemini de forma local y segura en Windows Credential Locker."
-                FontSize="12"
-                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-        </StackPanel>
-
-        <!-- Body Form Card -->
-        <StackPanel Grid.Row="1" Spacing="16">
-            
-            <!-- Status Card -->
-            <Border
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="16,12">
-                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                    <StackPanel Grid.Column="0" Spacing="2">
-                        <TextBlock Text="Google Gemini API Key" FontWeight="SemiBold" FontSize="13" />
-                        <TextBlock
-                            Text="{x:Bind ViewModel.MaskedKeyDisplay, Mode=OneWay}"
-                            FontSize="12"
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    </StackPanel>
-                    
-                    <Button
-                        Grid.Column="1"
-                        Content="Eliminar"
+                <!-- Header -->
+                <StackPanel Spacing="4">
+                    <TextBlock
+                        Text="Configuración e Integraciones"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
+                    <TextBlock
+                        Text="Tus credenciales se almacenan de forma local y segura en Windows Credential Locker (DPAPI)."
                         FontSize="12"
-                        Command="{x:Bind ViewModel.DeleteKeyCommand}"
-                        Visibility="{x:Bind ViewModel.HasConfiguredKey, Mode=OneWay}" />
-                </Grid>
-            </Border>
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
 
-            <!-- Input & Save -->
-            <StackPanel Spacing="8">
-                <TextBlock Text="Nueva API Key" FontSize="13" FontWeight="SemiBold" />
-                <PasswordBox
-                    Password="{x:Bind ViewModel.ApiKeyInput, Mode=TwoWay}"
-                    PlaceholderText="Pegá tu API key acá (AIza...)"
-                    PasswordChar="•" />
-                <TextBlock
-                    Text="Podés obtener una clave gratuita en Google AI Studio (aistudio.google.com)."
-                    FontSize="11"
-                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                <!-- Feedback InfoBar -->
+                <InfoBar
+                    IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
+                    Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
+                    Severity="{x:Bind ViewModel.StatusSeverity, Mode=OneWay}"
+                    IsClosable="False" />
+
+                <!-- SECTION 1: Google Gemini API -->
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Text="GOOGLE GEMINI (IA CLOUD)"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        CharacterSpacing="60"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <!-- Status Display -->
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="API Key actual" FontWeight="SemiBold" FontSize="13" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.MaskedGeminiKeyDisplay, Mode=OneWay}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            
+                            <Button
+                                Grid.Column="1"
+                                Content="Eliminar"
+                                FontSize="12"
+                                Command="{x:Bind ViewModel.DeleteGeminiKeyCommand}"
+                                Visibility="{x:Bind ViewModel.DeleteGeminiButtonVisibility, Mode=OneWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Input & Save -->
+                    <StackPanel Spacing="6">
+                        <PasswordBox
+                            Password="{x:Bind ViewModel.GeminiApiKeyInput, Mode=TwoWay}"
+                            PlaceholderText="Pegá tu API key acá (AIza...)"
+                            PasswordChar="•" />
+                        <TextBlock
+                            Text="Podés obtener una clave gratuita en Google AI Studio (aistudio.google.com)."
+                            FontSize="11"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+
+                    <Button
+                        Content="Guardar Gemini Key"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        HorizontalAlignment="Left"
+                        Command="{x:Bind ViewModel.SaveGeminiKeyCommand}" />
+                </StackPanel>
+
+                <MenuFlyoutSeparator />
+
+                <!-- SECTION 2: Telegram Bot -->
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Text="TELEGRAM BOT"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        CharacterSpacing="60"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <!-- Status Display -->
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Bot Token actual" FontWeight="SemiBold" FontSize="13" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.MaskedTelegramTokenDisplay, Mode=OneWay}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            
+                            <Button
+                                Grid.Column="1"
+                                Content="Eliminar"
+                                FontSize="12"
+                                Command="{x:Bind ViewModel.DeleteTelegramTokenCommand}"
+                                Visibility="{x:Bind ViewModel.DeleteTelegramButtonVisibility, Mode=OneWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Input & Save -->
+                    <StackPanel Spacing="6">
+                        <PasswordBox
+                            Password="{x:Bind ViewModel.TelegramTokenInput, Mode=TwoWay}"
+                            PlaceholderText="Pegá el token de tu bot acá (123456:ABC...)"
+                            PasswordChar="•" />
+                        <TextBlock
+                            Text="Creá tu bot en Telegram con @BotFather (/newbot) y pegá el HTTP API Token resultante."
+                            FontSize="11"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+
+                    <Button
+                        Content="Guardar Telegram Token"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        HorizontalAlignment="Left"
+                        Command="{x:Bind ViewModel.SaveTelegramTokenCommand}" />
+                </StackPanel>
+
             </StackPanel>
-
-            <Button
-                Content="Guardar en Windows Vault"
-                Style="{ThemeResource AccentButtonStyle}"
-                HorizontalAlignment="Left"
-                Command="{x:Bind ViewModel.SaveKeyCommand}"
-                Margin="0,4,0,0" />
-
-            <!-- Status Banner -->
-            <InfoBar
-                IsOpen="{x:Bind ViewModel.HasStatusMessage, Mode=OneWay}"
-                Message="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
-                Severity="{x:Bind ViewModel.StatusSeverity, Mode=OneWay}"
-                IsClosable="False"
-                Margin="0,8,0,0" />
-
-        </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

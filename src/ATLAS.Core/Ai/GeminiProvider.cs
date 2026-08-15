@@ -14,7 +14,7 @@ public class GeminiProvider : IAiProvider
     private readonly HttpClient _httpClient;
     private readonly string _model;
 
-    public const string SecretKeyName = "GeminiApiKey";
+    public const string SecretKeyName = SecretKeys.GeminiApiKey;
     public const string DefaultModel = "gemini-1.5-flash";
 
     public GeminiProvider(ISecretVault secretVault, HttpClient? httpClient = null, string model = DefaultModel)
