@@ -6,10 +6,12 @@ namespace ATLAS.Core.Integrations.Telegram;
 
 /// <summary>
 /// Background long-polling service for Telegram Bot API using native HttpClient.
+/// Dispatches incoming messages to TelegramMessageProcessor and replies back to the user chat.
 /// </summary>
 public class TelegramListenerService : ITelegramListenerService
 {
     private readonly ISecretVault _secretVault;
+    private readonly TelegramMessageProcessor? _messageProcessor;
     private readonly HttpClient _httpClient;
     private readonly int _pollingTimeoutSeconds;
     private CancellationTokenSource? _cts;
@@ -22,10 +24,12 @@ public class TelegramListenerService : ITelegramListenerService
 
     public TelegramListenerService(
         ISecretVault secretVault,
+        TelegramMessageProcessor? messageProcessor = null,
         HttpClient? httpClient = null,
         int pollingTimeoutSeconds = 25)
     {
         _secretVault = secretVault ?? throw new ArgumentNullException(nameof(secretVault));
+        _messageProcessor = messageProcessor;
         _httpClient = httpClient ?? new HttpClient();
         _pollingTimeoutSeconds = pollingTimeoutSeconds;
     }
@@ -106,17 +110,26 @@ public class TelegramListenerService : ITelegramListenerService
                         _lastUpdateId = update.UpdateId;
                     }
 
-                    // Log the received message (safe logging without logging full token)
+                    // Log the received message
                     System.Diagnostics.Debug.WriteLine(
                         $"[Telegram] Mensaje #{update.MessageId} de @{update.FromUsername ?? "unknown"} en chat {update.ChatId}: \"{update.Text}\" ({update.Date:HH:mm:ss})");
 
                     try
                     {
                         MessageReceived?.Invoke(update);
+
+                        if (_messageProcessor != null)
+                        {
+                            var replyText = await _messageProcessor.ProcessMessageAsync(update, cancellationToken).ConfigureAwait(false);
+                            if (!string.IsNullOrWhiteSpace(replyText))
+                            {
+                                await SendMessageAsync(token.Trim(), update.ChatId, replyText, cancellationToken).ConfigureAwait(false);
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"[Telegram] Error al despachar evento de mensaje: {ex.Message}");
+                        System.Diagnostics.Debug.WriteLine($"[Telegram] Error al procesar mensaje o responder: {ex.Message}");
                     }
                 }
             }
@@ -181,6 +194,34 @@ public class TelegramListenerService : ITelegramListenerService
         }
 
         return ParseUpdatesJson(json);
+    }
+
+    public async Task SendMessageAsync(
+        string botToken,
+        long chatId,
+        string text,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(botToken) || chatId == 0 || string.IsNullOrWhiteSpace(text))
+        {
+            return;
+        }
+
+        var endpoint = $"https://api.telegram.org/bot{botToken}/sendMessage";
+        var payload = new
+        {
+            chat_id = chatId,
+            text = text
+        };
+
+        try
+        {
+            await _httpClient.PostAsJsonAsync(endpoint, payload, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[Telegram] Error al enviar respuesta a chat {chatId}: {ex.Message}");
+        }
     }
 
     public static IReadOnlyList<TelegramMessage> ParseUpdatesJson(string json)

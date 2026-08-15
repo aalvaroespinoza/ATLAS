@@ -140,6 +140,61 @@
                         Command="{x:Bind ViewModel.SaveTelegramTokenCommand}" />
                 </StackPanel>
 
+                <MenuFlyoutSeparator />
+
+                <!-- SECTION 3: Mercado Pago -->
+                <StackPanel Spacing="12">
+                    <TextBlock
+                        Text="MERCADO PAGO"
+                        FontSize="11"
+                        FontWeight="SemiBold"
+                        CharacterSpacing="60"
+                        Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <!-- Status Display -->
+                    <Border
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="14,10">
+                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock Text="Access Token actual" FontWeight="SemiBold" FontSize="13" />
+                                <TextBlock
+                                    Text="{x:Bind ViewModel.MaskedMercadoPagoTokenDisplay, Mode=OneWay}"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                            
+                            <Button
+                                Grid.Column="1"
+                                Content="Eliminar"
+                                FontSize="12"
+                                Command="{x:Bind ViewModel.DeleteMercadoPagoTokenCommand}"
+                                Visibility="{x:Bind ViewModel.DeleteMercadoPagoButtonVisibility, Mode=OneWay}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Input & Save -->
+                    <StackPanel Spacing="6">
+                        <PasswordBox
+                            Password="{x:Bind ViewModel.MercadoPagoTokenInput, Mode=TwoWay}"
+                            PlaceholderText="Pegá tu Personal Access Token (APP_USR-...)"
+                            PasswordChar="•" />
+                        <TextBlock
+                            Text="Obtené tu Access Token de producción en el panel de desarrolladores de Mercado Pago."
+                            FontSize="11"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+
+                    <Button
+                        Content="Guardar Mercado Pago Token"
+                        Style="{ThemeResource AccentButtonStyle}"
+                        HorizontalAlignment="Left"
+                        Command="{x:Bind ViewModel.SaveMercadoPagoTokenCommand}" />
+                </StackPanel>
+
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -36,6 +36,19 @@ public partial class SettingsViewModel : ObservableObject
 
     public Visibility DeleteTelegramButtonVisibility => HasTelegramToken ? Visibility.Visible : Visibility.Collapsed;
 
+    // Mercado Pago Access Token properties
+    [ObservableProperty]
+    public partial string MercadoPagoTokenInput { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DeleteMercadoPagoButtonVisibility))]
+    public partial bool HasMercadoPagoToken { get; set; }
+
+    [ObservableProperty]
+    public partial string MaskedMercadoPagoTokenDisplay { get; set; } = "No configurado";
+
+    public Visibility DeleteMercadoPagoButtonVisibility => HasMercadoPagoToken ? Visibility.Visible : Visibility.Collapsed;
+
     // Feedback status banner
     [ObservableProperty]
     public partial string StatusMessage { get; set; } = string.Empty;
@@ -67,6 +80,11 @@ public partial class SettingsViewModel : ObservableObject
         var telegramToken = _secretVault.GetSecret(SecretKeys.TelegramBotToken);
         HasTelegramToken = !string.IsNullOrWhiteSpace(telegramToken);
         MaskedTelegramTokenDisplay = HasTelegramToken ? MaskKey(telegramToken!) : "No configurado";
+
+        // 3. Mercado Pago
+        var mpToken = _secretVault.GetSecret(SecretKeys.MercadoPagoAccessToken);
+        HasMercadoPagoToken = !string.IsNullOrWhiteSpace(mpToken);
+        MaskedMercadoPagoTokenDisplay = HasMercadoPagoToken ? MaskKey(mpToken!) : "No configurado";
     }
 
     [RelayCommand]
@@ -138,6 +156,43 @@ public partial class SettingsViewModel : ObservableObject
         {
             _secretVault.DeleteSecret(SecretKeys.TelegramBotToken);
             SetStatus("Token de Telegram eliminado del almacenamiento seguro.", isSuccess: true);
+            LoadAllSecretStatuses();
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Error al eliminar el token: {ex.Message}", isSuccess: false);
+        }
+    }
+
+    [RelayCommand]
+    public void SaveMercadoPagoToken()
+    {
+        if (string.IsNullOrWhiteSpace(MercadoPagoTokenInput))
+        {
+            SetStatus("Por favor ingresá un Access Token válido de Mercado Pago.", isSuccess: false);
+            return;
+        }
+
+        try
+        {
+            _secretVault.SetSecret(SecretKeys.MercadoPagoAccessToken, MercadoPagoTokenInput.Trim());
+            MercadoPagoTokenInput = string.Empty;
+            SetStatus("Access Token de Mercado Pago guardado exitosamente en Windows Credential Locker.", isSuccess: true);
+            LoadAllSecretStatuses();
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Error al guardar el token: {ex.Message}", isSuccess: false);
+        }
+    }
+
+    [RelayCommand]
+    public void DeleteMercadoPagoToken()
+    {
+        try
+        {
+            _secretVault.DeleteSecret(SecretKeys.MercadoPagoAccessToken);
+            SetStatus("Access Token de Mercado Pago eliminado del almacenamiento seguro.", isSuccess: true);
             LoadAllSecretStatuses();
         }
         catch (Exception ex)

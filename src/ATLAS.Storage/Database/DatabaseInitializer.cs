@@ -85,6 +85,27 @@ public class DatabaseInitializer
             );
             CREATE INDEX IF NOT EXISTS idx_habit_events_habit_id ON habit_events(habit_id);
             CREATE INDEX IF NOT EXISTS idx_habit_events_completed_at ON habit_events(completed_at);
+
+            -- Transactions table
+            CREATE TABLE IF NOT EXISTS transactions (
+                id TEXT PRIMARY KEY,
+                fecha TEXT NOT NULL,
+                monto REAL NOT NULL,
+                tipo TEXT NOT NULL DEFAULT 'expense',
+                origen TEXT NOT NULL DEFAULT 'manual',
+                descripcion TEXT NOT NULL,
+                moneda TEXT NOT NULL DEFAULT 'ARS',
+                categoria TEXT,
+                subcategoria TEXT,
+                id_externo TEXT,
+                estado TEXT NOT NULL DEFAULT 'approved',
+                metadata TEXT,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_transactions_fecha ON transactions(fecha DESC);
+            CREATE INDEX IF NOT EXISTS idx_transactions_tipo ON transactions(tipo);
+            CREATE INDEX IF NOT EXISTS idx_transactions_origen ON transactions(origen);
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_id_externo ON transactions(id_externo) WHERE id_externo IS NOT NULL;
             """;
 
         await using (var command = connection.CreateCommand())

@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddAtlasCore(this IServiceCollection services)
     {
         services.AddSingleton<ICommandRegistry, CommandRegistry>();
+        services.AddSingleton<TelegramMessageProcessor>();
         services.AddSingleton<ITelegramListenerService, TelegramListenerService>();
 
         // Commands
@@ -23,6 +24,8 @@ public static class ServiceCollectionExtensions
         services.AddTransient<GoalUpdateProgressCommand>();
         services.AddTransient<HabitCreateCommand>();
         services.AddTransient<HabitCompleteCommand>();
+        services.AddTransient<FinanceAddTransactionCommand>();
+        services.AddTransient<FinanceSyncMercadoPagoCommand>();
 
         return services;
     }

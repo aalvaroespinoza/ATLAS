@@ -301,7 +301,7 @@
                         FontSize="11"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                         VerticalAlignment="Center"
-                        Text="↵ Enter: Ejecutar / Guardar  •  /goal  •  /habit  •  /done  •  ? IA  •  Esc: Salir" />
+                        Text="↵ Enter: Ejecutar / Guardar  •  /goal  •  /habit  •  /done  •  /expense  •  ? IA  •  Esc: Salir" />
                     
                     <HyperlinkButton
                         Grid.Column="1"

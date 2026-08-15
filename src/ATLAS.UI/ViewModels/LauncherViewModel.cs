@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using ATLAS.Core.Commands;
 using ATLAS.Core.Entities;
+using ATLAS.Core.Finance;
 using ATLAS.Core.Repositories;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,6 +19,7 @@ public partial class LauncherViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsGoalMode))]
     [NotifyPropertyChangedFor(nameof(IsHabitCreateMode))]
     [NotifyPropertyChangedFor(nameof(IsHabitCompleteMode))]
+    [NotifyPropertyChangedFor(nameof(IsExpenseMode))]
     [NotifyPropertyChangedFor(nameof(ModeBadgeText))]
     [NotifyPropertyChangedFor(nameof(HasModeBadge))]
     [NotifyPropertyChangedFor(nameof(HasSearchResults))]
@@ -75,7 +77,9 @@ public partial class LauncherViewModel : ObservableObject
 
     public bool IsHabitCompleteMode => MatchesPrefix(Input, "/done", "!done", "hecho");
 
-    public bool HasModeBadge => IsAskMode || IsGoalMode || IsHabitCreateMode || IsHabitCompleteMode;
+    public bool IsExpenseMode => MatchesPrefix(Input, "/expense", "!expense", "/gasto", "!gasto");
+
+    public bool HasModeBadge => IsAskMode || IsGoalMode || IsHabitCreateMode || IsHabitCompleteMode || IsExpenseMode;
 
     public string ModeBadgeText
     {
@@ -85,6 +89,7 @@ public partial class LauncherViewModel : ObservableObject
             if (IsGoalMode) return "Nueva Meta";
             if (IsHabitCreateMode) return "Nuevo Hábito";
             if (IsHabitCompleteMode) return "Completar Hábito";
+            if (IsExpenseMode) return "Nuevo Gasto";
             return string.Empty;
         }
     }
@@ -136,30 +141,8 @@ public partial class LauncherViewModel : ObservableObject
             return;
         }
 
-        // Ask Mode (? query) -> no search list
-        if (IsAskMode)
-        {
-            SearchResults.Clear();
-            SelectedItem = null;
-            OnPropertyChanged(nameof(HasSearchResults));
-            OnPropertyChanged(nameof(ShowFooterHint));
-            WindowSizeChanged?.Invoke();
-            return;
-        }
-
-        // Goal Mode (/goal title) -> no search list
-        if (IsGoalMode)
-        {
-            SearchResults.Clear();
-            SelectedItem = null;
-            OnPropertyChanged(nameof(HasSearchResults));
-            OnPropertyChanged(nameof(ShowFooterHint));
-            WindowSizeChanged?.Invoke();
-            return;
-        }
-
-        // Habit Create Mode (/habit name) -> no search list
-        if (IsHabitCreateMode)
+        // Direct command modes without live note search
+        if (IsAskMode || IsGoalMode || IsHabitCreateMode || IsExpenseMode)
         {
             SearchResults.Clear();
             SelectedItem = null;
@@ -348,7 +331,20 @@ public partial class LauncherViewModel : ObservableObject
             return;
         }
 
-        // 5. Selected item from search list
+        // 5. Expense Create Mode (/expense or /gasto)
+        if (IsExpenseMode)
+        {
+            if (!ExpenseTextParser.TryParse(Input, out var amount, out var description))
+            {
+                ErrorMessage = "Formato inválido. Usá: /expense <monto> <descripción> (ej: /expense 4500 Cena).";
+                return;
+            }
+
+            await ExecuteExpenseCreateAsync(amount, description);
+            return;
+        }
+
+        // 6. Selected item from search list
         if (SelectedItem != null && !IsExpanded)
         {
             if (SelectedItem.IsHabit && SelectedItem.Habit != null)
@@ -368,7 +364,7 @@ public partial class LauncherViewModel : ObservableObject
             return;
         }
 
-        // 6. Default Note Capture
+        // 7. Default Note Capture
         if (string.IsNullOrWhiteSpace(Input))
         {
             ErrorMessage = "Escribí algo antes de guardar.";
@@ -480,6 +476,43 @@ public partial class LauncherViewModel : ObservableObject
             else
             {
                 ErrorMessage = result.ErrorMessage ?? "Error al completar el hábito.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task ExecuteExpenseCreateAsync(decimal amount, string description)
+    {
+        IsBusy = true;
+        ErrorMessage = null;
+
+        try
+        {
+            var parameters = new Dictionary<string, object?>
+            {
+                ["amount"] = amount,
+                ["description"] = description,
+                ["origin"] = "launcher",
+                ["type"] = "expense",
+                ["currency"] = "ARS"
+            };
+
+            var result = await _commandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, parameters);
+            if (result.IsSuccess)
+            {
+                Reset();
+                CloseRequested?.Invoke();
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage ?? "Error al registrar el gasto.";
             }
         }
         catch (Exception ex)

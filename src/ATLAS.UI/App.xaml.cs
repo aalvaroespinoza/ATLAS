@@ -20,10 +20,10 @@ namespace ATLAS_UI;
 /// </summary>
 public partial class App : Application
 {
+    private MainWindow? _mainWindow;
     private LauncherWindow? _launcherWindow;
     private ActivityWindow? _activityWindow;
     private SettingsWindow? _settingsWindow;
-    private HomeWindow? _homeWindow;
     private HotKeyService? _hotKeyService;
     private ITelegramListenerService? _telegramListener;
 
@@ -61,6 +61,7 @@ public partial class App : Application
         services.AddAtlasStorage();
 
         // UI ViewModels and Views
+        services.AddSingleton<MainWindow>();
         services.AddTransient<HomeViewModel>();
         services.AddSingleton<HomeWindow>();
         services.AddTransient<LauncherViewModel>();
@@ -89,6 +90,8 @@ public partial class App : Application
         commandRegistry.Register(Services.GetRequiredService<GoalUpdateProgressCommand>());
         commandRegistry.Register(Services.GetRequiredService<HabitCreateCommand>());
         commandRegistry.Register(Services.GetRequiredService<HabitCompleteCommand>());
+        commandRegistry.Register(Services.GetRequiredService<FinanceAddTransactionCommand>());
+        commandRegistry.Register(Services.GetRequiredService<FinanceSyncMercadoPagoCommand>());
     }
 
     /// <summary>
@@ -97,7 +100,7 @@ public partial class App : Application
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
         // 1. Instantiate Windows
-        _homeWindow = Services.GetRequiredService<HomeWindow>();
+        _mainWindow = Services.GetRequiredService<MainWindow>();
         _launcherWindow = Services.GetRequiredService<LauncherWindow>();
         _activityWindow = Services.GetRequiredService<ActivityWindow>();
         _settingsWindow = Services.GetRequiredService<SettingsWindow>();
@@ -119,31 +122,6 @@ public partial class App : Application
             NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT,
             NativeMethods.VK_SPACE,
             OnActivityHotKeyPressed);
-
-        // Connect Home navigation actions
-        _homeWindow.ViewModel.OpenLauncherRequested += () =>
-        {
-            _homeWindow.DispatcherQueue.TryEnqueue(() =>
-            {
-                _launcherWindow?.ShowLauncher();
-            });
-        };
-
-        _homeWindow.ViewModel.OpenActivityRequested += () =>
-        {
-            _homeWindow.DispatcherQueue.TryEnqueue(() =>
-            {
-                _activityWindow?.ShowAndActivate();
-            });
-        };
-
-        _homeWindow.ViewModel.OpenSettingsRequested += () =>
-        {
-            _homeWindow.DispatcherQueue.TryEnqueue(() =>
-            {
-                _settingsWindow?.ShowAndActivate();
-            });
-        };
 
         // Connect launcher action to open activity window
         _launcherWindow.ViewModel.OpenActivityRequested += () =>
@@ -170,8 +148,8 @@ public partial class App : Application
         _telegramListener = Services.GetRequiredService<ITelegramListenerService>();
         _ = _telegramListener.StartAsync();
 
-        // 5. Show Home / Inicio window on launch
-        _homeWindow.ShowAndActivate();
+        // 5. Show Main Shell Window on launch
+        _mainWindow.ShowAndActivate();
     }
 
     private void OnLauncherHotKeyPressed()

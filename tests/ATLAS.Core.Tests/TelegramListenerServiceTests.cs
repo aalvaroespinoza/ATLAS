@@ -128,7 +128,7 @@ public class TelegramListenerServiceTests
         });
 
         using var httpClient = new HttpClient(handler);
-        var listener = new TelegramListenerService(vault, httpClient, pollingTimeoutSeconds: 5);
+        var listener = new TelegramListenerService(vault, messageProcessor: null, httpClient: httpClient, pollingTimeoutSeconds: 5);
 
         // Act
         var updates = await listener.FetchUpdatesAsync("123456:TEST_TOKEN", offset: 100, CancellationToken.None);
@@ -156,7 +156,7 @@ public class TelegramListenerServiceTests
         });
 
         using var httpClient = new HttpClient(handler);
-        var listener = new TelegramListenerService(vault, httpClient);
+        var listener = new TelegramListenerService(vault, messageProcessor: null, httpClient: httpClient);
 
         // Act
         await listener.StartAsync();
