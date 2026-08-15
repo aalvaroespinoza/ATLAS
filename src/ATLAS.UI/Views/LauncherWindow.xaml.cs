@@ -5,6 +5,7 @@ using ATLAS.UI.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using WinRT.Interop;
@@ -15,6 +16,10 @@ public sealed partial class LauncherWindow : Window
 {
     private readonly AppWindow _appWindow;
     private readonly IntPtr _hwnd;
+    private const int WindowWidth = 680;
+    private const int CompactHeight = 76;
+    private const int ExpandedResultsHeight = 390;
+    private const int ExpandedDetailHeight = 360;
 
     public LauncherViewModel ViewModel { get; }
 
@@ -30,6 +35,7 @@ public sealed partial class LauncherWindow : Window
         ConfigureWindow();
 
         ViewModel.CloseRequested += OnCloseRequested;
+        ViewModel.WindowSizeChanged += OnViewModelWindowSizeChanged;
         Activated += OnWindowActivated;
     }
 
@@ -51,10 +57,10 @@ public sealed partial class LauncherWindow : Window
         SystemBackdrop = new DesktopAcrylicBackdrop();
 
         // 3. Size and Position in upper third of active monitor
-        CenterInUpperThird(680, 72);
+        AdjustWindowPosition(CompactHeight);
     }
 
-    private void CenterInUpperThird(int width, int height)
+    private void AdjustWindowPosition(int height)
     {
         var windowId = Win32Interop.GetWindowIdFromWindow(_hwnd);
         var displayArea = DisplayArea.GetFromWindowId(windowId, DisplayAreaFallback.Primary);
@@ -62,16 +68,36 @@ public sealed partial class LauncherWindow : Window
         if (displayArea != null)
         {
             var workArea = displayArea.WorkArea;
-            var x = workArea.X + (workArea.Width - width) / 2;
-            var y = workArea.Y + (int)(workArea.Height * 0.22);
+            var x = workArea.X + (workArea.Width - WindowWidth) / 2;
+            var y = workArea.Y + (int)(workArea.Height * 0.18);
 
-            _appWindow.MoveAndResize(new RectInt32(x, y, width, height));
+            _appWindow.MoveAndResize(new RectInt32(x, y, WindowWidth, height));
         }
+    }
+
+    private void OnViewModelWindowSizeChanged()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ViewModel.IsExpanded)
+            {
+                AdjustWindowPosition(ExpandedDetailHeight);
+            }
+            else if (ViewModel.HasSearchResults)
+            {
+                AdjustWindowPosition(ExpandedResultsHeight);
+            }
+            else
+            {
+                AdjustWindowPosition(CompactHeight);
+            }
+        });
     }
 
     public void ShowLauncher()
     {
         ViewModel.Reset();
+        AdjustWindowPosition(CompactHeight);
         _appWindow.Show();
         Activate();
         NativeMethods.SetForegroundWindow(_hwnd);
@@ -115,15 +141,61 @@ public sealed partial class LauncherWindow : Window
 
     private async void OnInputKeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == VirtualKey.Enter)
+        if (e.Key == VirtualKey.Down)
+        {
+            if (ViewModel.HasSearchResults)
+            {
+                e.Handled = true;
+                if (SearchResultsListView.SelectedIndex < ViewModel.SearchResults.Count - 1)
+                {
+                    SearchResultsListView.SelectedIndex++;
+                }
+                else
+                {
+                    SearchResultsListView.SelectedIndex = 0;
+                }
+                SearchResultsListView.ScrollIntoView(SearchResultsListView.SelectedItem);
+            }
+        }
+        else if (e.Key == VirtualKey.Up)
+        {
+            if (ViewModel.HasSearchResults)
+            {
+                e.Handled = true;
+                if (SearchResultsListView.SelectedIndex > 0)
+                {
+                    SearchResultsListView.SelectedIndex--;
+                }
+                else
+                {
+                    SearchResultsListView.SelectedIndex = -1;
+                }
+            }
+        }
+        else if (e.Key == VirtualKey.Enter)
         {
             e.Handled = true;
-            await ViewModel.SubmitCommand.ExecuteAsync(null);
+            if (SearchResultsListView.SelectedIndex >= 0 && ViewModel.SelectedItem != null)
+            {
+                ViewModel.SelectItem(ViewModel.SelectedItem);
+            }
+            else
+            {
+                await ViewModel.SubmitCommand.ExecuteAsync(null);
+            }
         }
         else if (e.Key == VirtualKey.Escape)
         {
             e.Handled = true;
             ViewModel.CancelCommand.Execute(null);
+        }
+    }
+
+    private void OnSearchResultItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is NoteItemViewModel item)
+        {
+            ViewModel.SelectItem(item);
         }
     }
 }

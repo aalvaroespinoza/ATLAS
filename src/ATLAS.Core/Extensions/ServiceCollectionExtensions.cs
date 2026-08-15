@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<ICommandRegistry, CommandRegistry>();
         services.AddTransient<CaptureNoteCommand>();
+        services.AddTransient<KnowledgeSearchCommand>();
         return services;
     }
 }

@@ -62,8 +62,8 @@ public partial class App : Application
 
         // 2. Register startup commands into CommandRegistry
         var commandRegistry = Services.GetRequiredService<ICommandRegistry>();
-        var captureNoteCommand = Services.GetRequiredService<CaptureNoteCommand>();
-        commandRegistry.Register(captureNoteCommand);
+        commandRegistry.Register(Services.GetRequiredService<CaptureNoteCommand>());
+        commandRegistry.Register(Services.GetRequiredService<KnowledgeSearchCommand>());
     }
 
     /// <summary>

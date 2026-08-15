@@ -7,7 +7,7 @@ using Microsoft.Data.Sqlite;
 namespace ATLAS.Storage.Repositories;
 
 /// <summary>
-/// SQLite implementation of INoteRepository supporting extended Knowledge attributes.
+/// SQLite implementation of INoteRepository supporting extended Knowledge attributes and search.
 /// </summary>
 public class NotesRepository : INoteRepository
 {
@@ -51,6 +51,11 @@ public class NotesRepository : INoteRepository
 
     public async Task<IReadOnlyList<Note>> GetRecentAsync(int count = 10, CancellationToken cancellationToken = default)
     {
+        return await SearchAsync(null, count, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<Note>> SearchAsync(string? query, int count = 20, CancellationToken cancellationToken = default)
+    {
         if (count <= 0)
         {
             return [];
@@ -59,16 +64,39 @@ public class NotesRepository : INoteRepository
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        const string sql = """
-            SELECT id, title, content, type, tags, created_at, source
-            FROM notes
-            ORDER BY datetime(created_at) DESC
-            LIMIT @limit;
-            """;
+        var trimmedQuery = query?.Trim();
+        string sql;
+
+        if (string.IsNullOrEmpty(trimmedQuery))
+        {
+            sql = """
+                SELECT id, title, content, type, tags, created_at, source
+                FROM notes
+                ORDER BY datetime(created_at) DESC
+                LIMIT @limit;
+                """;
+        }
+        else
+        {
+            sql = """
+                SELECT id, title, content, type, tags, created_at, source
+                FROM notes
+                WHERE title LIKE @pattern
+                   OR content LIKE @pattern
+                   OR tags LIKE @pattern
+                ORDER BY datetime(created_at) DESC
+                LIMIT @limit;
+                """;
+        }
 
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         command.Parameters.AddWithValue("@limit", count);
+
+        if (!string.IsNullOrEmpty(trimmedQuery))
+        {
+            command.Parameters.AddWithValue("@pattern", $"%{trimmedQuery}%");
+        }
 
         var notes = new List<Note>();
         await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
