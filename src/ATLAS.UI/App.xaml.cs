@@ -1,6 +1,7 @@
 using ATLAS.Core.Ai;
 using ATLAS.Core.Commands;
 using ATLAS.Core.Extensions;
+using ATLAS.Core.Integrations.Telegram;
 using ATLAS.Core.Security;
 using ATLAS.Storage.Database;
 using ATLAS.Storage.Extensions;
@@ -24,6 +25,7 @@ public partial class App : Application
     private SettingsWindow? _settingsWindow;
     private HomeWindow? _homeWindow;
     private HotKeyService? _hotKeyService;
+    private ITelegramListenerService? _telegramListener;
 
     /// <summary>
     /// Gets the current App instance.
@@ -164,7 +166,11 @@ public partial class App : Application
         // 3. Keep launcher hidden in background initially (ready for hotkeys)
         _launcherWindow.HideLauncher();
 
-        // 4. Show Home / Inicio window on launch
+        // 4. Start Telegram background long-polling service
+        _telegramListener = Services.GetRequiredService<ITelegramListenerService>();
+        _ = _telegramListener.StartAsync();
+
+        // 5. Show Home / Inicio window on launch
         _homeWindow.ShowAndActivate();
     }
 
