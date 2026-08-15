@@ -4,30 +4,144 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:ATLAS.UI.ViewModels"
     mc:Ignorable="d">
 
     <ScrollViewer Padding="32,24">
-        <StackPanel Spacing="20" MaxWidth="800" HorizontalAlignment="Left">
+        <StackPanel Spacing="24" MaxWidth="900" HorizontalAlignment="Left">
+
+            <!-- Header -->
             <StackPanel Spacing="4">
                 <TextBlock Text="Hábitos y Metas" FontSize="26" FontWeight="Bold" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-                <TextBlock Text="Seguimiento de consistencia y avance de metas personales." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="Gestioná tu constancia diaria y el avance de tus metas personales." FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
-            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="Gestión de Hábitos y Metas" FontWeight="SemiBold" FontSize="15" />
-                    <TextBlock Text="Próximamente: visualización de rachas, registro directo de hábitos y progreso de metas."
-                               FontSize="13"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <TextBlock Text="Tip: Podés completar hábitos rápidamente desde el Launcher con /done &lt;nombre&gt; o desde Telegram."
-                               FontSize="12"
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            <!-- 2-Column Grid -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="24">
+
+                <!-- Column 1: Hábitos -->
+                <StackPanel Grid.Column="0" Spacing="16">
+                    <TextBlock Text="HÁBITOS DE HOY" FontSize="12" FontWeight="SemiBold" CharacterSpacing="60" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <!-- Quick Add Habit -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox
+                                Grid.Column="0"
+                                PlaceholderText="Nuevo hábito (ej: Leer 20 min)..."
+                                Text="{x:Bind ViewModel.NewHabitName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                Grid.Column="1"
+                                Content="Agregar"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{x:Bind ViewModel.CreateHabitCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Habits List -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <StackPanel Spacing="10">
+                            <ListView
+                                ItemsSource="{x:Bind ViewModel.Habits}"
+                                SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:HabitTodayItemViewModel">
+                                        <Grid Padding="4,8" ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" FontSize="13" />
+                                                <TextBlock Text="{x:Bind CompletionDetail}" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <Button
+                                                Grid.Column="1"
+                                                Content="✓ Hecho"
+                                                FontSize="11"
+                                                Padding="10,4"
+                                                Tag="{x:Bind Habit.Id}"
+                                                Click="OnCompleteHabitClicked" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <TextBlock
+                                Text="No hay hábitos creados todavía."
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                HorizontalAlignment="Center"
+                                Padding="0,16"
+                                Visibility="{x:Bind ViewModel.HasNoHabitsVisibility, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-            </Border>
+
+                <!-- Column 2: Metas -->
+                <StackPanel Grid.Column="1" Spacing="16">
+                    <TextBlock Text="METAS ACTIVAS" FontSize="12" FontWeight="SemiBold" CharacterSpacing="60" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <!-- Quick Add Goal -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                            <TextBox
+                                Grid.Column="0"
+                                PlaceholderText="Nueva meta (ej: Lanzar MVP)..."
+                                Text="{x:Bind ViewModel.NewGoalTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            <Button
+                                Grid.Column="1"
+                                Content="Crear"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                Command="{x:Bind ViewModel.CreateGoalCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Goals List -->
+                    <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            Padding="12">
+                        <StackPanel Spacing="10">
+                            <ListView
+                                ItemsSource="{x:Bind ViewModel.Goals}"
+                                SelectionMode="None">
+                                <ListView.ItemTemplate>
+                                    <DataTemplate x:DataType="viewmodels:GoalActiveItemViewModel">
+                                        <StackPanel Padding="4,8" Spacing="6">
+                                            <Grid ColumnDefinitions="*,Auto">
+                                                <TextBlock Grid.Column="0" Text="{x:Bind Title}" FontWeight="SemiBold" FontSize="13" />
+                                                <TextBlock Grid.Column="1" Text="{x:Bind ProgressText}" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </Grid>
+
+                                            <ProgressBar Value="{x:Bind Progress}" Maximum="100" Height="6" CornerRadius="3" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+
+                            <TextBlock
+                                Text="No hay metas activas todavía."
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                HorizontalAlignment="Center"
+                                Padding="0,16"
+                                Visibility="{x:Bind ViewModel.HasNoGoalsVisibility, Mode=OneWay}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </Page>

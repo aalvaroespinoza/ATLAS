@@ -12,6 +12,8 @@ public sealed class NoteItemViewModel
     public Note Note { get; }
     public string DisplayTitle { get; }
     public string? ContentSnippet { get; }
+    public string PreviewContent => !string.IsNullOrWhiteSpace(ContentSnippet) ? ContentSnippet : Note.Content;
+    public string Content => Note.Content;
     public string? Tags { get; }
     public string Type { get; }
     public string FormattedDate { get; }

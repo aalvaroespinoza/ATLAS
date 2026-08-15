@@ -38,6 +38,11 @@ public partial class App : Application
     public IServiceProvider Services { get; }
 
     /// <summary>
+    /// Gets the primary shell window.
+    /// </summary>
+    public MainWindow? MainWindow => _mainWindow;
+
+    /// <summary>
     /// Initializes the singleton application object.
     /// </summary>
     public App()
@@ -70,6 +75,10 @@ public partial class App : Application
         services.AddSingleton<ActivityWindow>();
         services.AddTransient<SettingsViewModel>();
         services.AddSingleton<SettingsWindow>();
+        services.AddTransient<CaptureViewModel>();
+        services.AddTransient<SearchViewModel>();
+        services.AddTransient<HabitsGoalsViewModel>();
+        services.AddTransient<FinanceViewModel>();
 
         return services.BuildServiceProvider();
     }
