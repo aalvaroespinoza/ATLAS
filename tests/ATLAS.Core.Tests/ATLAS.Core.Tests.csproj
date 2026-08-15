@@ -20,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ATLAS.Core\ATLAS.Core.csproj" />
+    <ProjectReference Include="..\..\src\ATLAS.Storage\ATLAS.Storage.csproj" />
   </ItemGroup>
 
 </Project>
