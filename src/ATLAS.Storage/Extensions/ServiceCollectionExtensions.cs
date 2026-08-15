@@ -15,6 +15,8 @@ public static class ServiceCollectionExtensions
         var connStr = connectionString ?? DatabaseConfig.GetDefaultConnectionString();
         services.AddSingleton(new DatabaseInitializer(connStr));
         services.AddSingleton<INoteRepository>(_ => new NotesRepository(connStr));
+        services.AddSingleton<IGoalRepository>(_ => new GoalsRepository(connStr));
+        services.AddSingleton<IHabitRepository>(_ => new HabitsRepository(connStr));
         return services;
     }
 }

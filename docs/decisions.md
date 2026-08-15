@@ -12,3 +12,4 @@
 - 2026-08-15: Etapa 2b: Almacenamiento seguro de secretos mediante abstracción ISecretVault e implementación WindowsPasswordVault (Windows Credential Locker). Interfaz IAiProvider con implementación GeminiProvider (Google Gemini gemini-1.5-flash) y ventana de configuración SettingsWindow en WinUI 3.
 - 2026-08-15: Etapa 2b: Implementados comandos AiSummarizeCommand ('ai.summarize') y AiAskCommand ('ai.ask') en ATLAS.Core desacoplados del proveedor concreto e integrados al CommandRegistry.
 - 2026-08-15: Etapa 2b: Launcher integrado con IA: acción 'Resumir con IA' en notas expandidas, modo de consulta directa mediante prefijo '?' (ej. '? explicar Rust') e indicador visual de procesamiento con Gemini en segundo plano.
+- 2026-08-15: Etapa 3a: Implementadas tablas SQLite (goals, habits, habit_events) en DatabaseInitializer con foreign keys activadas, entidades de dominio (Goal, Habit, HabitEvent) y repositorios (GoalsRepository, HabitsRepository).

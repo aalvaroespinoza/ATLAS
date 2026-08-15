@@ -31,8 +31,16 @@ public class DatabaseInitializer
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        // 1. Create table if not exists (including new columns)
+        // Enable foreign keys
+        await using (var pragmaCmd = connection.CreateCommand())
+        {
+            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            await pragmaCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        // 1. Create tables and indices
         const string schemaSql = """
+            -- Notes table
             CREATE TABLE IF NOT EXISTS notes (
                 id TEXT PRIMARY KEY,
                 title TEXT,
@@ -43,6 +51,40 @@ public class DatabaseInitializer
                 source TEXT NOT NULL DEFAULT 'quick_capture'
             );
             CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+
+            -- Goals table
+            CREATE TABLE IF NOT EXISTS goals (
+                id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                description TEXT,
+                status TEXT NOT NULL DEFAULT 'active',
+                progress INTEGER NOT NULL DEFAULT 0,
+                target_date TEXT,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_goals_status ON goals(status);
+            CREATE INDEX IF NOT EXISTS idx_goals_created_at ON goals(created_at);
+
+            -- Habits table
+            CREATE TABLE IF NOT EXISTS habits (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                description TEXT,
+                frequency TEXT NOT NULL DEFAULT 'daily',
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_habits_created_at ON habits(created_at);
+
+            -- Habit Events table
+            CREATE TABLE IF NOT EXISTS habit_events (
+                id TEXT PRIMARY KEY,
+                habit_id TEXT NOT NULL,
+                completed_at TEXT NOT NULL,
+                note TEXT,
+                FOREIGN KEY (habit_id) REFERENCES habits(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_habit_events_habit_id ON habit_events(habit_id);
+            CREATE INDEX IF NOT EXISTS idx_habit_events_completed_at ON habit_events(completed_at);
             """;
 
         await using (var command = connection.CreateCommand())
@@ -65,7 +107,6 @@ public class DatabaseInitializer
             await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
             while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
             {
-                // Column name is in column index 1 ("name")
                 existingColumns.Add(reader.GetString(1));
             }
         }
