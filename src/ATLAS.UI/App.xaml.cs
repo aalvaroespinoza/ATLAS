@@ -1,7 +1,10 @@
+using ATLAS.Core.Ai;
 using ATLAS.Core.Commands;
 using ATLAS.Core.Extensions;
+using ATLAS.Core.Security;
 using ATLAS.Storage.Database;
 using ATLAS.Storage.Extensions;
+using ATLAS.UI.Interop;
 using ATLAS.UI.Services;
 using ATLAS.UI.ViewModels;
 using ATLAS.UI.Views;
@@ -17,6 +20,8 @@ namespace ATLAS_UI;
 public partial class App : Application
 {
     private LauncherWindow? _launcherWindow;
+    private ActivityWindow? _activityWindow;
+    private SettingsWindow? _settingsWindow;
     private HotKeyService? _hotKeyService;
 
     /// <summary>
@@ -43,6 +48,11 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
+        // Security and AI services (registered first so Core commands can resolve IAiProvider)
+        services.AddSingleton<ISecretVault, WindowsPasswordVault>();
+        services.AddSingleton<HttpClient>();
+        services.AddSingleton<IAiProvider, GeminiProvider>();
+
         // Core and Storage services
         services.AddAtlasCore();
         services.AddAtlasStorage();
@@ -50,6 +60,10 @@ public partial class App : Application
         // UI ViewModels and Views
         services.AddTransient<LauncherViewModel>();
         services.AddSingleton<LauncherWindow>();
+        services.AddTransient<ActivityViewModel>();
+        services.AddSingleton<ActivityWindow>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddSingleton<SettingsWindow>();
 
         return services.BuildServiceProvider();
     }
@@ -64,6 +78,8 @@ public partial class App : Application
         var commandRegistry = Services.GetRequiredService<ICommandRegistry>();
         commandRegistry.Register(Services.GetRequiredService<CaptureNoteCommand>());
         commandRegistry.Register(Services.GetRequiredService<KnowledgeSearchCommand>());
+        commandRegistry.Register(Services.GetRequiredService<AiSummarizeCommand>());
+        commandRegistry.Register(Services.GetRequiredService<AiAskCommand>());
     }
 
     /// <summary>
@@ -71,26 +87,68 @@ public partial class App : Application
     /// </summary>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
-        // 1. Instantiate Launcher Window
+        // 1. Instantiate Windows
         _launcherWindow = Services.GetRequiredService<LauncherWindow>();
+        _activityWindow = Services.GetRequiredService<ActivityWindow>();
+        _settingsWindow = Services.GetRequiredService<SettingsWindow>();
 
-        // 2. Setup Global Hotkey on the Launcher Window handle
+        // 2. Setup Global Hotkeys on the Launcher Window handle
         var hwnd = WindowNative.GetWindowHandle(_launcherWindow);
         _hotKeyService = new HotKeyService(hwnd);
-        _hotKeyService.HotKeyPressed += OnGlobalHotKeyPressed;
-        _hotKeyService.Register();
 
-        // 3. Keep launcher hidden in background initially (ready for Ctrl+Space)
+        // ID 1001: Ctrl + Space -> Launcher
+        _hotKeyService.Register(
+            1001,
+            NativeMethods.MOD_CONTROL,
+            NativeMethods.VK_SPACE,
+            OnLauncherHotKeyPressed);
+
+        // ID 1002: Ctrl + Shift + Space -> Actividad
+        _hotKeyService.Register(
+            1002,
+            NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT,
+            NativeMethods.VK_SPACE,
+            OnActivityHotKeyPressed);
+
+        // Connect launcher action to open activity window
+        _launcherWindow.ViewModel.OpenActivityRequested += () =>
+        {
+            _launcherWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                _activityWindow?.ShowAndActivate();
+            });
+        };
+
+        // Connect activity action to open settings window
+        _activityWindow.ViewModel.OpenSettingsRequested += () =>
+        {
+            _activityWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                _settingsWindow?.ShowAndActivate();
+            });
+        };
+
+        // 3. Keep launcher hidden in background initially (ready for hotkeys)
         _launcherWindow.HideLauncher();
     }
 
-    private void OnGlobalHotKeyPressed()
+    private void OnLauncherHotKeyPressed()
     {
         if (_launcherWindow == null) return;
 
         _launcherWindow.DispatcherQueue.TryEnqueue(() =>
         {
             _launcherWindow.ToggleLauncher();
+        });
+    }
+
+    private void OnActivityHotKeyPressed()
+    {
+        if (_activityWindow == null) return;
+
+        _activityWindow.DispatcherQueue.TryEnqueue(() =>
+        {
+            _activityWindow.ShowAndActivate();
         });
     }
 }

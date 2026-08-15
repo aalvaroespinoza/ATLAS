@@ -13,6 +13,8 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICommandRegistry, CommandRegistry>();
         services.AddTransient<CaptureNoteCommand>();
         services.AddTransient<KnowledgeSearchCommand>();
+        services.AddTransient<AiSummarizeCommand>();
+        services.AddTransient<AiAskCommand>();
         return services;
     }
 }

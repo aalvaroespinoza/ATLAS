@@ -19,7 +19,8 @@ public sealed partial class LauncherWindow : Window
     private const int WindowWidth = 680;
     private const int CompactHeight = 76;
     private const int ExpandedResultsHeight = 390;
-    private const int ExpandedDetailHeight = 360;
+    private const int ExpandedDetailHeight = 380;
+    private const int AiResultHeight = 380;
 
     public LauncherViewModel ViewModel { get; }
 
@@ -79,7 +80,11 @@ public sealed partial class LauncherWindow : Window
     {
         DispatcherQueue.TryEnqueue(() =>
         {
-            if (ViewModel.IsExpanded)
+            if (ViewModel.IsShowingAiResult)
+            {
+                AdjustWindowPosition(AiResultHeight);
+            }
+            else if (ViewModel.IsExpanded)
             {
                 AdjustWindowPosition(ExpandedDetailHeight);
             }
@@ -175,7 +180,7 @@ public sealed partial class LauncherWindow : Window
         else if (e.Key == VirtualKey.Enter)
         {
             e.Handled = true;
-            if (SearchResultsListView.SelectedIndex >= 0 && ViewModel.SelectedItem != null)
+            if (!ViewModel.IsAskMode && SearchResultsListView.SelectedIndex >= 0 && ViewModel.SelectedItem != null)
             {
                 ViewModel.SelectItem(ViewModel.SelectedItem);
             }

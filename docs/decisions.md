@@ -8,3 +8,7 @@
 - 2026-08-15: Etapa 2a: Extendido modelo y tabla notes con title (opcional), type (default 'note'), tags y source mediante migración no destructiva e idempotente en DatabaseInitializer.
 - 2026-08-15: Etapa 2a: Implementado comando KnowledgeSearchCommand ('knowledge.search') con búsqueda simple LIKE (case-insensitive) sobre title, content y tags con orden cronológico descendente y límite configurable.
 - 2026-08-15: Etapa 2a: Launcher dual en ATLAS.UI con Live Search (debounce 160ms), lista interactiva con navegación por teclado (flechas), vista expandida de notas y captura automática con Enter cuando no hay selección.
+- 2026-08-15: Etapa 2a: Implementada ventana secundaria ActivityWindow en ATLAS.UI (lista cronológica de solo lectura, lector de detalle dividido y hotkey global Ctrl+Shift+Space).
+- 2026-08-15: Etapa 2b: Almacenamiento seguro de secretos mediante abstracción ISecretVault e implementación WindowsPasswordVault (Windows Credential Locker). Interfaz IAiProvider con implementación GeminiProvider (Google Gemini gemini-1.5-flash) y ventana de configuración SettingsWindow en WinUI 3.
+- 2026-08-15: Etapa 2b: Implementados comandos AiSummarizeCommand ('ai.summarize') y AiAskCommand ('ai.ask') en ATLAS.Core desacoplados del proveedor concreto e integrados al CommandRegistry.
+- 2026-08-15: Etapa 2b: Launcher integrado con IA: acción 'Resumir con IA' en notas expandidas, modo de consulta directa mediante prefijo '?' (ej. '? explicar Rust') e indicador visual de procesamiento con Gemini en segundo plano.

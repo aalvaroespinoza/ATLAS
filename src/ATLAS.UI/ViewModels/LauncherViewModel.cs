@@ -12,6 +12,10 @@ public partial class LauncherViewModel : ObservableObject
     private CancellationTokenSource? _searchCts;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsAskMode))]
+    [NotifyPropertyChangedFor(nameof(AskPromptPreview))]
+    [NotifyPropertyChangedFor(nameof(HasSearchResults))]
+    [NotifyPropertyChangedFor(nameof(ShowFooterHint))]
     public partial string Input { get; set; } = string.Empty;
 
     [ObservableProperty]
@@ -23,6 +27,23 @@ public partial class LauncherViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool IsSearching { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsShowingAiResult))]
+    [NotifyPropertyChangedFor(nameof(IsAiResultReady))]
+    [NotifyPropertyChangedFor(nameof(HasSearchResults))]
+    [NotifyPropertyChangedFor(nameof(ShowFooterHint))]
+    public partial bool IsAiThinking { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsShowingAiResult))]
+    [NotifyPropertyChangedFor(nameof(IsAiResultReady))]
+    [NotifyPropertyChangedFor(nameof(HasSearchResults))]
+    [NotifyPropertyChangedFor(nameof(ShowFooterHint))]
+    public partial string? AiResponse { get; set; }
+
+    [ObservableProperty]
+    public partial string AiModeTitle { get; set; } = "Respuesta de IA";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSearchResults))]
@@ -39,11 +60,20 @@ public partial class LauncherViewModel : ObservableObject
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
 
-    public bool HasSearchResults => SearchResults.Count > 0 && !IsExpanded;
+    public bool IsAskMode => !string.IsNullOrWhiteSpace(Input) && Input.TrimStart().StartsWith("?");
 
-    public bool ShowFooterHint => !string.IsNullOrWhiteSpace(Input) || IsExpanded || HasSearchResults;
+    public string AskPromptPreview => IsAskMode ? Input.TrimStart()[1..].Trim() : string.Empty;
+
+    public bool IsShowingAiResult => !string.IsNullOrWhiteSpace(AiResponse) || IsAiThinking;
+
+    public bool IsAiResultReady => !string.IsNullOrWhiteSpace(AiResponse) && !IsAiThinking;
+
+    public bool HasSearchResults => SearchResults.Count > 0 && !IsExpanded && !IsShowingAiResult && !IsAskMode;
+
+    public bool ShowFooterHint => !string.IsNullOrWhiteSpace(Input) || IsExpanded || HasSearchResults || IsShowingAiResult || IsAskMode;
 
     public event Action? CloseRequested;
+    public event Action? OpenActivityRequested;
     public event Action? WindowSizeChanged;
 
     public LauncherViewModel(ICommandRegistry commandRegistry)
@@ -63,6 +93,22 @@ public partial class LauncherViewModel : ObservableObject
         {
             IsExpanded = false;
             ExpandedItem = null;
+        }
+
+        if (IsShowingAiResult && !IsAiThinking)
+        {
+            AiResponse = null;
+        }
+
+        // If in ask mode (starts with ?), do not search SQLite notes
+        if (value.TrimStart().StartsWith("?"))
+        {
+            SearchResults.Clear();
+            SelectedItem = null;
+            OnPropertyChanged(nameof(HasSearchResults));
+            OnPropertyChanged(nameof(ShowFooterHint));
+            WindowSizeChanged?.Invoke();
+            return;
         }
 
         if (string.IsNullOrWhiteSpace(value))
@@ -134,8 +180,30 @@ public partial class LauncherViewModel : ObservableObject
     [RelayCommand]
     public async Task SubmitAsync()
     {
-        if (IsBusy)
+        if (IsBusy || IsAiThinking)
         {
+            return;
+        }
+
+        // If currently displaying AI result, pressing enter closes launcher
+        if (IsShowingAiResult && !IsAiThinking)
+        {
+            Reset();
+            CloseRequested?.Invoke();
+            return;
+        }
+
+        // AI Ask mode (? prompt)
+        if (IsAskMode)
+        {
+            var prompt = AskPromptPreview;
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                ErrorMessage = "Escribí tu pregunta después del signo '?'.";
+                return;
+            }
+
+            await ExecuteAiAskAsync(prompt);
             return;
         }
 
@@ -194,6 +262,90 @@ public partial class LauncherViewModel : ObservableObject
     }
 
     [RelayCommand]
+    public async Task SummarizeExpandedNoteAsync()
+    {
+        if (ExpandedItem == null || string.IsNullOrWhiteSpace(ExpandedItem.Note.Content) || IsAiThinking)
+        {
+            return;
+        }
+
+        IsAiThinking = true;
+        ErrorMessage = null;
+        AiResponse = null;
+        AiModeTitle = $"Resumen: {ExpandedItem.DisplayTitle}";
+        WindowSizeChanged?.Invoke();
+
+        try
+        {
+            var parameters = new Dictionary<string, object?>
+            {
+                ["text"] = ExpandedItem.Note.Content
+            };
+
+            var result = await _commandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, parameters);
+
+            if (result.IsSuccess)
+            {
+                AiResponse = result.Data?.ToString() ?? "Sin resumen.";
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage ?? "Error al generar resumen.";
+                AiResponse = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+            AiResponse = null;
+        }
+        finally
+        {
+            IsAiThinking = false;
+            WindowSizeChanged?.Invoke();
+        }
+    }
+
+    private async Task ExecuteAiAskAsync(string prompt)
+    {
+        IsAiThinking = true;
+        ErrorMessage = null;
+        AiResponse = null;
+        AiModeTitle = $"Pregunta: {prompt}";
+        WindowSizeChanged?.Invoke();
+
+        try
+        {
+            var parameters = new Dictionary<string, object?>
+            {
+                ["prompt"] = prompt
+            };
+
+            var result = await _commandRegistry.ExecuteAsync(AiAskCommand.CommandId, parameters);
+
+            if (result.IsSuccess)
+            {
+                AiResponse = result.Data?.ToString() ?? "Sin respuesta.";
+            }
+            else
+            {
+                ErrorMessage = result.ErrorMessage ?? "Error al consultar a Gemini.";
+                AiResponse = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+            AiResponse = null;
+        }
+        finally
+        {
+            IsAiThinking = false;
+            WindowSizeChanged?.Invoke();
+        }
+    }
+
+    [RelayCommand]
     public void SelectItem(NoteItemViewModel? item)
     {
         if (item == null) return;
@@ -205,6 +357,8 @@ public partial class LauncherViewModel : ObservableObject
         ExpandedItem = item;
         IsExpanded = true;
         SelectedItem = null;
+        AiResponse = null;
+        IsAiThinking = false;
         OnPropertyChanged(nameof(HasSearchResults));
         OnPropertyChanged(nameof(ShowFooterHint));
         WindowSizeChanged?.Invoke();
@@ -215,14 +369,41 @@ public partial class LauncherViewModel : ObservableObject
     {
         IsExpanded = false;
         ExpandedItem = null;
+        AiResponse = null;
+        IsAiThinking = false;
         OnPropertyChanged(nameof(HasSearchResults));
         OnPropertyChanged(nameof(ShowFooterHint));
         WindowSizeChanged?.Invoke();
     }
 
     [RelayCommand]
+    public void CloseAiResult()
+    {
+        AiResponse = null;
+        IsAiThinking = false;
+        OnPropertyChanged(nameof(IsShowingAiResult));
+        OnPropertyChanged(nameof(HasSearchResults));
+        OnPropertyChanged(nameof(ShowFooterHint));
+        WindowSizeChanged?.Invoke();
+    }
+
+    [RelayCommand]
+    public void OpenActivity()
+    {
+        Reset();
+        CloseRequested?.Invoke();
+        OpenActivityRequested?.Invoke();
+    }
+
+    [RelayCommand]
     public void Cancel()
     {
+        if (IsShowingAiResult)
+        {
+            CloseAiResult();
+            return;
+        }
+
         if (IsExpanded)
         {
             CloseExpanded();
@@ -247,6 +428,8 @@ public partial class LauncherViewModel : ObservableObject
         ErrorMessage = null;
         IsBusy = false;
         IsSearching = false;
+        IsAiThinking = false;
+        AiResponse = null;
 
         OnPropertyChanged(nameof(HasSearchResults));
         OnPropertyChanged(nameof(ShowFooterHint));
