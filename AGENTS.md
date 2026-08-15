@@ -76,16 +76,50 @@ No crear más carpetas/proyectos que estos sin plan previo.
 - Tests para Commands con lógica no trivial (no hace falta testear getters/setters)
 - Si modifica algo arquitectónico, se agrega una línea en `/docs/decisions.md`
 
-## Alcance actual — Etapa 1 (no avanzar sin confirmación explícita)
+## Proveedor de IA (definido)
 
-Construir **únicamente**:
+Para todo lo que requiera IA cloud: **Google Gemini API** (free tier, vía
+Google AI Studio). La key vive en el almacenamiento seguro del usuario
+(Windows Credential Locker / DPAPI), nunca en texto plano ni commiteada al
+repo. La integración se hace atrás de una interfaz `IAiProvider` para poder
+cambiar de proveedor a futuro sin tocar el resto del Core (regla 12 del
+doc de producto).
 
-> Windows App + SQLite + Core + Command System + Global Launcher (Ctrl+Space) + Capture (nota rápida)
+## Etapa 1 — COMPLETADA
 
-Explícitamente **fuera de alcance** por ahora: Knowledge avanzado con
-embeddings, Hábitos, Finanzas, Roadmaps, Telegram, Gmail, IA/LLM local o
-cloud, dashboard con tarjetas. Esas etapas se habilitan recién cuando esta
-base esté estable y en uso real.
+Windows App + SQLite + Core + Command System + Global Launcher (Ctrl+Space)
++ Capture (nota rápida). Ya andando, no se toca salvo bugs.
+
+## Alcance actual — Etapa 2 (no avanzar sin confirmación explícita)
+
+Se divide en dos bloques secuenciales, no simultáneos:
+
+**2a — Knowledge (búsqueda y organización real):**
+- Extender el modelo de `notes` con: `title` (opcional), `type`, `tags`,
+  `source`. No agregar `documents`, `attachments` ni relaciones todavía.
+- Command `knowledge.search`: búsqueda simple (LIKE) sobre título,
+  contenido y tags. Nada de FTS5 ni embeddings todavía — eso es una
+  optimización futura, no de esta etapa (ver sección 7 del doc de
+  producto: primero almacenar bien, indexar bien, buscar bien, *después*
+  semántica).
+- El Launcher (Ctrl+Space) pasa a ser dual: si lo que escribís matchea
+  notas existentes, las muestra en vivo; Enter sin selección sigue
+  capturando como nota nueva.
+- Una vista simple de "Actividad" o "Buscar" para navegar lo guardado
+  (lista, sin fancy UI).
+
+**2b — AI Toolbox (recién después de que 2a esté estable):**
+- `IAiProvider` + implementación `GeminiProvider` (HTTP a la API de
+  Gemini, key desde almacenamiento seguro).
+- Commands: `ai.summarize` y `ai.ask` únicamente. No agregar `traducir`,
+  `explicar`, OCR, etc. todavía — eso es iteración posterior sobre la
+  misma base.
+- Se invocan desde el Launcher como acciones sobre el resultado de una
+  búsqueda o sobre texto tipeado directo.
+
+Explícitamente **fuera de alcance** todavía: Hábitos, Finanzas, Roadmaps,
+Telegram, Gmail, IA local (modelos on-device), dashboard con tarjetas,
+vector search / embeddings.
 
 ## Flujo de trabajo esperado
 
