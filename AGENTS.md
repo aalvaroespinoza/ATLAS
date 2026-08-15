@@ -85,46 +85,51 @@ repo. La integración se hace atrás de una interfaz `IAiProvider` para poder
 cambiar de proveedor a futuro sin tocar el resto del Core (regla 12 del
 doc de producto).
 
-## Etapa 1 — COMPLETADA
+## Etapa 3 — COMPLETADA
 
-Windows App + SQLite + Core + Command System + Global Launcher (Ctrl+Space)
-+ Capture (nota rápida). Ya andando, no se toca salvo bugs.
+Goals + Habits (tablas, commands, launcher, pantalla Inicio). Ya andando,
+no se toca salvo bugs.
 
-## Etapa 2 — COMPLETADA
+## Alcance actual — Etapa 4: Telegram + Finanzas (no avanzar sin confirmación)
 
-Knowledge (modelo de notes extendido, knowledge.search, launcher dual
-búsqueda/captura) + AI Toolbox (GeminiProvider, ai.summarize, ai.ask).
-Ya andando, no se toca salvo bugs.
+Se divide en dos bloques secuenciales, no simultáneos:
 
-## Alcance actual — Etapa 3: Goals + Habits (no avanzar sin confirmación)
+**4a — Integración con Telegram (long polling, no webhook):**
+- Bot creado externamente vía @BotFather (fuera del repo, a mano).
+- El token del bot se guarda con el mismo mecanismo seguro que ya existe
+  para la key de Gemini (reusar/generalizar el secure store existente,
+  no crear uno nuevo desde cero).
+- `TelegramListenerService`: long polling (`getUpdates`) corriendo en
+  background mientras la app está abierta. Sin webhook, sin servidor
+  propio expuesto.
+- Mapeo mínimo de mensajes a Commands existentes: texto libre →
+  `capture.note` (con `source = "telegram"`), y un prefijo simple para
+  completar un habit (ej. `/habit <nombre>` → `habit.complete`). Nada
+  de `/expense` todavía — depende de que exista el módulo de Finanzas
+  (bloque 4b).
+- El bot responde confirmando la acción ejecutada (texto simple, no
+  botones ni menús interactivos todavía).
 
-Se divide en dos bloques secuenciales:
+**4b — Finanzas (recién después de que 4a esté estable):**
+- Tabla `transactions`: fecha, monto, tipo, origen, descripción, moneda,
+  categoría, subcategoría, id_externo, estado, metadata.
+- Command `finance.add_transaction` (carga manual) — debe poder
+  invocarse desde el Launcher **y** desde Telegram vía el prefijo
+  `/expense <monto> <descripción>` (reusando el mismo Command, no
+  duplicando lógica).
+- Integración con Mercado Pago vía **personal access token** (no OAuth
+  de app pública — es uso personal, alcanza con el token que da el panel
+  de developers de MP), guardado con el mismo secure store. Command
+  `finance.sync_mercadopago` que trae movimientos recientes y los
+  normaliza a `transactions`. Sync manual (a demanda o al abrir la app),
+  no polling automático en esta etapa.
+- Categorización: manual en esta etapa. La categorización automática con
+  IA (ya tenés `ai.ask` de la Etapa 2) queda para una iteración
+  posterior, no de este bloque.
 
-**3a — Core de Goals y Habits:**
-- Tablas nuevas: `goals` (id, title, description, status, created_at,
-  target_date opcional) y `habits` (id, name, description, frequency,
-  created_at) + `habit_events` (id, habit_id, completed_at, note opcional).
-- Commands: `goal.create`, `goal.update_progress`, `habit.create`,
-  `habit.complete`. Nada de "Rutinas" (secuencias de hábitos) todavía —
-  eso es una elaboración futura sobre esta base, no de esta etapa.
-- Sin gamificación (XP, niveles, rachas visuales) en esta etapa. Guardar
-  los datos crudos en `habit_events` alcanza; el cálculo de rachas se
-  puede derivar después sin tocar el esquema.
-- Sin IA analizando hábitos abandonados ni sugiriendo cambios — eso
-  depende de tener datos reales acumulados primero.
-
-**3b — Surfacing (recién después de que 3a esté estable):**
-- Extender el Launcher: crear un goal o un habit, y marcar un habit como
-  completado, todo vía comando de texto (ej. escribir el nombre del
-  habit + confirmar), sin pantallas de formulario nuevas.
-- Primera versión mínima de la pantalla "Inicio" (ver sección 15 del doc
-  de producto): texto simple, no tarjetas — cuántos hábitos quedan hoy,
-  progreso de goals activos. Nada de dashboard con múltiples bloques
-  configurables todavía, eso viene después de tener uso real.
-
-Explícitamente **fuera de alcance** todavía: Rutinas, Finanzas, Roadmaps,
-Telegram, Gmail, IA local, gamificación, vector search / embeddings,
-dashboard configurable.
+Explícitamente **fuera de alcance** todavía: WhatsApp, Gmail, Roadmaps,
+IA local, categorización automática de gastos, webhooks de ningún tipo,
+sincronización automática en background de Mercado Pago.
 
 ## Flujo de trabajo esperado
 
