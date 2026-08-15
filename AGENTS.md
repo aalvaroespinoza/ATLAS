@@ -90,36 +90,41 @@ doc de producto).
 Windows App + SQLite + Core + Command System + Global Launcher (Ctrl+Space)
 + Capture (nota rápida). Ya andando, no se toca salvo bugs.
 
-## Alcance actual — Etapa 2 (no avanzar sin confirmación explícita)
+## Etapa 2 — COMPLETADA
 
-Se divide en dos bloques secuenciales, no simultáneos:
+Knowledge (modelo de notes extendido, knowledge.search, launcher dual
+búsqueda/captura) + AI Toolbox (GeminiProvider, ai.summarize, ai.ask).
+Ya andando, no se toca salvo bugs.
 
-**2a — Knowledge (búsqueda y organización real):**
-- Extender el modelo de `notes` con: `title` (opcional), `type`, `tags`,
-  `source`. No agregar `documents`, `attachments` ni relaciones todavía.
-- Command `knowledge.search`: búsqueda simple (LIKE) sobre título,
-  contenido y tags. Nada de FTS5 ni embeddings todavía — eso es una
-  optimización futura, no de esta etapa (ver sección 7 del doc de
-  producto: primero almacenar bien, indexar bien, buscar bien, *después*
-  semántica).
-- El Launcher (Ctrl+Space) pasa a ser dual: si lo que escribís matchea
-  notas existentes, las muestra en vivo; Enter sin selección sigue
-  capturando como nota nueva.
-- Una vista simple de "Actividad" o "Buscar" para navegar lo guardado
-  (lista, sin fancy UI).
+## Alcance actual — Etapa 3: Goals + Habits (no avanzar sin confirmación)
 
-**2b — AI Toolbox (recién después de que 2a esté estable):**
-- `IAiProvider` + implementación `GeminiProvider` (HTTP a la API de
-  Gemini, key desde almacenamiento seguro).
-- Commands: `ai.summarize` y `ai.ask` únicamente. No agregar `traducir`,
-  `explicar`, OCR, etc. todavía — eso es iteración posterior sobre la
-  misma base.
-- Se invocan desde el Launcher como acciones sobre el resultado de una
-  búsqueda o sobre texto tipeado directo.
+Se divide en dos bloques secuenciales:
 
-Explícitamente **fuera de alcance** todavía: Hábitos, Finanzas, Roadmaps,
-Telegram, Gmail, IA local (modelos on-device), dashboard con tarjetas,
-vector search / embeddings.
+**3a — Core de Goals y Habits:**
+- Tablas nuevas: `goals` (id, title, description, status, created_at,
+  target_date opcional) y `habits` (id, name, description, frequency,
+  created_at) + `habit_events` (id, habit_id, completed_at, note opcional).
+- Commands: `goal.create`, `goal.update_progress`, `habit.create`,
+  `habit.complete`. Nada de "Rutinas" (secuencias de hábitos) todavía —
+  eso es una elaboración futura sobre esta base, no de esta etapa.
+- Sin gamificación (XP, niveles, rachas visuales) en esta etapa. Guardar
+  los datos crudos en `habit_events` alcanza; el cálculo de rachas se
+  puede derivar después sin tocar el esquema.
+- Sin IA analizando hábitos abandonados ni sugiriendo cambios — eso
+  depende de tener datos reales acumulados primero.
+
+**3b — Surfacing (recién después de que 3a esté estable):**
+- Extender el Launcher: crear un goal o un habit, y marcar un habit como
+  completado, todo vía comando de texto (ej. escribir el nombre del
+  habit + confirmar), sin pantallas de formulario nuevas.
+- Primera versión mínima de la pantalla "Inicio" (ver sección 15 del doc
+  de producto): texto simple, no tarjetas — cuántos hábitos quedan hoy,
+  progreso de goals activos. Nada de dashboard con múltiples bloques
+  configurables todavía, eso viene después de tener uso real.
+
+Explícitamente **fuera de alcance** todavía: Rutinas, Finanzas, Roadmaps,
+Telegram, Gmail, IA local, gamificación, vector search / embeddings,
+dashboard configurable.
 
 ## Flujo de trabajo esperado
 
