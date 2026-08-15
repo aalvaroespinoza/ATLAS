@@ -28,7 +28,7 @@ Leela antes de proponer cualquier arquitectura o feature nueva. Este
    `input schema`, `execute()`, `result`. Se implementa una sola vez y lo
    reutilizan UI, launcher, integraciones futuras (Telegram, etc.) y
    automatizaciones. No dupliques lógica entre UI y Core.
-5. **WinUI 3 nativo. Nada de Electron ni web envuelta en ventana.**
+5. **UI en .NET MAUI Blazor Hybrid (Razor + HTML/CSS/Tailwind sobre WebView2). No Electron, no Chromium empaquetado — WebView2 es el motor nativo de Windows.** Decisión tomada en Etapa 5, después de comparar con WinUI 3 nativo (ver `/docs/decisions.md`).
 6. **SQLite local desde el día 1.** No se introduce ninguna dependencia
    (paquete NuGet, servicio cloud, librería externa) sin justificarla
    explícitamente en el plan antes de tocar código.
@@ -43,12 +43,15 @@ Leela antes de proponer cualquier arquitectura o feature nueva. Este
 
 ## Stack técnico
 
-- C# / .NET (net10.0+), WinUI 3, Windows App SDK
+- C# / .NET (net10.0+)
+- **UI: .NET MAUI Blazor Hybrid** (Razor components + HTML/CSS renderizados vía
+  WebView2, target Windows únicamente — sin Android/iOS/MacCatalyst). Estilos
+  con Tailwind. Reemplaza al proyecto WinUI 3 planteado originalmente en
+  ATLAS.UI (decisión de Etapa 5, ver `/docs/decisions.md`).
 - SQLite vía `Microsoft.Data.Sqlite` (o `sqlite-net-pcl` si simplifica el ORM)
-- MVVM con `CommunityToolkit.Mvvm`
-- Sin frameworks de UI adicionales, sin ORMs pesados, sin DI containers
-  externos salvo que se justifique (el `Microsoft.Extensions.DependencyInjection`
-  que ya trae la plantilla WinUI alcanza para esta etapa)
+- Core/Storage siguen siendo C# puro, sin ninguna referencia a UI — por eso
+  el cambio de WinUI a Blazor Hybrid no los toca.
+- Sin ORMs pesados, sin DI containers externos salvo que se justifique
 
 ## Estructura del repo
 
@@ -85,53 +88,63 @@ repo. La integración se hace atrás de una interfaz `IAiProvider` para poder
 cambiar de proveedor a futuro sin tocar el resto del Core (regla 12 del
 doc de producto).
 
+## Identidad visual (definida)
+
+ATLAS usa una estética inspirada en iOS: superficies con Mica/Acrylic
+(vidrio esmerilado), esquinas bien redondeadas, animaciones tipo spring
+en transiciones y hover states, tipografía con jerarquía clara (no todo
+el mismo tamaño/peso). Mismo lenguaje visual que ya usás en tu setup de
+Hyprland — no se inventa uno nuevo para ATLAS. Se define UNA vez en un
+`ResourceDictionary`/tema compartido antes de construir pantallas, no se
+improvisa pantalla por pantalla.
+
 ## Etapa 4 — COMPLETADA (hasta el bloque 4a; 4b pendiente de retomar)
 
 Telegram (long polling, mapeo de mensajes a Commands) andando. Finanzas
 (4b) queda pausado — se retoma después de Etapa 5, ya con UI para
 mostrar el balance en algo mejor que texto.
 
-## Alcance actual — Etapa 5: UI real / Dashboard interactivo (no avanzar sin confirmación)
+## Alcance actual — Etapa 5: UI real en .NET MAUI Blazor Hybrid (no avanzar sin confirmación)
 
-Hasta acá ATLAS solo tenía el Launcher (Ctrl+Space) como interfaz
-visual. Esta etapa le pone una interfaz gráfica de verdad encima del
-Core que ya existe — **sin romper el principio anti-saturación de la
-sección 3 del doc de producto**. Nada de dashboards con 15 items de
-sidebar ni 8 tarjetas simultáneas — eso es justo lo que el doc pide
-evitar.
+Decisión tomada: la UI se construye en **.NET MAUI Blazor Hybrid**, no WinUI 3
+puro (comparado con mockups, se eligió la estética web/Tailwind). El Core,
+Storage y Commands no se tocan — siguen siendo C# puro, consumidos igual
+que antes, ahora desde componentes Razor en vez de XAML.
 
-Se divide en dos bloques secuenciales:
+Sigue vigente el principio anti-saturación de la sección 3 del doc de
+producto: sidebar curada máximo 6 items, dashboard máximo 4-6 tarjetas.
 
-**5a — Shell de navegación real:**
-- Reemplazar la ventana simple actual por un layout con `NavigationView`
-  de WinUI 3.
-- Sidebar curada, máximo 6 items: Inicio, Capturar, Buscar (Second
-  Brain), Hábitos y Goals, Finanzas, Configuración. Nada de secciones
-  "NÚCLEO / HERRAMIENTAS / INTEGRACIONES" separadas ni items para cada
-  integración (Gmail, Telegram, MercadoPago no tienen sidebar item
-  propio — viven dentro de Configuración como conexiones).
-- Cada item navega a una Page que consume los Commands/ViewModels que
-  YA existen (habit.complete, goal.*, knowledge.search, finance.*) — no
-  se duplica lógica de negocio en la UI.
-- El Launcher (Ctrl+Space) se mantiene intacto y sigue siendo el modo
-  rápido — la navegación completa es un complemento, no un reemplazo.
+Se divide en tres bloques secuenciales:
 
-**5b — Dashboard interactivo en Inicio (recién después de 5a estable):**
-- Reemplaza el texto plano de Inicio de la Etapa 3 por tarjetas
-  visuales reales, con datos reales de los repositorios ya existentes
-  (nunca mock data): racha de hábitos con barra de progreso, goals
-  activos con progreso, balance financiero reciente, notas capturadas
-  recientes. Máximo 4-6 tarjetas, elegidas por relevancia real de uso,
-  no "porque quedan lindas".
-- Un gráfico simple (ej. balance de los últimos 30 días) usando una
-  librería de charts justificada en el plan antes de agregarla como
-  dependencia (ej. LiveCharts2, que soporta WinUI).
-- Todo interactivo: click en una tarjeta navega a la sección
-  correspondiente, no es solo decorativo.
+**5a — Setup del proyecto MAUI Blazor Hybrid:**
+- Nuevo proyecto `ATLAS.UI` (reemplaza al de WinUI 3, que nunca se llegó a
+  implementar con contenido real — solo existía el esqueleto).
+- Target únicamente Windows (sin Android/iOS/MacCatalyst) para no cargar
+  workloads ni complejidad innecesaria.
+- Tailwind vía CDN para esta etapa (Play CDN) — suficiente para iterar
+  rápido. Migrar a un build pipeline de Tailwind real queda para más
+  adelante, solo si el CDN empieza a molestar (FOUC, tamaño).
+- El Launcher (Ctrl+Space) sigue siendo una ventana flotante nativa
+  aparte — no hace falta que sea Blazor también, puede seguir en XAML
+  si eso resulta más simple para una ventana chica y rápida. Definir en
+  el plan, no asumir.
 
-Explícitamente **fuera de alcance** todavía: personalización de qué
-tarjetas se muestran (eso es Etapa 7+, cuando haya uso real para saber
-qué se ignora), Roadmaps, Gmail, WhatsApp, IA local.
+**5b — Shell de navegación (Razor):**
+- Layout con sidebar de 6 items (Inicio, Capturar, Buscar, Hábitos y
+  Goals, Finanzas, Configuración), cada uno una página Razor que
+  consume los Commands/ViewModels existentes.
+
+**5c — Dashboard interactivo en Inicio:**
+- Tarjetas con datos reales (nunca mock data), reusando el mismo
+  contenido curado validado en el mockup: racha de hábitos, goals
+  activos, Segundo Cerebro, AI Toolbox, y Finanzas mostrando el estado
+  real de "pausado" si 4b sigue sin retomarse.
+
+Explícitamente **fuera de alcance** todavía: build pipeline de Tailwind,
+personalización de tarjetas, Roadmaps, Gmail, WhatsApp, IA local,
+retomar el bloque 4b de Mercado Pago.
+
+## Etapa 6 — Roadmaps + Gmail (después de cerrar Etapa 5)
 
 ## Pendiente — Etapa 4b (Finanzas, retomar después de Etapa 5)
 
