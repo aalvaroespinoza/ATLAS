@@ -5,3 +5,4 @@
 - 2026-08-15: Implementado ATLAS.Storage con SQLite local (%LocalAppData%\ATLAS\atlas.db), tabla única notes (id, content, created_at, source), DatabaseInitializer y NotesRepository.
 - 2026-08-15: Implementado primer comando real CaptureNoteCommand ('capture.note') en ATLAS.Core, registrado en CommandRegistry y probado a través del CommandRegistry contra SQLite.
 - 2026-08-15: Implementado Global Launcher en ATLAS.UI: hotkey global Ctrl+Space (Win32 RegisterHotKey + SetWindowSubclass), ventana flotante sin bordes ni barra de título en tercio superior, ejecución de capture.note con Enter y cierre con Escape/blur.
+- 2026-08-15: Etapa 2a: Extendido modelo y tabla notes con title (opcional), type (default 'note'), tags y source mediante migración no destructiva e idempotente en DatabaseInitializer.

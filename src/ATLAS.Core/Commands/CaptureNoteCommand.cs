@@ -26,6 +26,9 @@ public class CaptureNoteCommand : ICommand
     public IReadOnlyList<CommandParameterDescriptor> InputSchema { get; } =
     [
         new("content", typeof(string), "Contenido de la nota", IsRequired: true),
+        new("title", typeof(string), "Título opcional de la nota", IsRequired: false),
+        new("type", typeof(string), "Tipo de nota", IsRequired: false, DefaultValue: "note"),
+        new("tags", typeof(string), "Etiquetas asociadas a la nota", IsRequired: false),
         new("source", typeof(string), "Origen de la captura", IsRequired: false, DefaultValue: "quick_capture")
     ];
 
@@ -34,6 +37,9 @@ public class CaptureNoteCommand : ICommand
         CancellationToken cancellationToken = default)
     {
         string? content = null;
+        string? title = null;
+        string type = "note";
+        string? tags = null;
         string source = "quick_capture";
 
         if (parameters != null)
@@ -41,6 +47,21 @@ public class CaptureNoteCommand : ICommand
             if (parameters.TryGetValue("content", out var rawContent) && rawContent != null)
             {
                 content = rawContent.ToString();
+            }
+
+            if (parameters.TryGetValue("title", out var rawTitle) && rawTitle != null)
+            {
+                title = rawTitle.ToString();
+            }
+
+            if (parameters.TryGetValue("type", out var rawType) && rawType != null && !string.IsNullOrWhiteSpace(rawType.ToString()))
+            {
+                type = rawType.ToString()!;
+            }
+
+            if (parameters.TryGetValue("tags", out var rawTags) && rawTags != null)
+            {
+                tags = rawTags.ToString();
             }
 
             if (parameters.TryGetValue("source", out var rawSource) && rawSource != null && !string.IsNullOrWhiteSpace(rawSource.ToString()))
@@ -57,7 +78,10 @@ public class CaptureNoteCommand : ICommand
         var note = new Note
         {
             Id = Guid.NewGuid().ToString("N"),
+            Title = string.IsNullOrWhiteSpace(title) ? null : title.Trim(),
             Content = content.Trim(),
+            Type = type.Trim(),
+            Tags = string.IsNullOrWhiteSpace(tags) ? null : tags.Trim(),
             CreatedAt = DateTimeOffset.UtcNow,
             Source = source.Trim()
         };

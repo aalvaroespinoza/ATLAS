@@ -1,6 +1,8 @@
+using System.Globalization;
 using ATLAS.Core.Entities;
 using ATLAS.Storage.Database;
 using ATLAS.Storage.Repositories;
+using Microsoft.Data.Sqlite;
 
 namespace ATLAS.Core.Tests;
 
@@ -59,7 +61,10 @@ public class NotesRepositoryTests : IDisposable
         var note = new Note
         {
             Id = "note-123",
+            Title = "Mi Título",
             Content = "Mi primera nota de prueba en ATLAS",
+            Type = "note",
+            Tags = "csharp, winui",
             CreatedAt = DateTimeOffset.UtcNow,
             Source = "quick_capture"
         };
@@ -72,8 +77,75 @@ public class NotesRepositoryTests : IDisposable
         Assert.NotNull(created);
         Assert.Single(recent);
         Assert.Equal("note-123", recent[0].Id);
+        Assert.Equal("Mi Título", recent[0].Title);
         Assert.Equal("Mi primera nota de prueba en ATLAS", recent[0].Content);
+        Assert.Equal("note", recent[0].Type);
+        Assert.Equal("csharp, winui", recent[0].Tags);
         Assert.Equal("quick_capture", recent[0].Source);
+    }
+
+    [Fact]
+    public async Task MigrateNotesTable_ShouldPreserveExistingDataAndAddColumnsWithDefaults()
+    {
+        // 1. Simular base de datos existente con el esquema antiguo (solo 4 columnas)
+        await using (var conn = new SqliteConnection(_connectionString))
+        {
+            await conn.OpenAsync();
+            const string oldSchemaSql = """
+                CREATE TABLE notes (
+                    id TEXT PRIMARY KEY,
+                    content TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    source TEXT NOT NULL
+                );
+                """;
+            await using var cmd = conn.CreateCommand();
+            cmd.CommandText = oldSchemaSql;
+            await cmd.ExecuteNonQueryAsync();
+
+            // Insertar fila antigua
+            cmd.CommandText = """
+                INSERT INTO notes (id, content, created_at, source)
+                VALUES ('old-1', 'Nota existente antes de migración', '2026-08-15T12:00:00.0000000Z', 'legacy');
+                """;
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // 2. Ejecutar DatabaseInitializer (migración idempotente sin borrar datos)
+        var initializer = new DatabaseInitializer(_connectionString);
+        await initializer.InitializeAsync();
+
+        var repository = new NotesRepository(_connectionString);
+
+        // 3. Verificar que la nota antigua sobrevivió y tiene valores por defecto
+        var recent = await repository.GetRecentAsync(10);
+        Assert.Single(recent);
+        Assert.Equal("old-1", recent[0].Id);
+        Assert.Equal("Nota existente antes de migración", recent[0].Content);
+        Assert.Equal("legacy", recent[0].Source);
+        Assert.Null(recent[0].Title);
+        Assert.Null(recent[0].Tags);
+        Assert.Equal("note", recent[0].Type);
+
+        // 4. Verificar que se pueden insertar nuevas notas con los campos extendidos
+        var newNote = new Note
+        {
+            Id = "new-2",
+            Title = "Nueva Nota",
+            Content = "Contenido nuevo",
+            Type = "idea",
+            Tags = "arquitectura, ai",
+            CreatedAt = DateTimeOffset.UtcNow,
+            Source = "launcher"
+        };
+        await repository.CreateAsync(newNote);
+
+        var updatedRecent = await repository.GetRecentAsync(10);
+        Assert.Equal(2, updatedRecent.Count);
+        Assert.Equal("new-2", updatedRecent[0].Id);
+        Assert.Equal("Nueva Nota", updatedRecent[0].Title);
+        Assert.Equal("idea", updatedRecent[0].Type);
+        Assert.Equal("arquitectura, ai", updatedRecent[0].Tags);
     }
 
     [Fact]

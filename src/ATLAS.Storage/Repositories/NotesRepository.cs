@@ -7,7 +7,7 @@ using Microsoft.Data.Sqlite;
 namespace ATLAS.Storage.Repositories;
 
 /// <summary>
-/// SQLite implementation of INoteRepository.
+/// SQLite implementation of INoteRepository supporting extended Knowledge attributes.
 /// </summary>
 public class NotesRepository : INoteRepository
 {
@@ -31,14 +31,17 @@ public class NotesRepository : INoteRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            INSERT INTO notes (id, content, created_at, source)
-            VALUES (@id, @content, @created_at, @source);
+            INSERT INTO notes (id, title, content, type, tags, created_at, source)
+            VALUES (@id, @title, @content, @type, @tags, @created_at, @source);
             """;
 
         await using var command = connection.CreateCommand();
         command.CommandText = sql;
         command.Parameters.AddWithValue("@id", note.Id);
+        command.Parameters.AddWithValue("@title", (object?)note.Title ?? DBNull.Value);
         command.Parameters.AddWithValue("@content", note.Content ?? string.Empty);
+        command.Parameters.AddWithValue("@type", string.IsNullOrWhiteSpace(note.Type) ? "note" : note.Type);
+        command.Parameters.AddWithValue("@tags", (object?)note.Tags ?? DBNull.Value);
         command.Parameters.AddWithValue("@created_at", note.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@source", note.Source ?? "quick_capture");
 
@@ -57,7 +60,7 @@ public class NotesRepository : INoteRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            SELECT id, content, created_at, source
+            SELECT id, title, content, type, tags, created_at, source
             FROM notes
             ORDER BY datetime(created_at) DESC
             LIMIT @limit;
@@ -72,9 +75,12 @@ public class NotesRepository : INoteRepository
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
             var id = reader.GetString(0);
-            var content = reader.GetString(1);
-            var createdAtStr = reader.GetString(2);
-            var source = reader.GetString(3);
+            var title = reader.IsDBNull(1) ? null : reader.GetString(1);
+            var content = reader.GetString(2);
+            var type = reader.IsDBNull(3) ? "note" : reader.GetString(3);
+            var tags = reader.IsDBNull(4) ? null : reader.GetString(4);
+            var createdAtStr = reader.GetString(5);
+            var source = reader.IsDBNull(6) ? "quick_capture" : reader.GetString(6);
 
             var createdAt = DateTimeOffset.TryParse(createdAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt)
                 ? dt
@@ -83,7 +89,10 @@ public class NotesRepository : INoteRepository
             notes.Add(new Note
             {
                 Id = id,
+                Title = title,
                 Content = content,
+                Type = type,
+                Tags = tags,
                 CreatedAt = createdAt,
                 Source = source
             });
