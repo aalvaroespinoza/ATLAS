@@ -15,6 +15,10 @@ public static class ServiceCollectionExtensions
         services.AddTransient<KnowledgeSearchCommand>();
         services.AddTransient<AiSummarizeCommand>();
         services.AddTransient<AiAskCommand>();
+        services.AddTransient<GoalCreateCommand>();
+        services.AddTransient<GoalUpdateProgressCommand>();
+        services.AddTransient<HabitCreateCommand>();
+        services.AddTransient<HabitCompleteCommand>();
         return services;
     }
 }

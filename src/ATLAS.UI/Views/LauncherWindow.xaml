@@ -31,7 +31,7 @@
                         x:Name="InputTextBox"
                         Grid.Column="1"
                         Text="{x:Bind ViewModel.Input, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        PlaceholderText="Buscar notas, '? pregunta' a la IA, o escribir para capturar..."
+                        PlaceholderText="Buscar notas, '/goal', '/habit', '/done' o '? pregunta'..."
                         FontSize="16"
                         BorderThickness="0"
                         Background="Transparent"
@@ -46,8 +46,8 @@
                             Background="{ThemeResource AccentFillColorDefaultBrush}"
                             CornerRadius="4"
                             Padding="6,2"
-                            Visibility="{x:Bind ViewModel.IsAskMode, Mode=OneWay}">
-                            <TextBlock Text="IA Mode (?)" FontSize="10" Foreground="White" FontWeight="SemiBold" />
+                            Visibility="{x:Bind ViewModel.HasModeBadge, Mode=OneWay}">
+                            <TextBlock Text="{x:Bind ViewModel.ModeBadgeText, Mode=OneWay}" FontSize="10" Foreground="White" FontWeight="SemiBold" />
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -74,7 +74,7 @@
                     IsItemClickEnabled="True"
                     ItemClick="OnSearchResultItemClick">
                     <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="viewmodels:NoteItemViewModel">
+                        <DataTemplate x:DataType="viewmodels:LauncherItemViewModel">
                             <Grid Padding="8,6" ColumnDefinitions="*,Auto">
                                 <StackPanel Grid.Column="0" Spacing="2">
                                     <!-- Title or Content Preview -->
@@ -301,7 +301,7 @@
                         FontSize="11"
                         Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                         VerticalAlignment="Center"
-                        Text="↵ Enter: Guardar / Abrir / Preguntar  •  ? Preguntar a IA  •  Esc: Salir" />
+                        Text="↵ Enter: Ejecutar / Guardar  •  /goal  •  /habit  •  /done  •  ? IA  •  Esc: Salir" />
                     
                     <HyperlinkButton
                         Grid.Column="1"

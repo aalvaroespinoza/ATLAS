@@ -180,7 +180,8 @@ public sealed partial class LauncherWindow : Window
         else if (e.Key == VirtualKey.Enter)
         {
             e.Handled = true;
-            if (!ViewModel.IsAskMode && SearchResultsListView.SelectedIndex >= 0 && ViewModel.SelectedItem != null)
+            if (!ViewModel.IsAskMode && !ViewModel.IsGoalMode && !ViewModel.IsHabitCreateMode &&
+                SearchResultsListView.SelectedIndex >= 0 && ViewModel.SelectedItem != null)
             {
                 ViewModel.SelectItem(ViewModel.SelectedItem);
             }
@@ -198,7 +199,7 @@ public sealed partial class LauncherWindow : Window
 
     private void OnSearchResultItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is NoteItemViewModel item)
+        if (e.ClickedItem is LauncherItemViewModel item)
         {
             ViewModel.SelectItem(item);
         }

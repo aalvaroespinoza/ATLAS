@@ -48,7 +48,7 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
 
-        // Security and AI services (registered first so Core commands can resolve IAiProvider)
+        // Security and AI services
         services.AddSingleton<ISecretVault, WindowsPasswordVault>();
         services.AddSingleton<HttpClient>();
         services.AddSingleton<IAiProvider, GeminiProvider>();
@@ -80,6 +80,10 @@ public partial class App : Application
         commandRegistry.Register(Services.GetRequiredService<KnowledgeSearchCommand>());
         commandRegistry.Register(Services.GetRequiredService<AiSummarizeCommand>());
         commandRegistry.Register(Services.GetRequiredService<AiAskCommand>());
+        commandRegistry.Register(Services.GetRequiredService<GoalCreateCommand>());
+        commandRegistry.Register(Services.GetRequiredService<GoalUpdateProgressCommand>());
+        commandRegistry.Register(Services.GetRequiredService<HabitCreateCommand>());
+        commandRegistry.Register(Services.GetRequiredService<HabitCompleteCommand>());
     }
 
     /// <summary>
