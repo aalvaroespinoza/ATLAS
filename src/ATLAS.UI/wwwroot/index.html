@@ -9,7 +9,7 @@
     <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -24,19 +24,19 @@
                     },
                     colors: {
                         atlas: {
-                            canvas: '#0a0d14',
-                            sidebar: '#0d111a',
-                            surface: '#121722',
-                            surfaceHover: '#181f2e',
-                            elevated: '#151b27',
-                            border: 'rgba(255, 255, 255, 0.06)',
+                            canvas: '#090b10',
+                            dock: '#10141e',
+                            surface: '#121724',
+                            surfaceHover: '#181f30',
+                            elevated: '#171e2e',
+                            border: 'rgba(255, 255, 255, 0.07)',
                             borderSubtle: 'rgba(255, 255, 255, 0.12)',
-                            borderFocus: 'rgba(56, 189, 248, 0.50)',
-                            accent: '#38bdf8',
-                            accentSubtle: 'rgba(56, 189, 248, 0.12)',
-                            success: '#22c55e',
-                            warning: '#eab308',
-                            danger: '#ef4444',
+                            accent: '#6366f1',
+                            accentGlow: '#818cf8',
+                            accentSubtle: 'rgba(99, 102, 241, 0.12)',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#f43f5e',
                             muted: '#64748b'
                         }
                     }
@@ -48,7 +48,7 @@
     <link rel="icon" href="data:,">
 </head>
 
-<body class="bg-[#0a0d14] text-slate-100 font-sans antialiased select-none overflow-hidden">
+<body class="bg-[#090b10] text-slate-100 font-sans antialiased select-none overflow-hidden">
 
     <div id="app" class="h-screen w-screen flex">
         <div class="flex items-center justify-center w-full h-full text-slate-500 text-xs font-mono">
@@ -58,7 +58,7 @@
 
     <div id="blazor-error-ui" class="hidden" data-nosnippet>
         Ocurrió un error no controlado.
-        <a href="." class="reload text-sky-400 underline">Recargar</a>
+        <a href="." class="reload text-indigo-400 underline">Recargar</a>
         <span class="dismiss cursor-pointer">🗙</span>
     </div>
 

@@ -1,149 +1,186 @@
 @page "/design-system"
 
-<div class="space-y-12 max-w-4xl pb-24">
+<div class="space-y-12 max-w-4xl pb-24 animate-atlas-in">
     
-    <!-- Demo Page Header -->
-    <div class="space-y-1 border-b border-white/[0.06] pb-4">
-        <div class="flex items-center gap-2">
-            <h1 class="text-base font-semibold tracking-tight text-white">
-                ATLAS Design System — Referencia Visual
+    <!-- Demo Header -->
+    <div class="space-y-1.5 border-b border-white/[0.08] pb-5">
+        <div class="flex items-center gap-3">
+            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
+                ATLAS Design System — Fuente Única de Verdad
             </h1>
-            <AtlasBadge Variant="mono">Internal / Demo</AtlasBadge>
+            <AtlasBadge Variant="accent">Indigo / Obsidiana</AtlasBadge>
         </div>
         <p class="text-xs text-slate-400">
-            Catálogo y fuente de verdad de componentes, tokens y estados del sistema "Menos interfaz, más capacidad".
+            Identidad visual personal, moderna y táctil. Centralización de componentes, tokens y estados del sistema.
         </p>
     </div>
 
     <!-- ======================================================================= -->
-    <!-- 1. TIPOGRAFÍA & ESCALAS -->
+    <!-- 1. IDENTIDAD DE COLOR & SUPERFICIES -->
     <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="1. Tipografía & Jerarquías" />
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="1. Superficies & Paleta Obsidiana" />
 
-        <div class="atlas-surface p-5 space-y-4">
-            <div class="space-y-1">
-                <span class="text-[10px] font-mono text-slate-500 uppercase">Page Title (16px SemiBold)</span>
-                <h1 class="text-base font-semibold text-white">El conocimiento personal estructurado en acciones</h1>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-xl bg-[#090b10] border border-white/[0.08] space-y-1">
+                <span class="text-[10px] font-mono text-slate-400 block">Canvas</span>
+                <span class="text-xs font-mono font-semibold text-white">#090B10</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#10141e] border border-white/[0.08] space-y-1">
+                <span class="text-[10px] font-mono text-slate-400 block">Personal Dock</span>
+                <span class="text-xs font-mono font-semibold text-white">#10141E</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#121724] border border-white/[0.08] space-y-1">
+                <span class="text-[10px] font-mono text-slate-400 block">Surface Panel</span>
+                <span class="text-xs font-mono font-semibold text-white">#121724</span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#171e2e] border border-white/[0.08] space-y-1">
+                <span class="text-[10px] font-mono text-slate-400 block">Elevated Modal</span>
+                <span class="text-xs font-mono font-semibold text-white">#171E2E</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+            <div class="p-3 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-between">
+                <span class="text-xs font-medium text-indigo-300">Indigo Hero</span>
+                <span class="w-3 h-3 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between">
+                <span class="text-xs font-medium text-emerald-300">Success</span>
+                <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-between">
+                <span class="text-xs font-medium text-amber-300">Warning</span>
+                <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+            </div>
+            <div class="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-between">
+                <span class="text-xs font-medium text-rose-300">Danger</span>
+                <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- 2. TIPOGRAFÍA & RITMO -->
+    <!-- ======================================================================= -->
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="2. Jerarquía Tipográfica" />
+
+        <div class="atlas-surface rounded-2xl p-6 space-y-4">
+            <div>
+                <span class="text-[10px] font-mono text-indigo-400 uppercase tracking-wider block">Hero Title (18px Bold)</span>
+                <h1 class="text-lg font-bold text-slate-100">Hoy: Avanzar en el capítulo de Rust & 2 hábitos pendientes</h1>
             </div>
 
             <AtlasDivider />
 
-            <div class="space-y-1">
-                <span class="text-[10px] font-mono text-slate-500 uppercase">Section Title (13px Medium)</span>
-                <h2 class="text-[13px] font-medium text-slate-200">Acción Inmediata — Tareas & Hábitos</h2>
-            </div>
-
-            <AtlasDivider />
-
-            <div class="space-y-1">
-                <span class="text-[10px] font-mono text-slate-500 uppercase">Body Regular (13px Regular - Slate 400)</span>
-                <p class="text-[13px] text-slate-400 leading-relaxed">
-                    ATLAS centraliza notas, eventos y sincronización sin intermediarios en la nube. La interfaz debe sentirse rápida, silenciosa y libre de adornos decorativos superfluos.
+            <div>
+                <span class="text-[10px] font-mono text-indigo-400 uppercase tracking-wider block">Body Reading (13.5px Regular)</span>
+                <p class="text-[13.5px] text-slate-300 leading-relaxed max-w-2xl">
+                    ATLAS centraliza captura, memoria y rutinas personales. El diseño privilegia la respiración visual y la acción inmediata sobre cualquier métrica decorativa.
                 </p>
             </div>
 
             <AtlasDivider />
 
-            <div class="flex items-center gap-6">
+            <div class="flex flex-wrap items-center gap-6">
                 <div>
-                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Mono Header</span>
-                    <span class="text-[10px] font-mono uppercase tracking-widest text-slate-500 font-semibold">EN PROGRESO</span>
+                    <span class="text-[10px] font-mono text-slate-400 uppercase block">Data/Money Mono</span>
+                    <span class="text-xs font-mono text-slate-200">+$184.200 ARS</span>
                 </div>
                 <div>
-                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Mono Data</span>
-                    <span class="text-xs font-mono text-slate-300">+$124.500 ARS • 14:32</span>
+                    <span class="text-[10px] font-mono text-slate-400 uppercase block">Timestamp</span>
+                    <span class="text-xs font-mono text-slate-400">hace 14m • Telegram</span>
                 </div>
                 <div>
-                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Keyboard Kbd</span>
-                    <kbd class="px-1.5 py-0.5 rounded bg-white/[0.08] text-[10px] font-mono text-slate-300">Ctrl+Space</kbd>
+                    <span class="text-[10px] font-mono text-slate-400 uppercase block">Command Badge</span>
+                    <kbd class="px-1.5 py-0.5 rounded-md bg-white/[0.06] border border-white/[0.08] text-[10px] font-mono text-slate-300">Ctrl+Space</kbd>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- ======================================================================= -->
-    <!-- 2. BOTONES & ACCIONES -->
+    <!-- 3. BOTONES, ICONOS & AVATARES -->
     <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="2. Botones & Acciones" />
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="3. Botones, Iconos & Avatares" />
 
-        <div class="atlas-surface p-5 space-y-4">
+        <div class="atlas-surface rounded-2xl p-6 space-y-5">
             <div class="flex flex-wrap items-center gap-3">
-                <AtlasButton Variant="primary">Primary Action</AtlasButton>
-                <AtlasButton Variant="secondary">Secondary Action</AtlasButton>
+                <AtlasButton Variant="primary" ShortcutText="↵">Primary Action</AtlasButton>
+                <AtlasButton Variant="secondary" ShortcutText="⌘S">Secondary Action</AtlasButton>
                 <AtlasButton Variant="ghost">Ghost Button</AtlasButton>
-                <AtlasButton Variant="danger">Danger Action</AtlasButton>
-                <AtlasButton Variant="secondary" IsLoading="true">Procesando</AtlasButton>
+                <AtlasButton Variant="danger">Eliminar</AtlasButton>
+                <AtlasButton Variant="primary" IsLoading="true">Guardando</AtlasButton>
                 <AtlasButton Variant="secondary" IsDisabled="true">Deshabilitado</AtlasButton>
             </div>
 
             <AtlasDivider />
 
-            <div class="flex items-center gap-4">
-                <span class="text-[10px] font-mono text-slate-500 uppercase">Icon Buttons:</span>
-                <AtlasIconButton Title="Buscar">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </AtlasIconButton>
-                <AtlasIconButton Title="Ajustes" Variant="secondary">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    </svg>
-                </AtlasIconButton>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] font-mono text-slate-400">Icon Buttons:</span>
+                    <AtlasIconButton Title="Buscar ⌘K">
+                        <svg class="w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </AtlasIconButton>
+                    <AtlasIconButton Title="Captura Rápida ⚡" Variant="accent">
+                        <svg class="w-4 h-4 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </AtlasIconButton>
+                </div>
+
+                <div class="flex items-center gap-3 pl-4 border-l border-white/[0.08]">
+                    <span class="text-[11px] font-mono text-slate-400">Avatares:</span>
+                    <AtlasAvatar Initials="A" Size="sm" />
+                    <AtlasAvatar Initials="ÁE" Size="md" />
+                </div>
             </div>
         </div>
     </section>
 
     <!-- ======================================================================= -->
-    <!-- 3. INPUTS & CONTROLES DE FORMULARIO -->
+    <!-- 4. INPUTS & HERO COMMAND INPUT -->
     <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="3. Inputs & Formularios" />
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="4. Entradas & Formularios" />
 
-        <div class="atlas-surface p-5 space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="atlas-surface rounded-2xl p-6 space-y-4">
+            <AtlasCommandInput 
+                @bind-Value="demoCommandText" 
+                Placeholder="¿Qué tenés en mente o qué necesitás hacer?... (Escribí o usá '?')" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
                 <AtlasInput 
-                    Label="Título de la Nota" 
+                    Label="Título del Hábito" 
                     @bind-Value="demoInputText" 
-                    Placeholder="Ej: Resumen semanal de arquitectura..." 
+                    Placeholder="Ej: Meditar 10 minutos..." 
                     IsRequired="true" />
 
-                <AtlasInput 
-                    Label="Token / Clave Secreta" 
-                    @bind-Value="demoTokenText" 
-                    Placeholder="Ingresá credencial..." 
-                    IsMono="true"
-                    RightLabel="Windows Vault" />
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <AtlasSearchInput @bind-Value="demoSearchQuery" Placeholder="Búsqueda instantánea..." />
-                
-                <AtlasInput 
-                    Label="Input con Error" 
-                    Value="monto_invalido" 
-                    HasError="true" 
-                    ErrorMessage="El formato numérico es incorrecto." />
+                <AtlasSearchInput 
+                    @bind-Value="demoSearchText" 
+                    Placeholder="Buscar notas o comandos..." />
             </div>
         </div>
     </section>
 
     <!-- ======================================================================= -->
-    <!-- 4. FILAS DE LISTAS & DENSIDAD INFORMATIVA -->
+    <!-- 5. LISTAS UNIVERSALES (UNIVERSAL LIST ITEM) -->
     <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="4. Filas de Lista (Universal ListItem)" Count="3" />
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="5. Filas Universales (ListItem)" Count="3" />
 
-        <div class="atlas-surface divide-y divide-white/[0.04] overflow-hidden">
+        <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
             <AtlasListItem 
                 Title="Lectura de documentación de WebAssembly" 
                 Subtitle="Hábito diario • Racha actual: 12 días" 
-                MetaText="HOY"
-                IsCompleted="false">
+                MetaText="HOY">
                 <PrefixContent>
-                    <input type="checkbox" class="w-3.5 h-3.5 rounded text-sky-500 bg-slate-900 border-slate-700 cursor-pointer" />
+                    <input type="checkbox" class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 cursor-pointer" />
                 </PrefixContent>
                 <SuffixContent>
                     <AtlasBadge Variant="accent">En curso</AtlasBadge>
@@ -156,10 +193,10 @@
                 MetaText="-$48.200"
                 IsSelected="true">
                 <PrefixContent>
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
                 </PrefixContent>
                 <SuffixContent>
-                    <span class="text-[10px] font-mono text-slate-500">ayer</span>
+                    <span class="text-[10px] font-mono text-slate-400">ayer</span>
                 </SuffixContent>
             </AtlasListItem>
 
@@ -169,7 +206,7 @@
                 MetaText="HECHO"
                 IsCompleted="true">
                 <PrefixContent>
-                    <input type="checkbox" checked class="w-3.5 h-3.5 rounded text-sky-500 bg-slate-900 border-slate-700 cursor-pointer" />
+                    <input type="checkbox" checked class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 cursor-pointer" />
                 </PrefixContent>
                 <SuffixContent>
                     <AtlasBadge Variant="success">✓ Hecho</AtlasBadge>
@@ -179,64 +216,43 @@
     </section>
 
     <!-- ======================================================================= -->
-    <!-- 5. BARRAS DE PROGRESO & BADGES -->
+    <!-- 6. PROGRESO, BADGES & ESTADOS -->
     <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="5. Progreso & Badges Semánticos" />
-
-        <div class="atlas-surface p-5 space-y-5">
-            <div class="space-y-3">
-                <AtlasProgress Value="75" Label="Roadmap: Aprender Rust (Etapa 3/4)" ShowLabel="true" Variant="accent" />
-                <AtlasProgress Value="100" Label="Meta de Ahorro Fondo de Emergencia" ShowLabel="true" Variant="success" />
-                <AtlasProgress Value="40" Label="Hábitos Diarios de Hoy" ShowLabel="true" Variant="neutral" />
-            </div>
-
-            <AtlasDivider />
-
-            <div class="flex flex-wrap items-center gap-2.5">
-                <AtlasBadge Variant="neutral">Neutral</AtlasBadge>
-                <AtlasBadge Variant="accent">Accent / Focus</AtlasBadge>
-                <AtlasBadge Variant="success">Success State</AtlasBadge>
-                <AtlasBadge Variant="warning">Warning Alert</AtlasBadge>
-                <AtlasBadge Variant="danger">Error / Overdue</AtlasBadge>
-                <AtlasBadge Variant="mono">ID: #89FA3</AtlasBadge>
-            </div>
-        </div>
-    </section>
-
-    <!-- ======================================================================= -->
-    <!-- 6. ESTADO VACÍO & SUPERFICIE ELEVADA -->
-    <!-- ======================================================================= -->
-    <section class="space-y-4">
-        <AtlasSectionHeader Title="6. Empty State & Superficie Elevada" />
+    <section class="space-y-3">
+        <AtlasSectionHeader Title="6. Progreso, Badges & Empty States" />
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AtlasEmptyState 
-                Title="Sin notas capturadas" 
-                Description="Presioná Ctrl+Space para redactar tu primera nota en el sistema.">
-                <ActionContent>
-                    <AtlasButton Variant="secondary" Size="sm">+ Nueva Nota</AtlasButton>
-                </ActionContent>
-            </AtlasEmptyState>
+            <div class="atlas-surface rounded-2xl p-5 space-y-4">
+                <span class="text-[11px] font-mono text-slate-400 uppercase">Barras de Progreso:</span>
+                <AtlasProgress Value="75" Label="Roadmap: Aprender Rust (Etapa 3/4)" ShowLabel="true" Variant="accent" />
+                <AtlasProgress Value="100" Label="Meta de Ahorro" ShowLabel="true" Variant="success" />
 
-            <div class="atlas-surface-elevated p-5 space-y-3 flex flex-col justify-between">
-                <div class="space-y-1">
-                    <span class="text-[10px] font-mono text-sky-400 uppercase font-semibold">Superficie Elevada (Modal/Overlay)</span>
-                    <p class="text-xs text-slate-300">
-                        Diseñada para capas flotantes que requieren contraste directo y sombra difusa sin recargar la pantalla.
-                    </p>
-                </div>
-                <div class="flex justify-end">
-                    <AtlasButton Variant="primary" Size="sm">Aceptar</AtlasButton>
+                <AtlasDivider />
+
+                <span class="text-[11px] font-mono text-slate-400 uppercase block">Badges Dot+Label:</span>
+                <div class="flex flex-wrap gap-2">
+                    <AtlasBadge Variant="accent">Activo</AtlasBadge>
+                    <AtlasBadge Variant="success">Completado</AtlasBadge>
+                    <AtlasBadge Variant="warning">Pendiente</AtlasBadge>
+                    <AtlasBadge Variant="danger">Alerta</AtlasBadge>
+                    <AtlasBadge Variant="mono">#ID-49F</AtlasBadge>
                 </div>
             </div>
+
+            <AtlasEmptyState 
+                Title="Tu mente está despejada" 
+                Description="No hay tareas pendientes por hoy. Presioná Ctrl+Space para capturar una idea o relajate.">
+                <ActionContent>
+                    <AtlasButton Variant="primary" Size="sm" ShortcutText="Ctrl+Space">+ Capturar Idea</AtlasButton>
+                </ActionContent>
+            </AtlasEmptyState>
         </div>
     </section>
 
 </div>
 
 @code {
+    private string? demoCommandText;
     private string? demoInputText;
-    private string? demoTokenText = "sk-gemini-live-token-49f";
-    private string? demoSearchQuery;
+    private string? demoSearchText;
 }

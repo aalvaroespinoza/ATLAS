@@ -1,0 +1,82 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="relative flex items-center w-full @ContainerClass">
+    <div class="absolute left-4 flex items-center pointer-events-none text-indigo-400">
+        @if (IconContent != null)
+        {
+            @IconContent
+        }
+        else
+        {
+            <span class="text-sm font-mono font-bold">⌘</span>
+        }
+    </div>
+
+    <input 
+        @ref="inputElement"
+        type="text" 
+        value="@Value"
+        @oninput="HandleInput"
+        @onkeydown="HandleKeyDown"
+        placeholder="@Placeholder"
+        disabled="@IsDisabled"
+        class="w-full pl-11 pr-12 py-3 rounded-2xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 transition-all font-sans @Class" />
+
+    @if (IsLoading)
+    {
+        <div class="absolute right-4 flex items-center">
+            <svg class="animate-spin w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+            </svg>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Value))
+    {
+        <button 
+            type="button" 
+            @onclick="Clear" 
+            class="absolute right-3.5 p-1 rounded-md text-slate-500 hover:text-slate-200 transition-colors text-xs">
+            ✕
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "¿Qué querés hacer o capturar?...";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public RenderFragment? IconContent { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ContainerClass { get; set; }
+
+    private ElementReference inputElement;
+
+    public async ValueTask FocusAsync()
+    {
+        try { await inputElement.FocusAsync(); } catch { }
+    }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (OnKeyDown.HasDelegate)
+        {
+            await OnKeyDown.InvokeAsync(e);
+        }
+    }
+
+    private async Task Clear()
+    {
+        Value = string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

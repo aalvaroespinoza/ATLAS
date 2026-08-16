@@ -1,0 +1,27 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="relative inline-flex items-center justify-center shrink-0 @Class">
+    <div class="rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-mono font-bold select-none shadow-sm shadow-indigo-500/20 @GetSizeClasses()">
+        @Initials
+    </div>
+
+    @if (ShowStatus)
+    {
+        <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full border-2 border-[#10141e] @(IsOnline ? "bg-emerald-400" : "bg-slate-500")"></span>
+    }
+</div>
+
+@code {
+    [Parameter] public string Initials { get; set; } = "A";
+    [Parameter] public string Size { get; set; } = "sm"; // sm (24px), md (32px), lg (40px)
+    [Parameter] public bool ShowStatus { get; set; } = true;
+    [Parameter] public bool IsOnline { get; set; } = true;
+    [Parameter] public string? Class { get; set; }
+
+    private string GetSizeClasses() => Size.ToLowerInvariant() switch
+    {
+        "lg" => "w-10 h-10 text-sm",
+        "md" => "w-8 h-8 text-xs",
+        _ => "w-6 h-6 text-[10px]"
+    };
+}

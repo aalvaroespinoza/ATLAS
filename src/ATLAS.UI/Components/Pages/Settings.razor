@@ -1,78 +1,88 @@
 @page "/settings"
 @inject ISecretVault SecretVault
 
-<div class="space-y-6 max-w-2xl pb-16">
+<div class="space-y-6 max-w-2xl pb-16 animate-atlas-in">
     
     <!-- Page Header -->
-    <div class="space-y-1 border-b border-white/[0.06] pb-4">
-        <h1 class="text-base font-semibold tracking-tight text-white">
-            Configuración & Seguridad
+    <div class="border-b border-white/[0.08] pb-4">
+        <h1 class="text-lg font-bold tracking-tight text-white">
+            Configuración & Privacidad
         </h1>
-        <p class="text-xs text-slate-400">
-            Administración segura de credenciales e integraciones locales (Windows Credential Locker).
-        </p>
     </div>
 
     <!-- Integrations Status List -->
     <div class="space-y-3">
-        <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
-            Integraciones Conectadas
-        </h2>
+        <AtlasSectionHeader Title="Integraciones & Proveedores" />
 
-        <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+        <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
             
             <!-- Gemini -->
-            <div class="p-4 flex items-center justify-between gap-4 text-xs">
-                <div class="space-y-0.5">
-                    <div class="font-medium text-slate-200">Google Gemini AI</div>
-                    <div class="text-[11px] text-slate-400">Resumen y consultas contextuales con gemini-1.5-flash.</div>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase @(hasGeminiKey ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.06] text-slate-400")">
-                    @(hasGeminiKey ? "Activo" : "No configurado")
-                </span>
-            </div>
+            <AtlasListItem 
+                Title="Google Gemini AI" 
+                Subtitle="Procesamiento contextual (gemini-1.5-flash)">
+                <PrefixContent>
+                    <span class="w-2 h-2 rounded-full @(hasGeminiKey ? "bg-emerald-400" : "bg-slate-600")"></span>
+                </PrefixContent>
+                <SuffixContent>
+                    <AtlasBadge Variant="@(hasGeminiKey ? "success" : "neutral")">
+                        @(hasGeminiKey ? "Conectado" : "Pendiente")
+                    </AtlasBadge>
+                </SuffixContent>
+            </AtlasListItem>
 
             <!-- Telegram -->
-            <div class="p-4 flex items-center justify-between gap-4 text-xs">
-                <div class="space-y-0.5">
-                    <div class="font-medium text-slate-200">Bot de Telegram</div>
-                    <div class="text-[11px] text-slate-400">Captura remota de notas, hábitos y finanzas vía long polling.</div>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase @(hasTelegramToken ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.06] text-slate-400")">
-                    @(hasTelegramToken ? "Activo" : "No configurado")
-                </span>
-            </div>
+            <AtlasListItem 
+                Title="Bot de Telegram" 
+                Subtitle="Captura remota y comandos vía long polling">
+                <PrefixContent>
+                    <span class="w-2 h-2 rounded-full @(hasTelegramToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                </PrefixContent>
+                <SuffixContent>
+                    <AtlasBadge Variant="@(hasTelegramToken ? "success" : "neutral")">
+                        @(hasTelegramToken ? "Conectado" : "Pendiente")
+                    </AtlasBadge>
+                </SuffixContent>
+            </AtlasListItem>
 
             <!-- Mercado Pago -->
-            <div class="p-4 flex items-center justify-between gap-4 text-xs">
-                <div class="space-y-0.5">
-                    <div class="font-medium text-slate-200">Mercado Pago</div>
-                    <div class="text-[11px] text-slate-400">Sincronización a demanda con Personal Access Token.</div>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase @(hasMpToken ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.06] text-slate-400")">
-                    @(hasMpToken ? "Activo" : "No configurado")
-                </span>
-            </div>
+            <AtlasListItem 
+                Title="Mercado Pago" 
+                Subtitle="Sincronización a demanda de transacciones">
+                <PrefixContent>
+                    <span class="w-2 h-2 rounded-full @(hasMpToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                </PrefixContent>
+                <SuffixContent>
+                    <AtlasBadge Variant="@(hasMpToken ? "success" : "neutral")">
+                        @(hasMpToken ? "Conectado" : "Pendiente")
+                    </AtlasBadge>
+                </SuffixContent>
+            </AtlasListItem>
 
             <!-- Gmail -->
-            <div class="p-4 flex items-center justify-between gap-4 text-xs">
-                <div class="space-y-0.5">
-                    <div class="font-medium text-slate-200">Gmail OAuth (Read-Only)</div>
-                    <div class="text-[11px] text-slate-400">Lectura de correos recientes para triage y contexto sin permisos de modificación.</div>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase @(hasGmailToken ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.06] text-slate-400")">
-                    @(hasGmailToken ? "Activo" : "No configurado")
-                </span>
-            </div>
+            <AtlasListItem 
+                Title="Gmail (Lectura)" 
+                Subtitle="Contexto y triage de correos recientes">
+                <PrefixContent>
+                    <span class="w-2 h-2 rounded-full @(hasGmailToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                </PrefixContent>
+                <SuffixContent>
+                    <AtlasBadge Variant="@(hasGmailToken ? "success" : "neutral")">
+                        @(hasGmailToken ? "Conectado" : "Pendiente")
+                    </AtlasBadge>
+                </SuffixContent>
+            </AtlasListItem>
 
         </div>
     </div>
 
     <!-- Security & Storage Notice -->
-    <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-slate-400 space-y-1.5 font-mono text-[11px]">
-        <div class="text-slate-300 font-medium uppercase text-[10px]">Almacenamiento Seguro:</div>
-        <p class="text-slate-400 leading-relaxed">
-            Todos los secretos y tokens son custodiados a través de Windows Credential Locker / DPAPI. La base de datos opera localmente en SQLite bajo %LocalAppData%\ATLAS\atlas.db.
+    <div class="atlas-surface rounded-2xl p-4 text-xs text-slate-400 space-y-1 font-mono text-[11px]">
+        <div class="text-slate-300 font-semibold uppercase text-[10px] flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+            <span>Almacenamiento Local & Seguro</span>
+        </div>
+        <p class="text-slate-400 leading-relaxed font-sans text-xs">
+            Credenciales resguardadas mediante Windows Credential Locker / DPAPI. Base de datos SQLite local bajo <code class="text-indigo-300 font-mono text-[11px]">%LocalAppData%\ATLAS\atlas.db</code>.
         </p>
     </div>
 

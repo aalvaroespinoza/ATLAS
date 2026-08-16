@@ -1,0 +1,15 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="py-8 flex flex-col items-center justify-center gap-2.5 text-center select-none @Class">
+    <svg class="animate-spin w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+        <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+    </svg>
+    
+    <span class="text-xs font-mono text-slate-400">@Message</span>
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Cargando...";
+    [Parameter] public string? Class { get; set; }
+}

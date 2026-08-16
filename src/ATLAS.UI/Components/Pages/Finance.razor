@@ -2,112 +2,95 @@
 @inject ITransactionRepository TransactionRepository
 @inject ICommandRegistry CommandRegistry
 
-<div class="space-y-6 max-w-3xl pb-16">
+<div class="space-y-6 max-w-3xl pb-16 animate-atlas-in">
     
-    <!-- Page Header -->
-    <div class="space-y-1 border-b border-white/[0.06] pb-4">
-        <h1 class="text-base font-semibold tracking-tight text-white">
-            Finanzas & Movimientos
-        </h1>
-        <p class="text-xs text-slate-400">
-            Control de ingresos, egresos y sincronización con Mercado Pago.
-        </p>
+    <!-- Page Header & Typographic Balance Line (Anti-Dashboard: No Cards) -->
+    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 border-b border-white/[0.08] pb-4">
+        <div class="space-y-1">
+            <h1 class="text-lg font-bold tracking-tight text-white">
+                Finanzas
+            </h1>
+            <div class="flex items-center gap-3 font-mono text-xs text-slate-400">
+                <span>Balance: <strong class="text-white font-semibold">$@((totalIncome - totalExpense).ToString("N0", new CultureInfo("es-AR")))</strong></span>
+                <span>•</span>
+                <span class="text-emerald-400 font-semibold">+$@totalIncome.ToString("N0", new CultureInfo("es-AR"))</span>
+                <span>•</span>
+                <span class="text-slate-300 font-semibold">-$@totalExpense.ToString("N0", new CultureInfo("es-AR"))</span>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(actionFeedback))
+        {
+            <span class="text-xs font-mono @(isFeedbackSuccess ? "text-emerald-400" : "text-rose-400") animate-atlas-in">
+                @(isFeedbackSuccess ? "✓ " : "✕ ") @actionFeedback
+            </span>
+        }
     </div>
 
-    <!-- Feedback Banner -->
-    @if (!string.IsNullOrWhiteSpace(actionFeedback))
-    {
-        <div class="px-4 py-2.5 rounded-lg border text-xs flex items-center justify-between @(isFeedbackSuccess ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-rose-500/10 border-rose-500/20 text-rose-300")">
-            <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @actionFeedback</span>
-            <button @onclick="() => actionFeedback = null" class="text-slate-400 hover:text-white text-xs">✕</button>
-        </div>
-    }
-
-    <!-- Top Balance Row -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Balance Neto</span>
-            <div class="text-lg font-semibold font-mono text-white">
-                $@((totalIncome - totalExpense).ToString("N0", new CultureInfo("es-AR")))
-            </div>
+    <!-- Quick Add Expense / Income Input Bar -->
+    <div class="atlas-surface rounded-2xl p-3.5 flex flex-col sm:flex-row items-center gap-2.5">
+        <div class="w-full sm:w-36">
+            <AtlasInput 
+                Type="number"
+                @bind-Value="amountString" 
+                Placeholder="Monto ($)..." />
         </div>
 
-        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Ingresos</span>
-            <div class="text-lg font-semibold font-mono text-emerald-400">
-                +$@totalIncome.ToString("N0", new CultureInfo("es-AR"))
-            </div>
+        <div class="flex-1 w-full">
+            <AtlasInput 
+                @bind-Value="newDescription" 
+                Placeholder="Descripción (ej: Supermercado, Alquiler, Transferencia)..." />
         </div>
-
-        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
-            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Gastos</span>
-            <div class="text-lg font-semibold font-mono text-slate-200">
-                -$@totalExpense.ToString("N0", new CultureInfo("es-AR"))
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Add Transaction Bar -->
-    <div class="p-3.5 rounded-lg bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row items-center gap-2.5">
-        <input 
-            type="number" 
-            @bind="newAmount" 
-            placeholder="Monto ($)..." 
-            class="w-full sm:w-32 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-mono" />
-
-        <input 
-            type="text" 
-            @bind="newDescription" 
-            placeholder="Descripción (ej: Supermercado, Alquiler)..." 
-            class="flex-1 w-full px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
         
-        <button 
-            type="button"
-            @onclick="AddExpenseAsync"
-            disabled="@(newAmount <= 0 || string.IsNullOrWhiteSpace(newDescription))"
-            class="w-full sm:w-auto px-3.5 py-1.5 rounded-md bg-white/[0.08] hover:bg-white/[0.14] disabled:opacity-50 text-white font-medium text-xs border border-white/[0.1] transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed">
-            + Registrar Gasto
-        </button>
+        <AtlasButton 
+            Variant="primary" 
+            Size="md" 
+            OnClick="AddExpenseAsync"
+            IsDisabled="@(string.IsNullOrWhiteSpace(amountString) || string.IsNullOrWhiteSpace(newDescription))">
+            + Registrar
+        </AtlasButton>
     </div>
 
-    <!-- Transactions List -->
-    <div class="space-y-3">
+    <!-- Grouped Transactions Stream -->
+    <div class="space-y-4">
         <div class="flex items-center justify-between">
-            <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
-                Historial de Transacciones
-            </h2>
-            <span class="text-[11px] font-mono text-slate-400">@transactions.Count movimientos</span>
+            <AtlasSectionHeader 
+                Title="Movimientos Registrados" 
+                Count="@transactions.Count" />
         </div>
 
         @if (isLoading)
         {
-            <div class="p-6 text-center text-xs font-mono text-slate-600">Cargando movimientos...</div>
+            <AtlasLoadingState Message="Cargando finanzas..." />
         }
         else if (transactions.Count == 0)
         {
-            <div class="p-6 text-center rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-500">
-                No hay transacciones registradas. Registrá la primera arriba o vía <kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-slate-400">Ctrl+Space</kbd>.
-            </div>
+            <AtlasEmptyState 
+                Title="No hay transacciones registradas" 
+                Description="Registrá tu primer movimiento arriba o mediante el atajo Ctrl+Space (/expense)." />
         }
         else
         {
-            <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+            <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
                 @foreach (var tx in transactions)
                 {
-                    <div class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-xs gap-3">
-                        <div class="space-y-0.5 min-w-0">
-                            <div class="text-slate-200 font-medium truncate">@tx.Descripcion</div>
-                            <div class="text-[10px] font-mono text-slate-400">
-                                @tx.Fecha.ToLocalTime().ToString("dd MMM yyyy HH:mm") • @tx.Origen
-                            </div>
-                        </div>
+                    var isIncome = tx.Tipo == "income";
+                    var amountStr = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))}";
 
-                        <div class="font-mono text-xs text-right shrink-0">
-                            <span class="@(tx.Tipo == "income" ? "text-emerald-400 font-semibold" : "text-slate-200")">
-                                @(tx.Tipo == "income" ? "+" : "-")$@tx.Monto.ToString("N0", new CultureInfo("es-AR"))
+                    <AtlasListItem 
+                        Title="@tx.Descripcion" 
+                        Subtitle="@($"{tx.Fecha.ToLocalTime():dd MMM yyyy HH:mm} • {tx.Origen}")"
+                        MetaText="@amountStr"
+                        Class="group">
+                        <PrefixContent>
+                            <span class="w-2 h-2 rounded-full @(isIncome ? "bg-emerald-400" : "bg-slate-500")"></span>
+                        </PrefixContent>
+                        <SuffixContent>
+                            <span class="font-mono text-xs font-semibold @(isIncome ? "text-emerald-400" : "text-slate-200")">
+                                @amountStr
                             </span>
-                        </div>
-                    </div>
+                        </SuffixContent>
+                    </AtlasListItem>
                 }
             </div>
         }
@@ -121,7 +104,7 @@
     private decimal totalIncome;
     private decimal totalExpense;
 
-    private decimal newAmount;
+    private string amountString = string.Empty;
     private string newDescription = string.Empty;
     private string? actionFeedback;
     private bool isFeedbackSuccess;
@@ -136,7 +119,7 @@
         isLoading = true;
         try
         {
-            var txs = await TransactionRepository.GetRecentAsync(50);
+            var txs = await TransactionRepository.GetRecentAsync(100);
             transactions = txs.ToList();
 
             totalIncome = transactions.Where(t => t.Tipo == "income").Sum(t => t.Monto);
@@ -155,24 +138,26 @@
 
     private async Task AddExpenseAsync()
     {
-        if (newAmount <= 0 || string.IsNullOrWhiteSpace(newDescription)) return;
+        if (!decimal.TryParse(amountString, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount) || amount <= 0 || string.IsNullOrWhiteSpace(newDescription)) 
+            return;
 
         try
         {
             var res = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
             {
-                ["monto"] = newAmount,
-                ["descripcion"] = newDescription.Trim(),
-                ["tipo"] = "expense",
-                ["origen"] = "manual"
+                ["amount"] = amount,
+                ["description"] = newDescription.Trim(),
+                ["type"] = "expense",
+                ["origin"] = "manual"
             });
 
             if (res.IsSuccess)
             {
-                newAmount = 0;
+                amountString = string.Empty;
                 newDescription = string.Empty;
                 actionFeedback = "Gasto registrado exitosamente.";
                 isFeedbackSuccess = true;
+                _ = Task.Delay(2500).ContinueWith(_ => { actionFeedback = null; InvokeAsync(StateHasChanged); });
                 await LoadTransactionsAsync();
             }
             else

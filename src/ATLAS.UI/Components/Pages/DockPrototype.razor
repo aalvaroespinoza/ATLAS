@@ -1,0 +1,132 @@
+@page "/dock-prototype"
+
+<div class="space-y-8 max-w-4xl pb-20 animate-atlas-in">
+    
+    <!-- Header -->
+    <div class="space-y-1.5 border-b border-white/[0.08] pb-4">
+        <div class="flex items-center gap-2.5">
+            <h1 class="text-base font-bold text-white flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm shadow-indigo-500/50"></span>
+                Prototipo Visual — Personal Dock Flotante
+            </h1>
+            <AtlasBadge Variant="accent">Prompt 3 Prototype</AtlasBadge>
+        </div>
+        <p class="text-xs text-slate-400">
+            Laboratorio interactivo de validación del Personal Dock: tamaño, elevación, micro-animaciones, estado compacto/expandido y acciones hero.
+        </p>
+    </div>
+
+    <!-- Interactive Testing Sandbox -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Live Floating Dock Preview Simulator -->
+        <div class="lg:col-span-1 p-4 rounded-3xl bg-[#090b10] border border-white/[0.08] flex justify-center min-h-[580px] relative overflow-hidden">
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#6366f1_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+            
+            <AtlasPersonalDock 
+                @bind-IsExpanded="isDockExpanded" 
+                OnQuickCapture="HandleQuickCapture" 
+                OnCommandLauncher="HandleCommandLauncher" />
+        </div>
+
+        <!-- Right Column: Interactive Controls & Feedback Sandbox -->
+        <div class="lg:col-span-2 space-y-4">
+            
+            <!-- Control Card -->
+            <div class="atlas-surface rounded-2xl p-5 space-y-4">
+                <AtlasSectionHeader Title="Controles del Prototipo" />
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <AtlasButton 
+                        Variant="primary" 
+                        OnClick="() => isDockExpanded = !isDockExpanded" 
+                        ShortcutText="Alt+D">
+                        Alternar: @(isDockExpanded ? "Modo Compacto" : "Modo Expandido")
+                    </AtlasButton>
+                    
+                    <AtlasButton 
+                        Variant="secondary" 
+                        OnClick="HandleQuickCapture">
+                        Simular ⚡ Captura Rápida
+                    </AtlasButton>
+
+                    <AtlasButton 
+                        Variant="ghost" 
+                        OnClick="HandleCommandLauncher">
+                        Simular ⌘ Launcher
+                    </AtlasButton>
+                </div>
+
+                <AtlasDivider />
+
+                <!-- Checklist of Product Criteria -->
+                <div class="space-y-2 text-xs">
+                    <span class="font-mono text-slate-400 uppercase text-[10px] block">Criterios a Validar en el Dock:</span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-300">
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Flotante a 12px con esquinas `rounded-2xl`</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Solo iconos (56px) / Expandido (208px)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Acciones Hero: ⚡ Captura y ⌘ Launcher</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Tooltips elegantes al posar el cursor</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Atajos numéricos directos (1, 2, 3, 4, 5)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-emerald-400 font-bold">✓</span>
+                            <span>Cero apariencia de barra SaaS corporativa</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Simulated Action Output Log -->
+            <div class="atlas-surface rounded-2xl p-5 space-y-3">
+                <AtlasSectionHeader Title="Registro de Interacciones en Vivo" />
+                
+                @if (lastActionMessage != null)
+                {
+                    <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-200 font-mono flex items-center gap-2 animate-atlas-in">
+                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                        <span>@lastActionMessage</span>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-xs text-slate-500 italic">
+                        Interactuá con los botones del Dock a la izquierda para ver las respuestas...
+                    </p>
+                }
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private bool isDockExpanded = false;
+    private string? lastActionMessage;
+
+    private void HandleQuickCapture()
+    {
+        lastActionMessage = $"[⚡ Quick Capture]: Disparado a las {DateTime.Now:HH:mm:ss} — Abre cápsula de captura rápida";
+    }
+
+    private void HandleCommandLauncher()
+    {
+        lastActionMessage = $"[⌘ Command Launcher]: Disparado a las {DateTime.Now:HH:mm:ss} — Invocado con Ctrl+Space";
+    }
+}

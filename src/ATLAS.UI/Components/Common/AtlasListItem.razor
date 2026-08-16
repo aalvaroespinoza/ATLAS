@@ -2,9 +2,9 @@
 
 <div 
     @onclick="HandleClick"
-    class="px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs select-none transition-colors @(IsClickable ? "cursor-pointer" : "") @(IsSelected ? "bg-white/[0.06] text-white" : "hover:bg-white/[0.02] text-slate-200") @Class">
+    class="px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs select-none transition-all duration-120 @(IsClickable ? "cursor-pointer atlas-clickable" : "") @(IsSelected ? "bg-white/[0.05] border-l-2 border-indigo-400 text-white" : "hover:bg-white/[0.02] text-slate-200") @Class">
     
-    <!-- Left: Prefix Slot + Main Content -->
+    <!-- Left: Prefix Slot + Main Text Content -->
     <div class="flex items-center gap-2.5 min-w-0 flex-1">
         @if (PrefixContent != null)
         {
@@ -14,7 +14,7 @@
         }
 
         <div class="space-y-0.5 min-w-0 flex-1">
-            <div class="font-medium truncate @(IsCompleted ? "line-through text-slate-500" : "")">
+            <div class="font-medium truncate @(IsCompleted ? "line-through text-slate-500 opacity-80" : "")">
                 @Title
             </div>
             @if (!string.IsNullOrWhiteSpace(Subtitle))
@@ -30,7 +30,7 @@
     <div class="flex items-center gap-3 shrink-0">
         @if (!string.IsNullOrWhiteSpace(MetaText))
         {
-            <span class="text-[10px] font-mono text-slate-500">
+            <span class="text-[10.5px] font-mono text-slate-400">
                 @MetaText
             </span>
         }

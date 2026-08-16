@@ -6,13 +6,13 @@
     disabled="@IsDisabled"
     title="@Title"
     aria-label="@(Title ?? "Acción")"
-    class="inline-flex items-center justify-center rounded-md transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 @GetSizeClasses() @GetVariantClasses() @Class">
+    class="inline-flex items-center justify-center rounded-xl transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetSizeClasses() @GetVariantClasses() @Class">
     @ChildContent
 </button>
 
 @code {
-    [Parameter] public string Variant { get; set; } = "ghost"; // ghost, secondary
-    [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (32px)
+    [Parameter] public string Variant { get; set; } = "ghost"; // ghost, secondary, accent
+    [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (34px), lg (40px)
     [Parameter] public bool IsDisabled { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Class { get; set; }
@@ -29,13 +29,15 @@
 
     private string GetVariantClasses() => Variant.ToLowerInvariant() switch
     {
-        "secondary" => "bg-white/[0.06] hover:bg-white/[0.12] active:bg-white/[0.16] text-slate-300 hover:text-white border border-white/[0.08]",
-        _ => "bg-transparent hover:bg-white/[0.06] active:bg-white/[0.10] text-slate-400 hover:text-slate-200"
+        "secondary" => "bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.14] text-slate-300 hover:text-white border border-white/[0.08]",
+        "accent" => "bg-indigo-500/15 hover:bg-indigo-500/25 active:bg-indigo-500/35 text-indigo-300 hover:text-white border border-indigo-500/30",
+        _ => "bg-transparent hover:bg-white/[0.06] active:bg-white/[0.10] text-slate-400 hover:text-slate-100"
     };
 
     private string GetSizeClasses() => Size.ToLowerInvariant() switch
     {
-        "md" => "w-8 h-8",
+        "lg" => "w-10 h-10",
+        "md" => "w-8.5 h-8.5",
         _ => "w-7 h-7"
     };
 }

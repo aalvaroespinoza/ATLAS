@@ -1,110 +1,198 @@
+@namespace ATLAS.UI.Components.Shared
 @inject ICommandRegistry CommandRegistry
+@inject INoteRepository NoteRepository
+@inject IHabitRepository HabitRepository
+@inject IRoadmapRepository RoadmapRepository
+@inject ITransactionRepository TransactionRepository
 @inject NavigationManager NavigationManager
 
 @if (IsOpen)
 {
     <!-- Backdrop Blur & Overlay -->
-    <div class="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn" @onclick="Close">
+    <div class="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-20 bg-black/60 backdrop-blur-sm select-none" @onclick="Close">
         
-        <!-- Modal Card (Raycast Style) -->
-        <div class="w-full max-w-xl bg-[#141923] border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col select-none" @onclick:stopPropagation="true">
+        <!-- Modal Card (Elevated Obsidiana / Raycast Style) -->
+        <div class="w-full max-w-xl atlas-elevated rounded-2xl overflow-hidden flex flex-col animate-atlas-in shadow-2xl shadow-black" @onclick:stopPropagation="true">
             
             <!-- Top Search Input Bar -->
-            <div class="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.08] bg-[#10141d]">
-                <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+            <div class="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.08] bg-[#141926]">
+                <div class="w-6 h-6 rounded-lg bg-indigo-500/15 flex items-center justify-center text-indigo-400 font-mono text-xs font-bold shrink-0">
+                    ⌘
+                </div>
                 
                 <input 
                     @ref="inputElement"
                     type="text" 
-                    @bind="query"
-                    @bind:event="oninput"
+                    value="@query"
+                    @oninput="HandleInputChanged"
                     @onkeydown="HandleKeyDown"
-                    placeholder="Escribí un comando, nota rápida, o '?' para consultar con IA..." 
+                    placeholder="@GetInputPlaceholder()" 
                     class="w-full bg-transparent border-0 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:ring-0 font-sans" />
 
                 @if (isRunning)
                 {
-                    <svg class="animate-spin w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin w-4 h-4 text-indigo-400 shrink-0" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
                     </svg>
                 }
+                else if (!string.IsNullOrWhiteSpace(query))
+                {
+                    <button type="button" @onclick="ClearQuery" class="text-slate-500 hover:text-slate-200 text-xs px-1">
+                        ✕
+                    </button>
+                }
             </div>
 
-            <!-- Result Feedback Banner (if executed) -->
+            <!-- Feedback Banner (Success / Error) -->
             @if (!string.IsNullOrWhiteSpace(executionFeedback))
             {
-                <div class="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between text-xs font-medium @(isFeedbackSuccess ? "bg-emerald-500/10 text-emerald-300" : "bg-rose-500/10 text-rose-300")">
+                <div class="px-4 py-2.5 border-b border-white/[0.08] flex items-center justify-between text-xs font-medium @(isFeedbackSuccess ? "bg-emerald-500/15 text-emerald-300" : "bg-rose-500/15 text-rose-300")">
                     <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @executionFeedback</span>
                     <button @onclick="() => executionFeedback = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
                 </div>
             }
 
-            <!-- AI Response Box (if query was '?') -->
+            <!-- AI Response View (if user asked a '?' prompt) -->
             @if (!string.IsNullOrWhiteSpace(aiResponse))
             {
-                <div class="p-4 border-b border-white/[0.08] bg-[#0c1017] text-xs text-slate-200 leading-relaxed max-h-60 overflow-y-auto space-y-2">
-                    <div class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-semibold">Respuesta ATLAS AI:</div>
-                    <div class="whitespace-pre-wrap">@aiResponse</div>
+                <div class="p-4 border-b border-white/[0.08] bg-[#0f131d] text-xs text-slate-200 leading-relaxed max-h-64 overflow-y-auto space-y-2">
+                    <div class="text-[10.5px] font-mono uppercase tracking-wider text-indigo-400 font-semibold flex items-center justify-between">
+                        <span class="flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                            <span>Respuesta ATLAS AI (Gemini):</span>
+                        </span>
+                        <button @onclick="() => aiResponse = null" class="text-slate-500 hover:text-slate-300 text-xs">✕</button>
+                    </div>
+                    <div class="whitespace-pre-wrap font-sans text-slate-300">@aiResponse</div>
                 </div>
             }
 
-            <!-- Command & Suggestion List -->
-            <div class="max-h-72 overflow-y-auto p-1.5 space-y-0.5">
-                @if (FilteredCommands.Count == 0 && string.IsNullOrWhiteSpace(query))
+            <!-- Result List or Context Actions Menu -->
+            <div class="max-h-80 overflow-y-auto p-1.5 space-y-0.5">
+                
+                @if (isInContextMenu && activeContextItem != null)
                 {
-                    <div class="p-4 text-center text-xs text-slate-500 font-mono">
-                        Comandos disponibles
-                    </div>
-                }
-                else if (FilteredCommands.Count == 0 && !string.IsNullOrWhiteSpace(query))
-                {
-                    <div class="px-3 py-2.5 rounded-lg bg-white/[0.04] text-xs flex items-center justify-between text-slate-300">
-                        <div class="flex items-center gap-2">
-                            <span class="text-sky-400 font-mono">↵</span>
-                            <span>Capturar nota: <strong class="text-white font-medium truncate">"@query"</strong></span>
+                    <!-- CONTEXT ACTIONS SUB-MENU (Tab / ⌘K on selected item) -->
+                    <div class="p-2 space-y-1">
+                        <div class="px-2 py-1 flex items-center justify-between text-[11px] font-mono text-slate-400 border-b border-white/[0.06] pb-1.5 mb-1">
+                            <span class="truncate">Acciones para: <strong class="text-white">@activeContextItem.Title</strong></span>
+                            <span class="text-[10px] text-slate-500">Esc para volver</span>
                         </div>
-                        <kbd class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-slate-400">Enter</kbd>
+
+                        @if (activeContextItem.ContextActions != null)
+                        {
+                            @for (int i = 0; i < activeContextItem.ContextActions.Count; i++)
+                            {
+                                var action = activeContextItem.ContextActions[i];
+                                var isSel = i == contextSelectedIndex;
+                                
+                                <div 
+                                    @onclick="() => ExecuteContextAction(action)"
+                                    class="px-3 py-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-colors @(isSel ? "bg-indigo-500/15 text-white border border-indigo-500/30 font-semibold" : "text-slate-300 hover:bg-white/[0.04]")">
+                                    <span class="truncate">@action.Title</span>
+                                    <kbd class="px-1.5 py-0.5 rounded-md bg-white/[0.06] text-[10px] font-mono text-slate-400">@action.Shortcut</kbd>
+                                </div>
+                            }
+                        }
                     </div>
                 }
                 else
                 {
-                    @for (int i = 0; i < FilteredCommands.Count; i++)
+                    <!-- MAIN SEARCH & COMMAND LIST -->
+                    @if (searchResults.Count == 0 && string.IsNullOrWhiteSpace(query))
                     {
-                        var index = i;
-                        var cmd = FilteredCommands[i];
-                        var isSelected = index == selectedIndex;
-
-                        <div 
-                            @onclick="() => ExecuteSelectedCommand(cmd)"
-                            class="px-3 py-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-colors @(isSelected ? "bg-sky-500/15 text-white font-medium" : "text-slate-300 hover:bg-white/[0.04]")">
-                            
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <span class="font-mono text-[11px] text-slate-400 @(isSelected ? "text-sky-300" : "")">@cmd.Id</span>
-                                <span class="text-slate-400 font-normal truncate">• @cmd.Description</span>
-                            </div>
-
-                            <div class="flex items-center gap-1.5 shrink-0 pl-2">
-                                @if (isSelected)
-                                {
-                                    <kbd class="px-1.5 py-0.5 rounded bg-sky-500/20 text-[10px] font-mono text-sky-200">Enter</kbd>
-                                }
+                        <!-- State 1: Initial Empty State (Suggestions) -->
+                        <div class="p-4 space-y-2">
+                            <span class="text-[10.5px] font-mono text-slate-500 uppercase tracking-wider block px-2">Acciones sugeridas:</span>
+                            @foreach (var item in initialSuggestions)
+                            {
+                                <div 
+                                    @onclick="item.PrimaryAction"
+                                    class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between cursor-pointer text-slate-300 hover:bg-white/[0.04] transition-colors">
+                                    <div class="flex items-center gap-2.5 min-w-0">
+                                        <AtlasBadge Variant="@item.BadgeVariant">@item.Category</AtlasBadge>
+                                        <span class="font-medium text-slate-200 truncate">@item.Title</span>
+                                    </div>
+                                    <span class="text-[10px] font-mono text-slate-500">@item.Subtitle</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (searchResults.Count == 0 && !string.IsNullOrWhiteSpace(query))
+                    {
+                        <!-- Fallback Quick Note Capture Pill -->
+                        <div class="p-2">
+                            <div 
+                                @onclick="ExecuteFallbackCaptureAsync"
+                                class="px-3.5 py-3 rounded-xl bg-white/[0.04] text-xs flex items-center justify-between text-slate-200 border border-white/[0.06] hover:bg-indigo-500/10 hover:border-indigo-500/30 cursor-pointer transition-all">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="text-indigo-400 font-mono font-bold text-sm">↵</span>
+                                    <span>Capturar como nueva nota: <strong class="text-white font-medium truncate">"@query"</strong></span>
+                                </div>
+                                <kbd class="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-[10px] font-mono text-indigo-300">Enter</kbd>
                             </div>
                         </div>
                     }
+                    else
+                    {
+                        <!-- Results List grouped logically -->
+                        @for (int i = 0; i < searchResults.Count; i++)
+                        {
+                            var index = i;
+                            var item = searchResults[i];
+                            var isSelected = index == selectedIndex;
+
+                            <div 
+                                @onclick="() => ExecuteResultItem(item)"
+                                class="px-3.5 py-2 rounded-xl text-xs flex items-center justify-between cursor-pointer transition-all @(isSelected ? "bg-indigo-500/15 text-white border border-indigo-500/30 font-medium" : "text-slate-300 hover:bg-white/[0.03]")">
+                                
+                                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                                    <AtlasBadge Variant="@item.BadgeVariant">@item.Category</AtlasBadge>
+                                    <span class="truncate @(isSelected ? "text-white font-semibold" : "text-slate-200")">
+                                        @item.Title
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(item.Subtitle))
+                                    {
+                                        <span class="text-[11px] text-slate-500 truncate hidden sm:inline">
+                                            • @item.Subtitle
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0 pl-2">
+                                    @if (item.ContextActions != null && item.ContextActions.Count > 0)
+                                    {
+                                        <button 
+                                            type="button" 
+                                            @onclick:stopPropagation="true"
+                                            @onclick="() => OpenContextMenu(item)"
+                                            class="text-[9.5px] font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-400 hover:text-white hover:bg-white/[0.1] transition-colors">
+                                            Acciones (Tab)
+                                        </button>
+                                    }
+
+                                    @if (isSelected)
+                                    {
+                                        <kbd class="px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-[10px] font-mono text-indigo-200 border border-indigo-400/30">↵</kbd>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
                 }
+
             </div>
 
             <!-- Footer Bar with Keyboard Cheatsheet -->
-            <div class="px-4 py-2 border-t border-white/[0.06] bg-[#0d1117] flex items-center justify-between text-[11px] text-slate-500 font-mono">
+            <div class="px-4 py-2.5 border-t border-white/[0.06] bg-[#10141e] flex items-center justify-between text-[11px] text-slate-500 font-mono">
                 <div class="flex items-center gap-3">
                     <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↑</kbd> <kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↓</kbd> Navegar</span>
                     <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↵</kbd> Ejecutar</span>
+                    <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">Tab</kbd> Acciones</span>
                     <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">?</kbd> Preguntar IA</span>
                 </div>
-                <span class="text-slate-400">Ctrl+Space</span>
+                <span class="text-indigo-300/80">Ctrl+Space</span>
             </div>
 
         </div>
@@ -118,17 +206,37 @@
 
     private ElementReference inputElement;
     private string query = string.Empty;
-    private int selectedIndex;
+    private int selectedIndex = 0;
+    private int contextSelectedIndex = 0;
     private bool isRunning;
     private string? executionFeedback;
     private bool isFeedbackSuccess;
     private string? aiResponse;
 
+    // Submenu Context State
+    private bool isInContextMenu = false;
+    private LauncherResultItem? activeContextItem;
+
+    // Models
+    public record ContextActionItem(string Title, string Shortcut, Func<Task> Action);
+    public record LauncherResultItem(
+        string Id,
+        string Title,
+        string Subtitle,
+        string Category,
+        string BadgeVariant,
+        Func<Task> PrimaryAction,
+        List<ContextActionItem>? ContextActions = null
+    );
+
     private List<ICommand> allCommands = [];
+    private List<LauncherResultItem> searchResults = [];
+    private List<LauncherResultItem> initialSuggestions = [];
 
     protected override void OnInitialized()
     {
         allCommands = CommandRegistry.GetAllCommands().ToList();
+        BuildInitialSuggestions();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -143,48 +251,204 @@
         }
     }
 
-    private List<ICommand> FilteredCommands
+    private string GetInputPlaceholder()
     {
-        get
+        if (isInContextMenu) return "Elegí una acción...";
+        return "¿Qué querés hacer o buscar?... (Escribí texto, '?' para IA, o '/expense')";
+    }
+
+    private void BuildInitialSuggestions()
+    {
+        initialSuggestions = new List<LauncherResultItem>
         {
-            if (string.IsNullOrWhiteSpace(query))
-                return allCommands.Take(6).ToList();
+            new LauncherResultItem("capture.note", "Capturar Nota Rápida", "Guardar pensamiento en SQLite", "Comando", "accent", () => ExecuteCommandAsync("capture.note")),
+            new LauncherResultItem("ai.ask", "Preguntar a Gemini AI", "Escribí '? <tu consulta>'", "IA", "accent", () => { query = "? "; return Task.CompletedTask; }),
+            new LauncherResultItem("habit.complete", "Completar Hábito", "Registrar progreso diario", "Hábito", "success", () => { NavigationManager.NavigateTo("habits-goals"); return Close(); }),
+            new LauncherResultItem("finance.add", "Registrar Gasto", "Formato: /expense <monto> <desc>", "Finanza", "warning", () => { query = "/expense "; return Task.CompletedTask; }),
+            new LauncherResultItem("knowledge.search", "Buscar en Segundo Cerebro", "Explorar todas las notas", "Búsqueda", "mono", () => { NavigationManager.NavigateTo("search"); return Close(); })
+        };
+    }
 
-            var trimmed = query.Trim();
-            if (trimmed.StartsWith("?") || trimmed.StartsWith("/"))
-                return [];
+    private async Task HandleInputChanged(ChangeEventArgs e)
+    {
+        query = e.Value?.ToString() ?? string.Empty;
+        selectedIndex = 0;
+        isInContextMenu = false;
+        await PerformSearchAsync();
+    }
 
-            return allCommands
-                .Where(c => c.Id.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
-                            c.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
-                            c.Description.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
-                .Take(6)
-                .ToList();
+    private async Task PerformSearchAsync()
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            searchResults.Clear();
+            return;
         }
+
+        var trimmed = query.Trim();
+        var results = new List<LauncherResultItem>();
+
+        // 1. If starts with '?' or '/expense', handle specifically
+        if (trimmed.StartsWith("?") || trimmed.StartsWith("/expense", StringComparison.OrdinalIgnoreCase))
+        {
+            searchResults.Clear();
+            return;
+        }
+
+        // 2. Search matching Commands
+        var matchingCmds = allCommands
+            .Where(c => c.Id.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                        c.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                        c.Description.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+            .Take(4);
+
+        foreach (var cmd in matchingCmds)
+        {
+            results.Add(new LauncherResultItem(
+                cmd.Id,
+                cmd.Name,
+                cmd.Description,
+                "Comando",
+                "accent",
+                () => ExecuteCommandAsync(cmd.Id)
+            ));
+        }
+
+        // 3. Search matching Notes (SQLite)
+        try
+        {
+            var notes = await NoteRepository.SearchAsync(trimmed);
+            foreach (var note in notes.Take(3))
+            {
+                var title = !string.IsNullOrWhiteSpace(note.Title) ? note.Title : (note.Content.Length > 40 ? note.Content[..40] + "..." : note.Content);
+                var noteObj = note;
+
+                results.Add(new LauncherResultItem(
+                    note.Id,
+                    title,
+                    note.CreatedAt.ToLocalTime().ToString("dd MMM HH:mm"),
+                    "Nota",
+                    "mono",
+                    () => { NavigationManager.NavigateTo("search"); return Close(); },
+                    new List<ContextActionItem>
+                    {
+                        new ContextActionItem("✦ Resumir con Gemini", "↵", async () => await SummarizeNoteAsync(noteObj)),
+                        new ContextActionItem("↗ Abrir en Segundo Cerebro", "↵", () => { NavigationManager.NavigateTo("search"); return Close(); })
+                    }
+                ));
+            }
+        }
+        catch { }
+
+        // 4. Search matching Habits (SQLite)
+        try
+        {
+            var habits = await HabitRepository.GetAllAsync();
+            var matchingHabits = habits.Where(h => h.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase)).Take(2);
+            foreach (var habit in matchingHabits)
+            {
+                var hObj = habit;
+                results.Add(new LauncherResultItem(
+                    habit.Id,
+                    habit.Name,
+                    $"Frecuencia: {habit.Frequency}",
+                    "Hábito",
+                    "success",
+                    async () => await CompleteHabitFromLauncher(hObj.Id, hObj.Name)
+                ));
+            }
+        }
+        catch { }
+
+        // 5. Search matching Roadmaps (SQLite)
+        try
+        {
+            var roadmaps = await RoadmapRepository.GetAllAsync();
+            var matchingRoadmaps = roadmaps.Where(r => r.Title.Contains(trimmed, StringComparison.OrdinalIgnoreCase)).Take(2);
+            foreach (var roadmap in matchingRoadmaps)
+            {
+                results.Add(new LauncherResultItem(
+                    roadmap.Id,
+                    roadmap.Title,
+                    $"Progreso: {roadmap.ProgressPercentage}%",
+                    "Roadmap",
+                    "warning",
+                    () => { NavigationManager.NavigateTo("habits-goals"); return Close(); }
+                ));
+            }
+        }
+        catch { }
+
+        searchResults = results;
     }
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Escape")
         {
+            if (isInContextMenu)
+            {
+                isInContextMenu = false;
+                activeContextItem = null;
+                return;
+            }
             await Close();
             return;
         }
 
+        // Submenu navigation
+        if (isInContextMenu && activeContextItem?.ContextActions != null)
+        {
+            var count = activeContextItem.ContextActions.Count;
+            if (e.Key == "ArrowDown")
+            {
+                contextSelectedIndex = (contextSelectedIndex + 1) % count;
+                return;
+            }
+            if (e.Key == "ArrowUp")
+            {
+                contextSelectedIndex = (contextSelectedIndex - 1 + count) % count;
+                return;
+            }
+            if (e.Key == "Enter")
+            {
+                if (contextSelectedIndex >= 0 && contextSelectedIndex < count)
+                {
+                    await ExecuteContextAction(activeContextItem.ContextActions[contextSelectedIndex]);
+                }
+                return;
+            }
+            return;
+        }
+
+        // Main List navigation
         if (e.Key == "ArrowDown")
         {
-            if (FilteredCommands.Count > 0)
+            if (searchResults.Count > 0)
             {
-                selectedIndex = (selectedIndex + 1) % FilteredCommands.Count;
+                selectedIndex = (selectedIndex + 1) % searchResults.Count;
             }
             return;
         }
 
         if (e.Key == "ArrowUp")
         {
-            if (FilteredCommands.Count > 0)
+            if (searchResults.Count > 0)
             {
-                selectedIndex = (selectedIndex - 1 + FilteredCommands.Count) % FilteredCommands.Count;
+                selectedIndex = (selectedIndex - 1 + searchResults.Count) % searchResults.Count;
+            }
+            return;
+        }
+
+        if (e.Key == "Tab")
+        {
+            if (searchResults.Count > 0 && selectedIndex >= 0 && selectedIndex < searchResults.Count)
+            {
+                var item = searchResults[selectedIndex];
+                if (item.ContextActions != null && item.ContextActions.Count > 0)
+                {
+                    OpenContextMenu(item);
+                }
             }
             return;
         }
@@ -195,13 +459,28 @@
         }
     }
 
+    private void OpenContextMenu(LauncherResultItem item)
+    {
+        activeContextItem = item;
+        contextSelectedIndex = 0;
+        isInContextMenu = true;
+    }
+
+    private async Task ExecuteContextAction(ContextActionItem action)
+    {
+        if (action.Action != null)
+        {
+            await action.Action.Invoke();
+        }
+    }
+
     private async Task ProcessEnterActionAsync()
     {
         if (isRunning || string.IsNullOrWhiteSpace(query)) return;
 
         var trimmed = query.Trim();
 
-        // 1. Direct AI Query
+        // 1. Direct AI Query ('?')
         if (trimmed.StartsWith("?"))
         {
             var prompt = trimmed[1..].Trim();
@@ -236,30 +515,94 @@
             return;
         }
 
-        // 2. Selected Command Match
-        if (FilteredCommands.Count > 0 && selectedIndex >= 0 && selectedIndex < FilteredCommands.Count)
+        // 2. Direct Expense ('/expense')
+        if (trimmed.StartsWith("/expense", StringComparison.OrdinalIgnoreCase))
         {
-            await ExecuteSelectedCommand(FilteredCommands[selectedIndex]);
+            var parts = trimmed.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 3 && decimal.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
+            {
+                var desc = parts[2];
+                isRunning = true;
+                try
+                {
+                    var res = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
+                    {
+                        ["amount"] = amount,
+                        ["type"] = "expense",
+                        ["description"] = desc
+                    });
+
+                    if (res.IsSuccess)
+                    {
+                        executionFeedback = $"✓ Gasto de ${amount:N0} registrado: '{desc}'";
+                        isFeedbackSuccess = true;
+                        query = string.Empty;
+                        await Task.Delay(600);
+                        await Close();
+                    }
+                    else
+                    {
+                        executionFeedback = res.ErrorMessage ?? "Error al registrar gasto.";
+                        isFeedbackSuccess = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    executionFeedback = ex.Message;
+                    isFeedbackSuccess = false;
+                }
+                finally
+                {
+                    isRunning = false;
+                }
+            }
+            else
+            {
+                executionFeedback = "Formato de gasto: /expense <monto> <descripción>";
+                isFeedbackSuccess = false;
+            }
             return;
         }
 
-        // 3. Fallback: Quick Note Capture
+        // 3. Selected Item from Results
+        if (searchResults.Count > 0 && selectedIndex >= 0 && selectedIndex < searchResults.Count)
+        {
+            await ExecuteResultItem(searchResults[selectedIndex]);
+            return;
+        }
+
+        // 4. Fallback: Quick Note Capture
+        await ExecuteFallbackCaptureAsync();
+    }
+
+    private async Task ExecuteResultItem(LauncherResultItem item)
+    {
+        if (item.PrimaryAction != null)
+        {
+            await item.PrimaryAction.Invoke();
+        }
+    }
+
+    private async Task ExecuteFallbackCaptureAsync()
+    {
+        if (string.IsNullOrWhiteSpace(query)) return;
+
         isRunning = true;
         executionFeedback = null;
         try
         {
             var res = await CommandRegistry.ExecuteAsync(CaptureNoteCommand.CommandId, new Dictionary<string, object?>
             {
-                ["content"] = trimmed,
+                ["content"] = query.Trim(),
                 ["source"] = "launcher"
             });
 
             if (res.IsSuccess)
             {
-                executionFeedback = "Nota capturada exitosamente.";
+                executionFeedback = "✓ Nota capturada exitosamente.";
                 isFeedbackSuccess = true;
                 query = string.Empty;
-                await Task.Delay(600);
+                await Task.Delay(500);
                 await Close();
             }
             else
@@ -279,49 +622,30 @@
         }
     }
 
-    private async Task ExecuteSelectedCommand(ICommand cmd)
+    private async Task ExecuteCommandAsync(string commandId)
     {
-        if (cmd.Id == "capture.note")
+        if (commandId == "capture.note")
         {
             NavigationManager.NavigateTo("capture");
             await Close();
             return;
         }
-        if (cmd.Id == "knowledge.search")
-        {
-            NavigationManager.NavigateTo("search");
-            await Close();
-            return;
-        }
-        if (cmd.Id.StartsWith("habit") || cmd.Id.StartsWith("goal") || cmd.Id.StartsWith("roadmap"))
-        {
-            NavigationManager.NavigateTo("habits-goals");
-            await Close();
-            return;
-        }
-        if (cmd.Id.StartsWith("finance"))
-        {
-            NavigationManager.NavigateTo("finance");
-            await Close();
-            return;
-        }
-        if (cmd.Id.StartsWith("gmail"))
+        if (commandId == "knowledge.search")
         {
             NavigationManager.NavigateTo("search");
             await Close();
             return;
         }
 
-        // Default: execute without params if parameterless
         isRunning = true;
         try
         {
-            var res = await CommandRegistry.ExecuteAsync(cmd.Id);
+            var res = await CommandRegistry.ExecuteAsync(commandId);
             if (res.IsSuccess)
             {
-                executionFeedback = $"Comando '{cmd.Name}' ejecutado con éxito.";
+                executionFeedback = $"✓ Comando ejecutado con éxito.";
                 isFeedbackSuccess = true;
-                await Task.Delay(600);
+                await Task.Delay(500);
                 await Close();
             }
             else
@@ -341,12 +665,90 @@
         }
     }
 
+    private async Task SummarizeNoteAsync(Note note)
+    {
+        isRunning = true;
+        aiResponse = null;
+        isInContextMenu = false;
+
+        try
+        {
+            var res = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["text"] = $"{note.Title}\n{note.Content}"
+            });
+
+            if (res.IsSuccess)
+            {
+                aiResponse = res.Data?.ToString();
+            }
+            else
+            {
+                executionFeedback = res.ErrorMessage ?? "Error al resumir con Gemini.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            executionFeedback = ex.Message;
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private async Task CompleteHabitFromLauncher(string habitId, string habitName)
+    {
+        isRunning = true;
+        try
+        {
+            var res = await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["habit_id"] = habitId
+            });
+
+            if (res.IsSuccess)
+            {
+                executionFeedback = $"✓ Hábito '{habitName}' completado hoy.";
+                isFeedbackSuccess = true;
+                await Task.Delay(500);
+                await Close();
+            }
+            else
+            {
+                executionFeedback = res.ErrorMessage ?? "Error al completar hábito.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            executionFeedback = ex.Message;
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private void ClearQuery()
+    {
+        query = string.Empty;
+        searchResults.Clear();
+        isInContextMenu = false;
+    }
+
     public async Task Close()
     {
         IsOpen = false;
         query = string.Empty;
+        searchResults.Clear();
         aiResponse = null;
         executionFeedback = null;
+        isInContextMenu = false;
+        activeContextItem = null;
         await IsOpenChanged.InvokeAsync(false);
     }
 }

@@ -1,0 +1,24 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-300 flex items-center justify-between gap-3 animate-atlas-in @Class">
+    <div class="flex items-center gap-2.5 min-w-0">
+        <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shrink-0"></span>
+        <span class="truncate">@Message</span>
+    </div>
+
+    @if (OnRetry.HasDelegate)
+    {
+        <button 
+            type="button" 
+            @onclick="OnRetry" 
+            class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-[11px] font-mono shrink-0 transition-colors cursor-pointer">
+            Reintentar
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "Ocurrió un error al procesar la solicitud.";
+    [Parameter] public EventCallback OnRetry { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

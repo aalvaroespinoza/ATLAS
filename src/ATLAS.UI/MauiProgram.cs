@@ -34,9 +34,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<HttpClient>();
         builder.Services.AddSingleton<IAiProvider, GeminiProvider>();
 
-        // Core & Storage
+        // Core, Storage & Context Services
         builder.Services.AddAtlasCore();
         builder.Services.AddAtlasStorage();
+        builder.Services.AddSingleton<IContextActionService, ContextActionService>();
 
         var app = builder.Build();
 

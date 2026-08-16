@@ -1,0 +1,71 @@
+@namespace ATLAS.UI.Components.Common
+@inject IContextActionService ContextActionService
+
+@if (Target != null && Actions.Count > 0)
+{
+    <div class="flex items-center gap-2 flex-wrap @Class">
+        @foreach (var action in Actions)
+        {
+            var isRunningThis = runningActionId == action.Id;
+            <AtlasButton 
+                Variant="@(action.IsPrimary ? "primary" : "secondary")" 
+                Size="sm" 
+                ShortcutText="@action.Shortcut"
+                IsLoading="@isRunningThis"
+                IsDisabled="@(runningActionId != null && !isRunningThis)"
+                OnClick="() => HandleExecuteAsync(action)">
+                @action.Label
+            </AtlasButton>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(statusMessage))
+        {
+            <span class="text-[11px] font-mono text-emerald-400 pl-2 animate-atlas-in">
+                @statusMessage
+            </span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public object? Target { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<ContextActionResult> OnActionExecuted { get; set; }
+
+    public record ContextActionResult(ContextActionDescriptor Action, CommandResult Result);
+
+    private IReadOnlyList<ContextActionDescriptor> Actions => ContextActionService.GetActionsFor(Target);
+    private string? runningActionId;
+    private string? statusMessage;
+
+    private async Task HandleExecuteAsync(ContextActionDescriptor action)
+    {
+        if (Target == null || runningActionId != null) return;
+
+        runningActionId = action.Id;
+        statusMessage = null;
+
+        try
+        {
+            var result = await ContextActionService.ExecuteActionAsync(action, Target);
+            if (result.IsSuccess)
+            {
+                statusMessage = "✓ Listo";
+                _ = Task.Delay(2000).ContinueWith(_ => { statusMessage = null; InvokeAsync(StateHasChanged); });
+            }
+
+            if (OnActionExecuted.HasDelegate)
+            {
+                await OnActionExecuted.InvokeAsync(new ContextActionResult(action, result));
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            runningActionId = null;
+        }
+    }
+}

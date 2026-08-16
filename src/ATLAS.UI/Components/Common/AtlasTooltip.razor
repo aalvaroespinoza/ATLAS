@@ -1,0 +1,36 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="relative inline-flex group @Class">
+    @ChildContent
+
+    @if (!string.IsNullOrWhiteSpace(Text))
+    {
+        <div class="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 @GetPositionClasses()">
+            <div class="px-2 py-1 rounded-md bg-[#181f30] text-slate-200 border border-white/[0.12] text-[10.5px] font-sans font-medium whitespace-nowrap shadow-xl">
+                @Text
+                @if (!string.IsNullOrWhiteSpace(Shortcut))
+                {
+                    <kbd class="ml-1.5 px-1 py-0.2 rounded bg-white/[0.08] text-[9px] font-mono text-slate-400">
+                        @Shortcut
+                    </kbd>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public string? Shortcut { get; set; }
+    [Parameter] public string Position { get; set; } = "top"; // top, bottom, right, left
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string GetPositionClasses() => Position.ToLowerInvariant() switch
+    {
+        "right" => "left-full top-1/2 -translate-y-1/2 ml-2",
+        "left" => "right-full top-1/2 -translate-y-1/2 mr-2",
+        "bottom" => "top-full left-1/2 -translate-x-1/2 mt-2",
+        _ => "bottom-full left-1/2 -translate-x-1/2 mb-2"
+    };
+}

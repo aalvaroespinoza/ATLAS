@@ -1,0 +1,27 @@
+@namespace ATLAS.UI.Components.Common
+
+@if (IsOpen)
+{
+    <div class="fixed inset-0 z-50 bg-transparent" @onclick="Close">
+        <div 
+            class="absolute atlas-elevated rounded-xl p-1 min-w-[180px] space-y-0.5 animate-atlas-in" 
+            style="left: @(X)px; top: @(Y)px;" 
+            @onclick:stopPropagation="true">
+            @ChildContent
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter] public double X { get; set; }
+    [Parameter] public double Y { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    public async Task Close()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}
