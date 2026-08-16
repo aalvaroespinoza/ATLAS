@@ -141,5 +141,10 @@ ATLAS.sln
 - **Etapa 13:** Blindaje del Lenguaje Visual (Completada).
 - **Etapa 14 (Hardening de Supabase, Limpieza de Código y finance.categorize):** Completada.
   - **14a:** Supabase Auth (Email/Password) implementado con refresh token en `ISecretVault`, columna `user_id` en las 7 tablas y políticas RLS estrictas `USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`.
-  - **14b:** Eliminado `NavMenu.razor` y prototipos movidos a `docs/prototypes/` fuera de `Components/Pages/`.
+  - **14b:** Eliminado `NavMenu.razor` y prototipos eliminados definitivamente del repositorio. Incorporado `BRIEF_SISTEMA_PERSONAL.md`.
   - **14c:** Implementado `finance.categorize` con Gemini (`IAiProvider`), sugerencias editables en UI y confirmación manual obligatoria sin sobreescritura automática.
+- **Sesión de Optimización & Armonización (16/08):**
+  - **Dirección Visual Rica:** Aplicada estética satinada con profundidad, gradientes sutiles y glows semánticos en las 6 páginas (Home, Capture, Search, HabitsGoals, Finance, Settings).
+  - **Tailwind Build Local:** Reemplazado Play CDN por build estático en tiempo de compilación (`app.css` ~41KB), logrando arranque instantáneo sin dependencia de red.
+  - **Optimización de Arranque y Rendimiento:** SQLite WAL mode + pragmas de memoria y `Task.WhenAll` en queries concurrentes (tests acelerados a ~430ms).
+  - **Consistencia de Estados & Microinteracciones:** Unificados `AtlasLoadingState`, `AtlasEmptyState`, `AtlasErrorState` y estandarizada la curva `cubic-bezier(0.16, 1, 0.3, 1)` con scale `0.98`.
