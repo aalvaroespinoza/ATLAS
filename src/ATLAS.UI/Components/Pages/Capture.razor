@@ -78,8 +78,7 @@
                     Variant="primary" 
                     Size="sm" 
                     OnClick="SaveNoteAsync" 
-                    IsLoading="isSaving"
-                    IsDisabled="@string.IsNullOrWhiteSpace(contentInput)">
+                    IsLoading="isSaving">
                     Guardar en Segundo Cerebro
                 </AtlasButton>
             </div>
@@ -107,7 +106,14 @@
 
     private async Task SaveNoteAsync()
     {
-        if (isSaving || string.IsNullOrWhiteSpace(contentInput)) return;
+        if (string.IsNullOrWhiteSpace(contentInput))
+        {
+            statusMessage = "Escribí el contenido de la nota antes de guardar.";
+            isSuccess = false;
+            return;
+        }
+
+        if (isSaving) return;
 
         isSaving = true;
         statusMessage = null;

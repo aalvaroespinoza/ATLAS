@@ -45,8 +45,7 @@
         <AtlasButton 
             Variant="primary" 
             Size="md" 
-            OnClick="AddExpenseAsync"
-            IsDisabled="@(string.IsNullOrWhiteSpace(amountString) || string.IsNullOrWhiteSpace(newDescription))">
+            OnClick="AddExpenseAsync">
             + Registrar
         </AtlasButton>
     </div>
@@ -138,8 +137,19 @@
 
     private async Task AddExpenseAsync()
     {
-        if (!decimal.TryParse(amountString, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount) || amount <= 0 || string.IsNullOrWhiteSpace(newDescription)) 
+        if (string.IsNullOrWhiteSpace(amountString) || !decimal.TryParse(amountString, NumberStyles.Any, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        {
+            actionFeedback = "Ingresá un monto numérico válido.";
+            isFeedbackSuccess = false;
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newDescription))
+        {
+            actionFeedback = "Ingresá una descripción para el movimiento.";
+            isFeedbackSuccess = false;
+            return;
+        }
 
         try
         {

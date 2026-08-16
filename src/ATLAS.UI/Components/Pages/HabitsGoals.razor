@@ -54,8 +54,7 @@
                 <AtlasButton 
                     Variant="primary" 
                     Size="md" 
-                    OnClick="CreateHabitAsync"
-                    IsDisabled="@string.IsNullOrWhiteSpace(newHabitName)">
+                    OnClick="CreateHabitAsync">
                     + Crear Hábito
                 </AtlasButton>
             </div>
@@ -117,8 +116,7 @@
                     <AtlasButton 
                         Variant="primary" 
                         Size="md" 
-                        OnClick="CreateRoadmapAsync"
-                        IsDisabled="@string.IsNullOrWhiteSpace(newRoadmapTitle)">
+                        OnClick="CreateRoadmapAsync">
                         + Crear Roadmap
                     </AtlasButton>
                 </div>
@@ -290,7 +288,12 @@
 
     private async Task CreateHabitAsync()
     {
-        if (string.IsNullOrWhiteSpace(newHabitName)) return;
+        if (string.IsNullOrWhiteSpace(newHabitName))
+        {
+            statusMessage = "Escribí el nombre del nuevo hábito.";
+            isSuccess = false;
+            return;
+        }
 
         try
         {
@@ -352,7 +355,12 @@
 
     private async Task CreateRoadmapAsync()
     {
-        if (string.IsNullOrWhiteSpace(newRoadmapTitle)) return;
+        if (string.IsNullOrWhiteSpace(newRoadmapTitle))
+        {
+            statusMessage = "Escribí un título para el roadmap.";
+            isSuccess = false;
+            return;
+        }
 
         try
         {

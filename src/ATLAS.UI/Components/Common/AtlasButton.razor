@@ -4,7 +4,8 @@
     type="@Type"
     @onclick="HandleClick"
     disabled="@(IsDisabled || IsLoading)"
-    class="inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetVariantClasses() @GetSizeClasses() @Class">
+    class="inline-flex items-center justify-center gap-2 font-medium transition-all duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetVariantClasses() @GetSizeClasses() @Class"
+    @attributes="AdditionalAttributes">
     
     @if (IsLoading)
     {
@@ -25,7 +26,7 @@
 </button>
 
 @code {
-    [Parameter] public string Variant { get; set; } = "secondary"; // primary, secondary, ghost, danger
+    [Parameter] public string Variant { get; set; } = "secondary"; // primary, secondary, ghost, danger, accent
     [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (34px)
     [Parameter] public string Type { get; set; } = "button";
     [Parameter] public string? ShortcutText { get; set; }
@@ -34,10 +35,11 @@
     [Parameter] public string? Class { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleClick(MouseEventArgs e)
     {
-        if (!IsDisabled && !IsLoading && OnClick.HasDelegate)
+        if (!IsDisabled && !IsLoading)
         {
             await OnClick.InvokeAsync(e);
         }
@@ -46,6 +48,7 @@
     private string GetVariantClasses() => Variant.ToLowerInvariant() switch
     {
         "primary" => "bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold shadow-sm shadow-indigo-500/20 border border-indigo-400/30",
+        "accent" => "bg-indigo-500/15 hover:bg-indigo-500/25 active:bg-indigo-500/35 text-indigo-200 hover:text-white border border-indigo-500/30 font-medium",
         "secondary" => "bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.14] text-slate-200 hover:text-white border border-white/[0.08]",
         "ghost" => "bg-transparent hover:bg-white/[0.06] active:bg-white/[0.10] text-slate-400 hover:text-slate-100",
         "danger" => "bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-300 border border-rose-500/20",
@@ -55,6 +58,7 @@
     private string GetShortcutClasses() => Variant.ToLowerInvariant() switch
     {
         "primary" => "bg-indigo-700/50 text-indigo-100 border-indigo-400/40",
+        "accent" => "bg-indigo-900/60 text-indigo-200 border-indigo-500/30",
         _ => "bg-white/[0.06] text-slate-400 border-white/[0.1]"
     };
 

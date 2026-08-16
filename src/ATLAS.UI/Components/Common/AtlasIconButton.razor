@@ -6,7 +6,8 @@
     disabled="@IsDisabled"
     title="@Title"
     aria-label="@(Title ?? "Acción")"
-    class="inline-flex items-center justify-center rounded-xl transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetSizeClasses() @GetVariantClasses() @Class">
+    class="inline-flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetSizeClasses() @GetVariantClasses() @Class"
+    @attributes="AdditionalAttributes">
     @ChildContent
 </button>
 
@@ -18,10 +19,11 @@
     [Parameter] public string? Class { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleClick(MouseEventArgs e)
     {
-        if (!IsDisabled && OnClick.HasDelegate)
+        if (!IsDisabled)
         {
             await OnClick.InvokeAsync(e);
         }

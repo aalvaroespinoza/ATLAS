@@ -9,23 +9,34 @@
     
     <!-- Header -->
     <div class="space-y-1 border-b border-white/[0.08] pb-4">
-        <h1 class="text-lg font-bold tracking-tight text-white flex items-center justify-between">
-            <span>Configuración & Bóveda de Claves</span>
-            <span class="text-xs font-mono font-normal @(isVaultUnlocked ? "text-amber-400" : "text-slate-400") flex items-center gap-1.5">
-                <span>@(isVaultUnlocked ? "🔓 Bóveda Desbloqueada" : "🔒 Bóveda Protegida")</span>
-            </span>
-        </h1>
+        <div class="flex items-center justify-between">
+            <h1 class="text-lg font-bold tracking-tight text-white">
+                Configuración & Bóveda de Claves
+            </h1>
+            <div class="flex items-center gap-2 text-xs font-mono">
+                @if (hasPinConfigured)
+                {
+                    <span class="@(isVaultUnlocked ? "text-amber-400" : "text-emerald-400") flex items-center gap-1.5">
+                        <span>@(isVaultUnlocked ? "🔓 Bóveda Desbloqueada" : "🔒 Protegido con PIN")</span>
+                    </span>
+                }
+                else
+                {
+                    <span class="text-slate-500">● Sin PIN configurado</span>
+                }
+            </div>
+        </div>
         <p class="text-xs text-slate-400">
-            Administración segura y encriptada de APIs y base de datos Supabase. Protegido con PIN de 4 dígitos.
+            Administrá tus claves de APIs e integraciones. Se almacenan encriptadas en Windows Credential Locker.
         </p>
     </div>
 
     <!-- Notification / Status Feedback -->
     @if (!string.IsNullOrWhiteSpace(feedbackMessage))
     {
-        <div class="px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between font-medium animate-atlas-in @(isFeedbackSuccess ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300" : "bg-rose-500/10 border border-rose-500/20 text-rose-300")">
+        <div class="px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between font-medium animate-atlas-in @(isFeedbackSuccess ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-200" : "bg-rose-500/15 border border-rose-500/30 text-rose-200")">
             <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @feedbackMessage</span>
-            <button @onclick="() => feedbackMessage = null" class="text-slate-400 hover:text-white text-xs">✕</button>
+            <button type="button" @onclick="() => feedbackMessage = null" class="text-slate-400 hover:text-white text-xs ml-2 cursor-pointer">✕</button>
         </div>
     }
 
@@ -39,25 +50,26 @@
                 <!-- Crear PIN inicial -->
                 <div class="space-y-3">
                     <div class="space-y-1">
-                        <span class="text-xs font-semibold text-slate-200 block">Establecer PIN de 4 dígitos</span>
+                        <span class="text-xs font-semibold text-slate-200 block">Establecer PIN Maestro de 4 números</span>
                         <p class="text-[11px] text-slate-400">
-                            Creá un PIN numérico de 4 cifras para proteger la visualización y edición de tus claves privadas.
+                            Creá un PIN de 4 números para proteger y ocultar la visualización de tus claves privadas.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-2.5">
-                        <div class="w-32">
-                            <AtlasInput 
-                                Type="password" 
-                                MaxLength="4"
-                                @bind-Value="newPinInput" 
-                                Placeholder="•••• (4 dígitos)" />
+                        <div class="w-36">
+                            <input 
+                                type="password" 
+                                maxlength="4"
+                                @bind="newPinInput"
+                                @bind:event="oninput"
+                                placeholder="•••• (4 dígitos)" 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <AtlasButton 
                             Variant="primary" 
                             Size="md" 
-                            OnClick="SetInitialPinAsync"
-                            IsDisabled="@(string.IsNullOrWhiteSpace(newPinInput) || newPinInput.Length != 4)">
+                            OnClick="SetInitialPinAsync">
                             Guardar PIN
                         </AtlasButton>
                     </div>
@@ -73,24 +85,25 @@
                             <span class="text-xs font-semibold text-slate-200">PIN de 4 dígitos activo</span>
                         </div>
                         <p class="text-[11px] text-slate-400">
-                            Ingresá tu PIN para revelar o editar las claves guardadas.
+                            Ingresá tu PIN para ver los valores reales de tus claves guardadas.
                         </p>
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <div class="w-28">
-                            <AtlasInput 
-                                Type="password" 
-                                MaxLength="4"
-                                @bind-Value="unlockPinInput" 
-                                Placeholder="••••" />
+                        <div class="w-32">
+                            <input 
+                                type="password" 
+                                maxlength="4"
+                                @bind="unlockPinInput"
+                                @bind:event="oninput"
+                                placeholder="••••" 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                         </div>
                         <AtlasButton 
                             Variant="primary" 
                             Size="md" 
-                            OnClick="UnlockVaultAsync"
-                            IsDisabled="@(string.IsNullOrWhiteSpace(unlockPinInput) || unlockPinInput.Length != 4)">
-                            Desbloquear
+                            OnClick="UnlockVaultAsync">
+                            🔓 Desbloquear
                         </AtlasButton>
                     </div>
                 </div>
@@ -98,10 +111,10 @@
                 @if (isChangingPin)
                 {
                     <div class="pt-3 border-t border-white/[0.06] space-y-3 animate-atlas-in">
-                        <span class="text-xs font-semibold text-slate-200 block">Cambiar PIN</span>
+                        <span class="text-xs font-semibold text-slate-200 block">Cambiar PIN de Seguridad</span>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <AtlasInput Type="password" MaxLength="4" @bind-Value="oldPinChangeInput" Placeholder="PIN Actual (4 dígitos)" />
-                            <AtlasInput Type="password" MaxLength="4" @bind-Value="newPinChangeInput" Placeholder="Nuevo PIN (4 dígitos)" />
+                            <input type="password" maxlength="4" @bind="oldPinChangeInput" @bind:event="oninput" placeholder="PIN Actual (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500" />
+                            <input type="password" maxlength="4" @bind="newPinChangeInput" @bind:event="oninput" placeholder="Nuevo PIN (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500" />
                         </div>
                         <div class="flex items-center gap-2">
                             <AtlasButton Variant="primary" Size="sm" OnClick="ChangePinAsync">Actualizar PIN</AtlasButton>
@@ -112,7 +125,7 @@
                 else
                 {
                     <div class="pt-2 border-t border-white/[0.04] flex justify-end">
-                        <button type="button" @onclick="() => isChangingPin = true" class="text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors">
+                        <button type="button" @onclick="() => isChangingPin = true" class="text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors cursor-pointer">
                             ¿Querés cambiar tu PIN? →
                         </button>
                     </div>
@@ -125,10 +138,10 @@
                     <div class="space-y-0.5">
                         <span class="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
                             <span class="w-2 h-2 rounded-full bg-amber-400"></span>
-                            <span>Bóveda desbloqueada para esta sesión</span>
+                            <span>Bóveda desbloqueada</span>
                         </span>
                         <p class="text-[11px] text-slate-400">
-                            Las claves se encuentran visibles y editables.
+                            Todas las claves están visibles y editables.
                         </p>
                     </div>
 
@@ -149,7 +162,7 @@
             <button 
                 type="button"
                 @onclick="() => showSqlModal = !showSqlModal"
-                class="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 transition-colors">
+                class="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer">
                 @(showSqlModal ? "Ocultar SQL" : "📋 Ver Script SQL")
             </button>
         </div>
@@ -170,11 +183,11 @@
                 <div class="p-4 rounded-xl bg-[#090b10] border border-white/[0.08] space-y-2.5 animate-atlas-in">
                     <div class="flex items-center justify-between text-xs">
                         <span class="font-mono text-indigo-400 font-semibold">Script SQL para crear tablas en Supabase:</span>
-                        <button type="button" @onclick="() => showSqlModal = false" class="text-slate-400 hover:text-white text-xs">✕</button>
+                        <button type="button" @onclick="() => showSqlModal = false" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
                     </div>
                     <pre class="text-[10px] font-mono text-slate-300 overflow-x-auto max-h-48 p-2.5 bg-black/40 rounded-lg select-all whitespace-pre">@SupabaseSchemaSql</pre>
                     <p class="text-[10px] text-slate-400">
-                        Copiá este script y ejecutalo en el <strong>SQL Editor</strong> de tu panel en Supabase.
+                        Copiá este script y ejecutalo en el <strong>SQL Editor</strong> de tu proyecto en Supabase.
                     </p>
                 </div>
             }
@@ -182,49 +195,36 @@
             <div class="space-y-3">
                 <!-- Project URL -->
                 <div class="space-y-1">
-                    <label class="text-[11px] font-mono text-slate-400 block">Project URL (ej: https://xyz.supabase.co)</label>
-                    @if (isVaultUnlocked)
-                    {
-                        <AtlasInput @bind-Value="supabaseUrlInput" Placeholder="https://your-project.supabase.co" />
-                    }
-                    else
-                    {
-                        <input type="password" disabled value="@(hasSupabaseConfigured ? "••••••••••••••••••••••••" : "")" placeholder="@(hasSupabaseConfigured ? "••••••••••••••••••••••••" : "No configurada")" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                    }
+                    <label class="text-[11px] font-mono text-slate-400 block">Project URL</label>
+                    <input 
+                        type="@(isVaultUnlocked || !hasSupabaseConfigured ? "text" : "password")" 
+                        @bind="supabaseUrlInput" 
+                        @bind:event="oninput"
+                        placeholder="https://your-project.supabase.co" 
+                        class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
                 <!-- Anon API Key -->
                 <div class="space-y-1">
                     <label class="text-[11px] font-mono text-slate-400 block">Anon / Public API Key</label>
-                    @if (isVaultUnlocked)
-                    {
-                        <AtlasInput @bind-Value="supabaseKeyInput" Placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." />
-                    }
-                    else
-                    {
-                        <input type="password" disabled value="@(hasSupabaseConfigured ? "••••••••••••••••••••••••" : "")" placeholder="@(hasSupabaseConfigured ? "••••••••••••••••••••••••" : "No configurada")" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                    }
+                    <input 
+                        type="@(isVaultUnlocked || !hasSupabaseConfigured ? "text" : "password")" 
+                        @bind="supabaseKeyInput" 
+                        @bind:event="oninput"
+                        placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+                        class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
                 <!-- Action buttons -->
                 <div class="pt-2 flex items-center justify-between flex-wrap gap-2">
                     <div class="flex items-center gap-2">
-                        @if (isVaultUnlocked)
+                        <AtlasButton Variant="primary" Size="sm" OnClick="SaveSupabaseKeysAsync">
+                            Guardar Credenciales
+                        </AtlasButton>
+                        @if (hasSupabaseConfigured)
                         {
-                            <AtlasButton Variant="primary" Size="sm" OnClick="SaveSupabaseKeysAsync">
-                                Guardar Credenciales
-                            </AtlasButton>
-                            @if (hasSupabaseConfigured)
-                            {
-                                <AtlasButton Variant="danger" Size="sm" OnClick="DeleteSupabaseKeysAsync">
-                                    Eliminar
-                                </AtlasButton>
-                            }
-                        }
-                        else if (!hasSupabaseConfigured)
-                        {
-                            <AtlasButton Variant="primary" Size="sm" OnClick='() => PromptUnlockOrSet("supabase")'>
-                                + Configurar Supabase
+                            <AtlasButton Variant="danger" Size="sm" OnClick="DeleteSupabaseKeysAsync">
+                                Eliminar
                             </AtlasButton>
                         }
                     </div>
@@ -248,9 +248,6 @@
     <section class="space-y-4">
         <div class="flex items-center justify-between">
             <AtlasSectionHeader Title="Otras Integraciones & APIs" />
-            <span class="text-[11px] font-mono text-slate-500">
-                @(isVaultUnlocked ? "Modo Edición" : "Modo Seguro")
-            </span>
         </div>
 
         <div class="space-y-3">
@@ -271,39 +268,21 @@
                     <label class="text-[11px] font-mono text-slate-400 block">API Key (Google AI Studio)</label>
                     <div class="flex items-center gap-2">
                         <div class="flex-1">
-                            @if (isVaultUnlocked)
-                            {
-                                <AtlasInput 
-                                    @bind-Value="geminiKeyInput" 
-                                    Placeholder="AIzaSy..." />
-                            }
-                            else
-                            {
-                                <input 
-                                    type="password" 
-                                    disabled 
-                                    value="@(hasGeminiKey ? "••••••••••••••••••••••••" : "")" 
-                                    placeholder="@(hasGeminiKey ? "••••••••••••••••••••••••" : "No configurada")" 
-                                    class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                            }
+                            <input 
+                                type="@(isVaultUnlocked || !hasGeminiKey ? "text" : "password")" 
+                                @bind="geminiKeyInput" 
+                                @bind:event="oninput"
+                                placeholder="AIzaSy..." 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        @if (isVaultUnlocked)
+                        <AtlasButton Variant="primary" Size="md" OnClick="SaveGeminiKeyAsync">
+                            Guardar
+                        </AtlasButton>
+                        @if (hasGeminiKey)
                         {
-                            <AtlasButton Variant="primary" Size="md" OnClick="SaveGeminiKeyAsync">
-                                Guardar
-                            </AtlasButton>
-                            @if (hasGeminiKey)
-                            {
-                                <AtlasButton Variant="danger" Size="md" OnClick="DeleteGeminiKeyAsync">
-                                    Eliminar
-                                </AtlasButton>
-                            }
-                        }
-                        else if (!hasGeminiKey)
-                        {
-                            <AtlasButton Variant="primary" Size="md" OnClick='() => PromptUnlockOrSet("gemini")'>
-                                + Agregar
+                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteGeminiKeyAsync">
+                                Eliminar
                             </AtlasButton>
                         }
                     </div>
@@ -326,39 +305,21 @@
                     <label class="text-[11px] font-mono text-slate-400 block">Bot Token (@@BotFather)</label>
                     <div class="flex items-center gap-2">
                         <div class="flex-1">
-                            @if (isVaultUnlocked)
-                            {
-                                <AtlasInput 
-                                    @bind-Value="telegramTokenInput" 
-                                    Placeholder="123456789:ABCdefGHIjklMNOpqr..." />
-                            }
-                            else
-                            {
-                                <input 
-                                    type="password" 
-                                    disabled 
-                                    value="@(hasTelegramToken ? "••••••••••••••••••••••••" : "")" 
-                                    placeholder="@(hasTelegramToken ? "••••••••••••••••••••••••" : "No configurado")" 
-                                    class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                            }
+                            <input 
+                                type="@(isVaultUnlocked || !hasTelegramToken ? "text" : "password")" 
+                                @bind="telegramTokenInput" 
+                                @bind:event="oninput"
+                                placeholder="123456789:ABCdefGHIjklMNOpqr..." 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        @if (isVaultUnlocked)
+                        <AtlasButton Variant="primary" Size="md" OnClick="SaveTelegramTokenAsync">
+                            Guardar
+                        </AtlasButton>
+                        @if (hasTelegramToken)
                         {
-                            <AtlasButton Variant="primary" Size="md" OnClick="SaveTelegramTokenAsync">
-                                Guardar
-                            </AtlasButton>
-                            @if (hasTelegramToken)
-                            {
-                                <AtlasButton Variant="danger" Size="md" OnClick="DeleteTelegramTokenAsync">
-                                    Eliminar
-                                </AtlasButton>
-                            }
-                        }
-                        else if (!hasTelegramToken)
-                        {
-                            <AtlasButton Variant="primary" Size="md" OnClick='() => PromptUnlockOrSet("telegram")'>
-                                + Agregar
+                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteTelegramTokenAsync">
+                                Eliminar
                             </AtlasButton>
                         }
                     </div>
@@ -381,39 +342,21 @@
                     <label class="text-[11px] font-mono text-slate-400 block">Personal Access Token (PROD / TEST)</label>
                     <div class="flex items-center gap-2">
                         <div class="flex-1">
-                            @if (isVaultUnlocked)
-                            {
-                                <AtlasInput 
-                                    @bind-Value="mpTokenInput" 
-                                    Placeholder="APP_USR-..." />
-                            }
-                            else
-                            {
-                                <input 
-                                    type="password" 
-                                    disabled 
-                                    value="@(hasMpToken ? "••••••••••••••••••••••••" : "")" 
-                                    placeholder="@(hasMpToken ? "••••••••••••••••••••••••" : "No configurado")" 
-                                    class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                            }
+                            <input 
+                                type="@(isVaultUnlocked || !hasMpToken ? "text" : "password")" 
+                                @bind="mpTokenInput" 
+                                @bind:event="oninput"
+                                placeholder="APP_USR-..." 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        @if (isVaultUnlocked)
+                        <AtlasButton Variant="primary" Size="md" OnClick="SaveMpTokenAsync">
+                            Guardar
+                        </AtlasButton>
+                        @if (hasMpToken)
                         {
-                            <AtlasButton Variant="primary" Size="md" OnClick="SaveMpTokenAsync">
-                                Guardar
-                            </AtlasButton>
-                            @if (hasMpToken)
-                            {
-                                <AtlasButton Variant="danger" Size="md" OnClick="DeleteMpTokenAsync">
-                                    Eliminar
-                                </AtlasButton>
-                            }
-                        }
-                        else if (!hasMpToken)
-                        {
-                            <AtlasButton Variant="primary" Size="md" OnClick='() => PromptUnlockOrSet("mp")'>
-                                + Agregar
+                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteMpTokenAsync">
+                                Eliminar
                             </AtlasButton>
                         }
                     </div>
@@ -436,39 +379,21 @@
                     <label class="text-[11px] font-mono text-slate-400 block">OAuth Refresh Token</label>
                     <div class="flex items-center gap-2">
                         <div class="flex-1">
-                            @if (isVaultUnlocked)
-                            {
-                                <AtlasInput 
-                                    @bind-Value="gmailTokenInput" 
-                                    Placeholder="1//04..." />
-                            }
-                            else
-                            {
-                                <input 
-                                    type="password" 
-                                    disabled 
-                                    value="@(hasGmailToken ? "••••••••••••••••••••••••" : "")" 
-                                    placeholder="@(hasGmailToken ? "••••••••••••••••••••••••" : "No configurado")" 
-                                    class="w-full px-3.5 py-2 rounded-xl bg-white/[0.02] border border-white/[0.06] text-slate-400 text-xs font-mono cursor-not-allowed select-none" />
-                            }
+                            <input 
+                                type="@(isVaultUnlocked || !hasGmailToken ? "text" : "password")" 
+                                @bind="gmailTokenInput" 
+                                @bind:event="oninput"
+                                placeholder="1//04..." 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        @if (isVaultUnlocked)
+                        <AtlasButton Variant="primary" Size="md" OnClick="SaveGmailTokenAsync">
+                            Guardar
+                        </AtlasButton>
+                        @if (hasGmailToken)
                         {
-                            <AtlasButton Variant="primary" Size="md" OnClick="SaveGmailTokenAsync">
-                                Guardar
-                            </AtlasButton>
-                            @if (hasGmailToken)
-                            {
-                                <AtlasButton Variant="danger" Size="md" OnClick="DeleteGmailTokenAsync">
-                                    Eliminar
-                                </AtlasButton>
-                            }
-                        }
-                        else if (!hasGmailToken)
-                        {
-                            <AtlasButton Variant="primary" Size="md" OnClick='() => PromptUnlockOrSet("gmail")'>
-                                + Agregar
+                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteGmailTokenAsync">
+                                Eliminar
                             </AtlasButton>
                         }
                     </div>
@@ -485,7 +410,7 @@
             <span>Almacenamiento Local & Encriptado</span>
         </div>
         <p class="text-slate-400 leading-relaxed font-sans text-xs">
-            Todas las claves son encriptadas por el sistema operativo mediante Windows Credential Locker (DPAPI) y protegidas por tu PIN de 4 dígitos.
+            Todas las claves son encriptadas por Windows Credential Locker (DPAPI) y custodiadas localmente.
         </p>
     </div>
 
@@ -511,7 +436,7 @@
     private bool hasMpToken;
     private bool hasGmailToken;
 
-    // Unlocked API Key values
+    // API Key values
     private string supabaseUrlInput = string.Empty;
     private string supabaseKeyInput = string.Empty;
     private string geminiKeyInput = string.Empty;
@@ -550,7 +475,7 @@
             hasMpToken = SecretVault.HasSecret(SecretKeys.MercadoPagoAccessToken);
             hasGmailToken = SecretVault.HasSecret(SecretKeys.GmailRefreshToken);
 
-            if (isVaultUnlocked)
+            if (isVaultUnlocked || !hasPinConfigured)
             {
                 supabaseUrlInput = SecretVault.GetSecret(SecretKeys.SupabaseUrl) ?? string.Empty;
                 supabaseKeyInput = SecretVault.GetSecret(SecretKeys.SupabaseAnonKey) ?? string.Empty;
@@ -558,6 +483,15 @@
                 telegramTokenInput = SecretVault.GetSecret(SecretKeys.TelegramBotToken) ?? string.Empty;
                 mpTokenInput = SecretVault.GetSecret(SecretKeys.MercadoPagoAccessToken) ?? string.Empty;
                 gmailTokenInput = SecretVault.GetSecret(SecretKeys.GmailRefreshToken) ?? string.Empty;
+            }
+            else
+            {
+                supabaseUrlInput = hasSupabaseConfigured ? "••••••••••••••••••••••••" : string.Empty;
+                supabaseKeyInput = hasSupabaseConfigured ? "••••••••••••••••••••••••" : string.Empty;
+                geminiKeyInput = hasGeminiKey ? "••••••••••••••••••••••••" : string.Empty;
+                telegramTokenInput = hasTelegramToken ? "••••••••••••••••••••••••" : string.Empty;
+                mpTokenInput = hasMpToken ? "••••••••••••••••••••••••" : string.Empty;
+                gmailTokenInput = hasGmailToken ? "••••••••••••••••••••••••" : string.Empty;
             }
         }
         catch (Exception ex)
@@ -570,7 +504,7 @@
     {
         if (!IsValidPin(newPinInput))
         {
-            ShowFeedback("El PIN debe ser exactamente de 4 dígitos numéricos.", false);
+            ShowFeedback("El PIN debe ser exactamente de 4 números (ej: 1234).", false);
             return;
         }
 
@@ -594,7 +528,7 @@
     {
         if (!IsValidPin(unlockPinInput))
         {
-            ShowFeedback("El PIN ingresado no es válido (deben ser 4 dígitos).", false);
+            ShowFeedback("El PIN ingresado debe contener 4 dígitos.", false);
             return;
         }
 
@@ -624,15 +558,10 @@
     private void LockVault()
     {
         isVaultUnlocked = false;
-        supabaseUrlInput = string.Empty;
-        supabaseKeyInput = string.Empty;
-        geminiKeyInput = string.Empty;
-        telegramTokenInput = string.Empty;
-        mpTokenInput = string.Empty;
-        gmailTokenInput = string.Empty;
         unlockPinInput = string.Empty;
         isChangingPin = false;
         showSqlModal = false;
+        RefreshStatus();
         ShowFeedback("Bóveda bloqueada.", true);
     }
 
@@ -668,24 +597,12 @@
         }
     }
 
-    private void PromptUnlockOrSet(string keyType)
-    {
-        if (!hasPinConfigured)
-        {
-            ShowFeedback("Primero establecé tu PIN de 4 dígitos arriba para proteger tus claves.", false);
-        }
-        else
-        {
-            ShowFeedback("Ingresá tu PIN arriba para desbloquear la bóveda y agregar la clave.", false);
-        }
-    }
-
     // Save Handlers
     private void SaveSupabaseKeysAsync()
     {
-        if (string.IsNullOrWhiteSpace(supabaseUrlInput) || string.IsNullOrWhiteSpace(supabaseKeyInput))
+        if (string.IsNullOrWhiteSpace(supabaseUrlInput) || string.IsNullOrWhiteSpace(supabaseKeyInput) || supabaseUrlInput.Contains("•••"))
         {
-            ShowFeedback("Completá tanto la URL como la Anon Key de Supabase.", false);
+            ShowFeedback("Por favor completá la URL y la Anon Key de Supabase.", false);
             return;
         }
         try
@@ -739,7 +656,11 @@
 
     private void SaveGeminiKeyAsync()
     {
-        if (string.IsNullOrWhiteSpace(geminiKeyInput)) return;
+        if (string.IsNullOrWhiteSpace(geminiKeyInput) || geminiKeyInput.Contains("•••"))
+        {
+            ShowFeedback("Escribí tu API Key de Gemini para guardar.", false);
+            return;
+        }
         try
         {
             SecretVault.SetSecret(SecretKeys.GeminiApiKey, geminiKeyInput.Trim());
@@ -763,7 +684,11 @@
 
     private void SaveTelegramTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(telegramTokenInput)) return;
+        if (string.IsNullOrWhiteSpace(telegramTokenInput) || telegramTokenInput.Contains("•••"))
+        {
+            ShowFeedback("Escribí tu Bot Token de Telegram para guardar.", false);
+            return;
+        }
         try
         {
             SecretVault.SetSecret(SecretKeys.TelegramBotToken, telegramTokenInput.Trim());
@@ -787,7 +712,11 @@
 
     private void SaveMpTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(mpTokenInput)) return;
+        if (string.IsNullOrWhiteSpace(mpTokenInput) || mpTokenInput.Contains("•••"))
+        {
+            ShowFeedback("Escribí tu Access Token de Mercado Pago para guardar.", false);
+            return;
+        }
         try
         {
             SecretVault.SetSecret(SecretKeys.MercadoPagoAccessToken, mpTokenInput.Trim());
@@ -811,7 +740,11 @@
 
     private void SaveGmailTokenAsync()
     {
-        if (string.IsNullOrWhiteSpace(gmailTokenInput)) return;
+        if (string.IsNullOrWhiteSpace(gmailTokenInput) || gmailTokenInput.Contains("•••"))
+        {
+            ShowFeedback("Escribí tu Refresh Token de Gmail para guardar.", false);
+            return;
+        }
         try
         {
             SecretVault.SetSecret(SecretKeys.GmailRefreshToken, gmailTokenInput.Trim());
@@ -848,6 +781,6 @@
     {
         feedbackMessage = message;
         isFeedbackSuccess = isSuccess;
-        _ = Task.Delay(3500).ContinueWith(_ => { feedbackMessage = null; InvokeAsync(StateHasChanged); });
+        _ = Task.Delay(4000).ContinueWith(_ => { feedbackMessage = null; InvokeAsync(StateHasChanged); });
     }
 }
