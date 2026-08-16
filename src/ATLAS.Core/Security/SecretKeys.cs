@@ -50,4 +50,29 @@ public static class SecretKeys
     /// Supabase Anon / Service API Key.
     /// </summary>
     public const string SupabaseAnonKey = "SupabaseAnonKey";
+
+    /// <summary>
+    /// Supabase Auth JWT Access Token for authenticated RLS.
+    /// </summary>
+    public const string SupabaseAccessToken = "SupabaseAccessToken";
+
+    /// <summary>
+    /// Supabase Auth Refresh Token for session renewal.
+    /// </summary>
+    public const string SupabaseRefreshToken = "SupabaseRefreshToken";
+
+    /// <summary>
+    /// Unix timestamp (seconds) when the Supabase access token expires.
+    /// </summary>
+    public const string SupabaseTokenExpiresAt = "SupabaseTokenExpiresAt";
+
+    /// <summary>
+    /// Supabase User UUID (auth.uid()).
+    /// </summary>
+    public const string SupabaseUserId = "SupabaseUserId";
+
+    /// <summary>
+    /// Supabase User Email for UI display.
+    /// </summary>
+    public const string SupabaseUserEmail = "SupabaseUserEmail";
 }

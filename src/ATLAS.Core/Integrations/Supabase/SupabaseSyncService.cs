@@ -18,6 +18,7 @@ public class SupabaseSyncService : ISupabaseSyncService
 {
     private readonly HttpClient _httpClient;
     private readonly ISecretVault _secretVault;
+    private readonly ISupabaseAuthService _authService;
     private readonly INoteRepository _noteRepository;
     private readonly IGoalRepository _goalRepository;
     private readonly IHabitRepository _habitRepository;
@@ -33,6 +34,7 @@ public class SupabaseSyncService : ISupabaseSyncService
     public SupabaseSyncService(
         HttpClient httpClient,
         ISecretVault secretVault,
+        ISupabaseAuthService authService,
         INoteRepository noteRepository,
         IGoalRepository goalRepository,
         IHabitRepository habitRepository,
@@ -41,6 +43,7 @@ public class SupabaseSyncService : ISupabaseSyncService
     {
         _httpClient = httpClient;
         _secretVault = secretVault;
+        _authService = authService;
         _noteRepository = noteRepository;
         _goalRepository = goalRepository;
         _habitRepository = habitRepository;
@@ -52,17 +55,34 @@ public class SupabaseSyncService : ISupabaseSyncService
     {
         var url = _secretVault.GetSecret(SecretKeys.SupabaseUrl);
         var key = _secretVault.GetSecret(SecretKeys.SupabaseAnonKey);
-        return !string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(key);
+        return !string.IsNullOrWhiteSpace(url) && !string.IsNullOrWhiteSpace(key) && _authService.IsAuthenticated();
     }
 
     public async Task<SupabaseSyncResult> SyncAllAsync(CancellationToken cancellationToken = default)
     {
         var url = _secretVault.GetSecret(SecretKeys.SupabaseUrl)?.TrimEnd('/');
-        var key = _secretVault.GetSecret(SecretKeys.SupabaseAnonKey);
+        var anonKey = _secretVault.GetSecret(SecretKeys.SupabaseAnonKey);
 
-        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(key))
+        if (string.IsNullOrWhiteSpace(url) || string.IsNullOrWhiteSpace(anonKey))
         {
             return new SupabaseSyncResult(false, "Supabase no está configurado (falta URL o Anon Key).");
+        }
+
+        if (!_authService.IsAuthenticated())
+        {
+            return new SupabaseSyncResult(false, "Supabase requiere inicio de sesión en Configuración (Supabase Auth).");
+        }
+
+        var accessToken = await _authService.GetValidAccessTokenAsync(cancellationToken);
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return new SupabaseSyncResult(false, "No se pudo obtener un token de sesión válido. Por favor volvé a iniciar sesión en Configuración.");
+        }
+
+        var userId = _authService.GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return new SupabaseSyncResult(false, "No se encontró el identificador de usuario de Supabase.");
         }
 
         try
@@ -74,6 +94,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var notesPayload = notes.Select(n => new
                 {
                     id = n.Id,
+                    user_id = userId,
                     title = n.Title,
                     content = n.Content,
                     type = n.Type,
@@ -81,7 +102,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                     source = n.Source,
                     created_at = n.CreatedAt.UtcDateTime.ToString("o")
                 });
-                await UpsertTableAsync(url, key, "notes", notesPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "notes", notesPayload, cancellationToken);
             }
 
             // 2. Sync Goals
@@ -91,6 +112,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var goalsPayload = goals.Select(g => new
                 {
                     id = g.Id,
+                    user_id = userId,
                     title = g.Title,
                     description = g.Description,
                     status = g.Status,
@@ -98,7 +120,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                     target_date = g.TargetDate?.UtcDateTime.ToString("o"),
                     created_at = g.CreatedAt.UtcDateTime.ToString("o")
                 });
-                await UpsertTableAsync(url, key, "goals", goalsPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "goals", goalsPayload, cancellationToken);
             }
 
             // 3. Sync Habits
@@ -108,12 +130,13 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var habitsPayload = habits.Select(h => new
                 {
                     id = h.Id,
+                    user_id = userId,
                     name = h.Name,
                     description = h.Description,
                     frequency = h.Frequency,
                     created_at = h.CreatedAt.UtcDateTime.ToString("o")
                 });
-                await UpsertTableAsync(url, key, "habits", habitsPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "habits", habitsPayload, cancellationToken);
             }
 
             // 4. Sync Habit Events
@@ -123,11 +146,12 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var eventsPayload = events.Select(e => new
                 {
                     id = e.Id,
+                    user_id = userId,
                     habit_id = e.HabitId,
                     completed_at = e.CompletedAt.UtcDateTime.ToString("o"),
                     note = e.Note
                 });
-                await UpsertTableAsync(url, key, "habit_events", eventsPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "habit_events", eventsPayload, cancellationToken);
             }
 
             // 5. Sync Roadmaps
@@ -138,6 +162,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var roadmapsPayload = roadmaps.Select(r => new
                 {
                     id = r.Id,
+                    user_id = userId,
                     goal_id = r.GoalId,
                     title = r.Title,
                     description = r.Description,
@@ -145,7 +170,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                     created_at = r.CreatedAt.UtcDateTime.ToString("o"),
                     updated_at = r.UpdatedAt.UtcDateTime.ToString("o")
                 });
-                await UpsertTableAsync(url, key, "roadmaps", roadmapsPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "roadmaps", roadmapsPayload, cancellationToken);
 
                 // 6. Sync Roadmap Milestones
                 var allMilestones = roadmaps.SelectMany(r => r.Milestones ?? new List<RoadmapMilestone>()).ToList();
@@ -155,6 +180,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                     var milestonesPayload = allMilestones.Select(m => new
                     {
                         id = m.Id,
+                        user_id = userId,
                         roadmap_id = m.RoadmapId,
                         title = m.Title,
                         order_index = m.OrderIndex,
@@ -163,7 +189,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                         created_at = m.CreatedAt.UtcDateTime.ToString("o"),
                         completed_at = m.CompletedAt?.UtcDateTime.ToString("o")
                     });
-                    await UpsertTableAsync(url, key, "roadmap_milestones", milestonesPayload, cancellationToken);
+                    await UpsertTableAsync(url, anonKey, accessToken, "roadmap_milestones", milestonesPayload, cancellationToken);
                 }
             }
 
@@ -174,6 +200,7 @@ public class SupabaseSyncService : ISupabaseSyncService
                 var txPayload = txs.Select(t => new
                 {
                     id = t.Id,
+                    user_id = userId,
                     fecha = t.Fecha.UtcDateTime.ToString("o"),
                     monto = t.Monto,
                     tipo = t.Tipo,
@@ -187,12 +214,12 @@ public class SupabaseSyncService : ISupabaseSyncService
                     metadata = t.Metadata,
                     created_at = t.CreatedAt.UtcDateTime.ToString("o")
                 });
-                await UpsertTableAsync(url, key, "transactions", txPayload, cancellationToken);
+                await UpsertTableAsync(url, anonKey, accessToken, "transactions", txPayload, cancellationToken);
             }
 
             return new SupabaseSyncResult(
                 IsSuccess: true,
-                Message: "Sincronización con Supabase completada exitosamente.",
+                Message: "Sincronización autenticada con Supabase completada exitosamente.",
                 NotesSynced: notes.Count,
                 GoalsSynced: goals.Count,
                 HabitsSynced: habits.Count,
@@ -208,14 +235,14 @@ public class SupabaseSyncService : ISupabaseSyncService
         }
     }
 
-    private async Task UpsertTableAsync<T>(string baseUrl, string apiKey, string table, IEnumerable<T> records, CancellationToken cancellationToken)
+    private async Task UpsertTableAsync<T>(string baseUrl, string apiKey, string accessToken, string table, IEnumerable<T> records, CancellationToken cancellationToken)
     {
         var endpoint = $"{baseUrl}/rest/v1/{table}";
         var json = JsonSerializer.Serialize(records, JsonOptions);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
         request.Headers.Add("apikey", apiKey);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
         request.Headers.Add("Prefer", "resolution=merge-duplicates");
         request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 

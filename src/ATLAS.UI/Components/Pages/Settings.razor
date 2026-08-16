@@ -1,6 +1,8 @@
 @page "/settings"
+@using ATLAS.Core.Integrations.Supabase
 @inject ISecretVault SecretVault
 @inject ICommandRegistry CommandRegistry
+@inject ISupabaseAuthService SupabaseAuth
 @using System.Security.Cryptography
 @using System.Text
 @using System.Text.RegularExpressions
@@ -27,7 +29,7 @@
             </div>
         </div>
         <p class="text-xs text-slate-400">
-            Administrá tus claves de APIs e integraciones. Se almacenan encriptadas en Windows Credential Locker.
+            Administrá tus credenciales y conexiones encriptadas en Windows Credential Locker.
         </p>
     </div>
 
@@ -155,10 +157,10 @@
         </div>
     </section>
 
-    <!-- 2. SECCIÓN: BASE DE DATOS SUPABASE -->
+    <!-- 2. SECCIÓN: BASE DE DATOS SUPABASE + AUTH -->
     <section class="space-y-3">
         <div class="flex items-center justify-between">
-            <AtlasSectionHeader Title="Base de Datos en la Nube — Supabase" />
+            <AtlasSectionHeader Title="Base de Datos en la Nube — Supabase (Auth + RLS)" />
             <button 
                 type="button"
                 @onclick="() => showSqlModal = !showSqlModal"
@@ -168,21 +170,33 @@
         </div>
 
         <div class="atlas-surface rounded-2xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
+            
+            <!-- Supabase Connection & Auth Status Badges -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-3.5">
                 <div class="flex items-center gap-2.5">
-                    <span class="w-2 h-2 rounded-full @(hasSupabaseConfigured ? "bg-emerald-400" : "bg-slate-600")"></span>
-                    <span class="text-xs font-semibold text-white">Supabase (PostgreSQL & REST)</span>
+                    <span class="w-2 h-2 rounded-full @(hasSupabaseConfigured && isSupabaseAuthenticated ? "bg-emerald-400" : hasSupabaseConfigured ? "bg-amber-400" : "bg-slate-600")"></span>
+                    <span class="text-xs font-semibold text-white">Supabase Cloud</span>
+                    @if (isSupabaseAuthenticated)
+                    {
+                        <span class="text-[11px] font-mono text-indigo-300">(@supabaseUserEmail)</span>
+                    }
                 </div>
-                <AtlasBadge Variant="@(hasSupabaseConfigured ? "success" : "neutral")">
-                    @(hasSupabaseConfigured ? "Conectado" : "Pendiente")
-                </AtlasBadge>
+                
+                <div class="flex items-center gap-2">
+                    <AtlasBadge Variant="@(hasSupabaseConfigured ? "success" : "neutral")">
+                        @(hasSupabaseConfigured ? "API Conectada" : "Sin Claves")
+                    </AtlasBadge>
+                    <AtlasBadge Variant="@(isSupabaseAuthenticated ? "success" : "warning")">
+                        @(isSupabaseAuthenticated ? "Auth Activo" : "Auth Pendiente")
+                    </AtlasBadge>
+                </div>
             </div>
 
             @if (showSqlModal)
             {
                 <div class="p-4 rounded-xl bg-[#090b10] border border-white/[0.08] space-y-2.5 animate-atlas-in">
                     <div class="flex items-center justify-between text-xs">
-                        <span class="font-mono text-indigo-400 font-semibold">Script SQL para crear tablas en Supabase:</span>
+                        <span class="font-mono text-indigo-400 font-semibold">Script SQL de creación con RLS scoped a auth.uid():</span>
                         <button type="button" @onclick="() => showSqlModal = false" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
                     </div>
                     <pre class="text-[10px] font-mono text-slate-300 overflow-x-auto max-h-48 p-2.5 bg-black/40 rounded-lg select-all whitespace-pre">@SupabaseSchemaSql</pre>
@@ -192,8 +206,8 @@
                 </div>
             }
 
+            <!-- 2.1 API Configuration (URL & Anon Key) -->
             <div class="space-y-3">
-                <!-- Project URL -->
                 <div class="space-y-1">
                     <label class="text-[11px] font-mono text-slate-400 block">Project URL</label>
                     <input 
@@ -204,7 +218,6 @@
                         class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
-                <!-- Anon API Key -->
                 <div class="space-y-1">
                     <label class="text-[11px] font-mono text-slate-400 block">Anon / Public API Key</label>
                     <input 
@@ -215,36 +228,93 @@
                         class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
-                <!-- Action buttons -->
-                <div class="pt-2 flex items-center justify-between flex-wrap gap-2">
-                    <div class="flex items-center gap-2">
-                        <AtlasButton Variant="primary" Size="sm" OnClick="SaveSupabaseKeysAsync">
-                            Guardar Credenciales
-                        </AtlasButton>
-                        @if (hasSupabaseConfigured)
-                        {
-                            <AtlasButton Variant="danger" Size="sm" OnClick="DeleteSupabaseKeysAsync">
-                                Eliminar
-                            </AtlasButton>
-                        }
-                    </div>
-
+                <div class="flex items-center gap-2 pt-1">
+                    <AtlasButton Variant="primary" Size="sm" OnClick="SaveSupabaseKeysAsync">
+                        Guardar API Keys
+                    </AtlasButton>
                     @if (hasSupabaseConfigured)
                     {
-                        <AtlasButton 
-                            Variant="accent" 
-                            Size="sm" 
-                            OnClick="SyncSupabaseAsync" 
-                            IsLoading="isSyncingSupabase">
-                            🔄 Sincronizar Ahora con Supabase
+                        <AtlasButton Variant="danger" Size="sm" OnClick="DeleteSupabaseKeysAsync">
+                            Eliminar Keys
                         </AtlasButton>
                     }
                 </div>
             </div>
+
+            <!-- 2.2 Supabase Auth (Email & Password) Login Section -->
+            <div class="pt-3 border-t border-white/[0.06] space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-200 block">Autenticación de Usuario (Supabase Auth)</span>
+                    @if (isSupabaseAuthenticated)
+                    {
+                        <span class="text-[10px] font-mono text-emerald-400">● Token JWT persistido</span>
+                    }
+                </div>
+
+                @if (isSupabaseAuthenticated)
+                {
+                    <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
+                            <span class="text-slate-300 font-medium">Sesión activa como: <strong class="text-white">@supabaseUserEmail</strong></span>
+                            <span class="text-[10.5px] font-mono text-slate-500">ID: @supabaseUserId</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
+                            <AtlasButton Variant="danger" Size="sm" OnClick="SignOutSupabase">
+                                Cerrar Sesión
+                            </AtlasButton>
+
+                            <AtlasButton 
+                                Variant="accent" 
+                                Size="sm" 
+                                OnClick="SyncSupabaseAsync" 
+                                IsLoading="isSyncingSupabase">
+                                🔄 Sincronizar Ahora con Supabase
+                            </AtlasButton>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="space-y-3 bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.06]">
+                        <p class="text-[11px] text-slate-400">
+                            Iniciá sesión con tu email y contraseña de Supabase. El token de sesión se guardará en tu bóveda segura para sincronizar con RLS.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <input 
+                                type="email" 
+                                @bind="loginEmailInput" 
+                                @bind:event="oninput"
+                                placeholder="tu-email@ejemplo.com" 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+
+                            <input 
+                                type="password" 
+                                @bind="loginPasswordInput" 
+                                @bind:event="oninput"
+                                placeholder="Contraseña de Supabase" 
+                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+                        </div>
+
+                        <div class="flex items-center justify-between pt-1">
+                            <AtlasButton 
+                                Variant="primary" 
+                                Size="sm" 
+                                OnClick="SignInSupabaseAsync"
+                                IsLoading="isSigningIn">
+                                Conectar Cuenta (Iniciar Sesión)
+                            </AtlasButton>
+                            <span class="text-[10px] font-mono text-slate-500">Un solo login permanente</span>
+                        </div>
+                    </div>
+                }
+            </div>
+
         </div>
     </section>
 
-    <!-- 3. SECCIÓN: GESTIÓN DE CLAVES DE APIS E INTEGRACIONES -->
+    <!-- 3. SECCIÓN: GESTIÓN DE CLAVES DE OTRAS APIS -->
     <section class="space-y-4">
         <div class="flex items-center justify-between">
             <AtlasSectionHeader Title="Otras Integraciones & APIs" />
@@ -422,12 +492,20 @@
     private bool isChangingPin;
     private bool showSqlModal;
     private bool isSyncingSupabase;
+    private bool isSigningIn;
 
     // PIN inputs
     private string newPinInput = string.Empty;
     private string unlockPinInput = string.Empty;
     private string oldPinChangeInput = string.Empty;
     private string newPinChangeInput = string.Empty;
+
+    // Supabase Auth inputs
+    private string loginEmailInput = string.Empty;
+    private string loginPasswordInput = string.Empty;
+    private bool isSupabaseAuthenticated;
+    private string? supabaseUserEmail;
+    private string? supabaseUserId;
 
     // API Key existence
     private bool hasSupabaseConfigured;
@@ -450,13 +528,29 @@
 
     private const string SupabaseSchemaSql = """
     -- Copiá y ejecutá en Supabase SQL Editor:
-    CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, title TEXT, content TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'note', tags TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), source TEXT NOT NULL DEFAULT 'quick_capture');
-    CREATE TABLE IF NOT EXISTS goals (id TEXT PRIMARY KEY, title TEXT NOT NULL, description TEXT, status TEXT NOT NULL DEFAULT 'active', progress INTEGER NOT NULL DEFAULT 0, target_date TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-    CREATE TABLE IF NOT EXISTS habits (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT, frequency TEXT NOT NULL DEFAULT 'daily', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-    CREATE TABLE IF NOT EXISTS habit_events (id TEXT PRIMARY KEY, habit_id TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE, completed_at TIMESTAMPTZ NOT NULL, note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-    CREATE TABLE IF NOT EXISTS roadmaps (id TEXT PRIMARY KEY, goal_id TEXT REFERENCES goals(id) ON DELETE SET NULL, title TEXT NOT NULL, description TEXT, status TEXT NOT NULL DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
-    CREATE TABLE IF NOT EXISTS roadmap_milestones (id TEXT PRIMARY KEY, roadmap_id TEXT NOT NULL REFERENCES roadmaps(id) ON DELETE CASCADE, title TEXT NOT NULL, order_index INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', notes TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), completed_at TIMESTAMPTZ);
-    CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, fecha TIMESTAMPTZ NOT NULL, monto NUMERIC NOT NULL, tipo TEXT NOT NULL DEFAULT 'expense', origen TEXT NOT NULL DEFAULT 'manual', descripcion TEXT NOT NULL, moneda TEXT NOT NULL DEFAULT 'ARS', categoria TEXT, subcategoria TEXT, id_externo TEXT UNIQUE, estado TEXT NOT NULL DEFAULT 'approved', metadata TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS notes (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), title TEXT, content TEXT NOT NULL, type TEXT NOT NULL DEFAULT 'note', tags TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), source TEXT NOT NULL DEFAULT 'quick_capture');
+    CREATE TABLE IF NOT EXISTS goals (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), title TEXT NOT NULL, description TEXT, status TEXT NOT NULL DEFAULT 'active', progress INTEGER NOT NULL DEFAULT 0, target_date TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS habits (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), name TEXT NOT NULL, description TEXT, frequency TEXT NOT NULL DEFAULT 'daily', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS habit_events (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), habit_id TEXT NOT NULL REFERENCES habits(id) ON DELETE CASCADE, completed_at TIMESTAMPTZ NOT NULL, note TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS roadmaps (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), goal_id TEXT REFERENCES goals(id) ON DELETE SET NULL, title TEXT NOT NULL, description TEXT, status TEXT NOT NULL DEFAULT 'active', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    CREATE TABLE IF NOT EXISTS roadmap_milestones (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), roadmap_id TEXT NOT NULL REFERENCES roadmaps(id) ON DELETE CASCADE, title TEXT NOT NULL, order_index INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'pending', notes TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), completed_at TIMESTAMPTZ);
+    CREATE TABLE IF NOT EXISTS transactions (id TEXT PRIMARY KEY, user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(), fecha TIMESTAMPTZ NOT NULL, monto NUMERIC NOT NULL, tipo TEXT NOT NULL DEFAULT 'expense', origen TEXT NOT NULL DEFAULT 'manual', descripcion TEXT NOT NULL, moneda TEXT NOT NULL DEFAULT 'ARS', categoria TEXT, subcategoria TEXT, id_externo TEXT UNIQUE, estado TEXT NOT NULL DEFAULT 'approved', metadata TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+    
+    ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE habits ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE habit_events ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE roadmaps ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE roadmap_milestones ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+
+    CREATE POLICY "Users can manage their own notes" ON notes FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own goals" ON goals FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own habits" ON habits FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own habit_events" ON habit_events FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own roadmaps" ON roadmaps FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own roadmap_milestones" ON roadmap_milestones FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+    CREATE POLICY "Users can manage their own transactions" ON transactions FOR ALL TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
     """;
 
     protected override void OnInitialized()
@@ -470,6 +564,10 @@
         {
             hasPinConfigured = SecretVault.HasSecret(SecretKeys.MasterSecurityPin);
             hasSupabaseConfigured = SecretVault.HasSecret(SecretKeys.SupabaseUrl) && SecretVault.HasSecret(SecretKeys.SupabaseAnonKey);
+            isSupabaseAuthenticated = SupabaseAuth.IsAuthenticated();
+            supabaseUserEmail = SupabaseAuth.GetUserEmail();
+            supabaseUserId = SupabaseAuth.GetUserId();
+
             hasGeminiKey = SecretVault.HasSecret(SecretKeys.GeminiApiKey);
             hasTelegramToken = SecretVault.HasSecret(SecretKeys.TelegramBotToken);
             hasMpToken = SecretVault.HasSecret(SecretKeys.MercadoPagoAccessToken);
@@ -597,7 +695,7 @@
         }
     }
 
-    // Save Handlers
+    // Supabase Handlers
     private void SaveSupabaseKeysAsync()
     {
         if (string.IsNullOrWhiteSpace(supabaseUrlInput) || string.IsNullOrWhiteSpace(supabaseKeyInput) || supabaseUrlInput.Contains("•••"))
@@ -621,12 +719,63 @@
         {
             SecretVault.DeleteSecret(SecretKeys.SupabaseUrl);
             SecretVault.DeleteSecret(SecretKeys.SupabaseAnonKey);
+            SupabaseAuth.SignOut();
             supabaseUrlInput = string.Empty;
             supabaseKeyInput = string.Empty;
+            loginEmailInput = string.Empty;
+            loginPasswordInput = string.Empty;
             RefreshStatus();
-            ShowFeedback("Credenciales de Supabase eliminadas.", true);
+            ShowFeedback("Credenciales y sesión de Supabase eliminadas.", true);
         }
         catch (Exception ex) { ShowFeedback(ex.Message, false); }
+    }
+
+    private async Task SignInSupabaseAsync()
+    {
+        if (string.IsNullOrWhiteSpace(loginEmailInput) || string.IsNullOrWhiteSpace(loginPasswordInput))
+        {
+            ShowFeedback("Ingresá tu email y contraseña de Supabase.", false);
+            return;
+        }
+
+        if (!hasSupabaseConfigured)
+        {
+            ShowFeedback("Primero guardá la URL y la Anon Key de Supabase arriba.", false);
+            return;
+        }
+
+        isSigningIn = true;
+        try
+        {
+            var result = await SupabaseAuth.SignInWithPasswordAsync(loginEmailInput, loginPasswordInput);
+            if (result.IsSuccess)
+            {
+                loginPasswordInput = string.Empty;
+                RefreshStatus();
+                ShowFeedback("✓ Sesión iniciada con éxito en Supabase Auth.", true);
+            }
+            else
+            {
+                ShowFeedback(result.Message, false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowFeedback($"Error: {ex.Message}", false);
+        }
+        finally
+        {
+            isSigningIn = false;
+        }
+    }
+
+    private void SignOutSupabase()
+    {
+        SupabaseAuth.SignOut();
+        loginEmailInput = string.Empty;
+        loginPasswordInput = string.Empty;
+        RefreshStatus();
+        ShowFeedback("Sesión de Supabase cerrada.", true);
     }
 
     private async Task SyncSupabaseAsync()
@@ -654,6 +803,7 @@
         }
     }
 
+    // Other API Handlers
     private void SaveGeminiKeyAsync()
     {
         if (string.IsNullOrWhiteSpace(geminiKeyInput) || geminiKeyInput.Contains("•••"))
