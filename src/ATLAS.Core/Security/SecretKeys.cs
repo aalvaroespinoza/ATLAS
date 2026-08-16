@@ -35,4 +35,9 @@ public static class SecretKeys
     /// Google OAuth Refresh Token for offline access to Gmail.
     /// </summary>
     public const string GmailRefreshToken = "GmailRefreshToken";
+
+    /// <summary>
+    /// Master 4-digit security PIN for unlocking and viewing encrypted credentials in Settings.
+    /// </summary>
+    public const string MasterSecurityPin = "MasterSecurityPin";
 }
