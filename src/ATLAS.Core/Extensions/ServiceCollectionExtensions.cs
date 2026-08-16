@@ -21,6 +21,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IGmailClient>(sp =>
             new GmailClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
 
+        // Supabase Integration
+        services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseSyncService, ATLAS.Core.Integrations.Supabase.SupabaseSyncService>();
+
         // Commands
         services.AddTransient<CaptureNoteCommand>();
         services.AddTransient<KnowledgeSearchCommand>();
@@ -36,6 +39,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<RoadmapCreateCommand>();
         services.AddTransient<RoadmapAddMilestoneCommand>();
         services.AddTransient<RoadmapCompleteMilestoneCommand>();
+        services.AddTransient<SupabaseSyncCommand>();
 
         return services;
     }

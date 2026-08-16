@@ -40,4 +40,14 @@ public static class SecretKeys
     /// Master 4-digit security PIN for unlocking and viewing encrypted credentials in Settings.
     /// </summary>
     public const string MasterSecurityPin = "MasterSecurityPin";
+
+    /// <summary>
+    /// Supabase project URL (e.g. https://xyz.supabase.co).
+    /// </summary>
+    public const string SupabaseUrl = "SupabaseUrl";
+
+    /// <summary>
+    /// Supabase Anon / Service API Key.
+    /// </summary>
+    public const string SupabaseAnonKey = "SupabaseAnonKey";
 }

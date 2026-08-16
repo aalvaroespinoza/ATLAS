@@ -69,6 +69,7 @@ public static class MauiProgram
         commandRegistry.Register(services.GetRequiredService<RoadmapCreateCommand>());
         commandRegistry.Register(services.GetRequiredService<RoadmapAddMilestoneCommand>());
         commandRegistry.Register(services.GetRequiredService<RoadmapCompleteMilestoneCommand>());
+        commandRegistry.Register(services.GetRequiredService<SupabaseSyncCommand>());
 
         // 3. Start Telegram Listener in background
         var telegramListener = services.GetRequiredService<ITelegramListenerService>();
