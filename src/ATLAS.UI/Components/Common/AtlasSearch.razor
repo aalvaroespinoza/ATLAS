@@ -1,0 +1,49 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="relative flex items-center w-full max-w-xl @Class">
+    <div class="absolute left-3.5 flex items-center pointer-events-none text-slate-400">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+    </div>
+
+    <input 
+        type="text"
+        value="@Value"
+        @oninput="HandleInput"
+        @onkeydown="HandleKeyDown"
+        placeholder="@Placeholder"
+        class="w-full bg-white/[0.05] hover:bg-white/[0.07] focus:bg-white/[0.08] border border-white/[0.09] focus:border-violet-500/50 rounded-2xl pl-10 pr-20 py-2.5 text-xs md:text-sm text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/25 transition-all duration-150 shadow-inner" />
+
+    <div class="absolute right-3 flex items-center gap-1.5 pointer-events-none select-none">
+        @if (!string.IsNullOrWhiteSpace(ShortcutText))
+        {
+            <kbd class="px-2 py-0.5 rounded-lg bg-white/[0.06] border border-white/[0.08] text-[10.5px] font-mono text-slate-400">
+                @ShortcutText
+            </kbd>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Buscar en ATLAS o escribir un comando...";
+    [Parameter] public string ShortcutText { get; set; } = "Ctrl + K";
+    [Parameter] public EventCallback<string?> OnSearch { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && OnSearch.HasDelegate)
+        {
+            await OnSearch.InvokeAsync(Value);
+        }
+    }
+}

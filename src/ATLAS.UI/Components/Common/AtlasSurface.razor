@@ -1,0 +1,42 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="rounded-2xl @GetElevationClass() @GetGlowClass() @(IsInteractive ? "atlas-clickable atlas-card-hover cursor-pointer" : "") @Class"
+     @onclick="HandleClick"
+     @attributes="AdditionalAttributes">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public string Elevation { get; set; } = "base"; // base, elevated, floating
+    [Parameter] public string Glow { get; set; } = "none"; // none, purple, emerald, orange, cyan, hero
+    [Parameter] public bool IsInteractive { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private async Task HandleClick(MouseEventArgs e)
+    {
+        if (IsInteractive && OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(e);
+        }
+    }
+
+    private string GetElevationClass() => Elevation.ToLowerInvariant() switch
+    {
+        "elevated" => "atlas-elevated",
+        "floating" => "atlas-floating",
+        _ => "atlas-surface"
+    };
+
+    private string GetGlowClass() => Glow.ToLowerInvariant() switch
+    {
+        "purple" => "glow-purple",
+        "emerald" => "glow-emerald",
+        "orange" => "glow-orange",
+        "cyan" => "glow-cyan",
+        "hero" => "shadow-glow-hero",
+        _ => ""
+    };
+}

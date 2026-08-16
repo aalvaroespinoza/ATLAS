@@ -1,43 +1,46 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="space-y-1.5 @Class">
-    @if (ShowLabel || !string.IsNullOrWhiteSpace(Label))
+<div class="space-y-1.5 w-full @Class">
+    @if (ShowPercentage)
     {
-        <div class="flex items-center justify-between text-[11px] font-mono">
-            <span class="text-slate-400 font-sans">@Label</span>
-            <span class="text-slate-200 font-semibold">@ClampedValue%</span>
+        <div class="flex items-center justify-between text-[11.5px] font-mono text-slate-400">
+            <span>@Label</span>
+            <span class="font-semibold text-slate-200">@ClampedValue%</span>
         </div>
     }
 
-    <!-- Progress Track (Smooth & Hairline) -->
-    <div class="w-full @GetHeightClass() rounded-full bg-white/[0.06] overflow-hidden">
+    <div class="w-full bg-white/[0.06] rounded-full overflow-hidden p-0.5 border border-white/[0.04] @GetHeightClass()">
         <div 
-            class="@GetFillClasses() rounded-full transition-all duration-500 ease-out" 
-            style="width: @(ClampedValue)%; height: 100%;">
+            class="h-full rounded-full transition-all duration-300 @GetColorClass()"
+            style="width: @ClampedValue%;">
         </div>
     </div>
 </div>
 
 @code {
     [Parameter] public int Value { get; set; }
+    [Parameter] public int Max { get; set; } = 100;
     [Parameter] public string? Label { get; set; }
-    [Parameter] public bool ShowLabel { get; set; }
-    [Parameter] public string Variant { get; set; } = "accent"; // accent, neutral, success
-    [Parameter] public string Size { get; set; } = "sm"; // sm (2px), md (4px)
+    [Parameter] public string Color { get; set; } = "gradient"; // gradient, indigo, emerald, cyan, purple
+    [Parameter] public string Height { get; set; } = "md"; // sm (4px), md (6px), lg (8px)
+    [Parameter] public bool ShowPercentage { get; set; }
     [Parameter] public string? Class { get; set; }
 
-    private int ClampedValue => Math.Clamp(Value, 0, 100);
+    private int ClampedValue => Math.Clamp(Value, 0, Max);
 
-    private string GetHeightClass() => Size.ToLowerInvariant() switch
+    private string GetHeightClass() => Height.ToLowerInvariant() switch
     {
-        "md" => "h-1.5",
-        _ => "h-1"
+        "sm" => "h-1.5",
+        "lg" => "h-3",
+        _ => "h-2"
     };
 
-    private string GetFillClasses() => Variant.ToLowerInvariant() switch
+    private string GetColorClass() => Color.ToLowerInvariant() switch
     {
-        "neutral" => "bg-slate-300",
-        "success" => "bg-emerald-400",
-        _ => "bg-gradient-to-r from-indigo-500 to-indigo-400 shadow-sm shadow-indigo-500/50"
+        "emerald" => "bg-gradient-to-r from-emerald-500 to-teal-400 shadow-sm shadow-emerald-500/50",
+        "cyan" => "bg-gradient-to-r from-cyan-500 to-blue-400 shadow-sm shadow-cyan-500/50",
+        "indigo" => "bg-gradient-to-r from-indigo-500 to-blue-500 shadow-sm shadow-indigo-500/50",
+        "purple" => "bg-gradient-to-r from-violet-500 to-purple-400 shadow-sm shadow-violet-500/50",
+        _ => "bg-gradient-to-r from-indigo-500 via-violet-500 to-cyan-400 shadow-sm shadow-violet-500/50"
     };
 }

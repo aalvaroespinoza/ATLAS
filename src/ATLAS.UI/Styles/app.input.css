@@ -2,40 +2,61 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ATLAS Personal OS — Master Design System (Indigo / Obsidiana) */
+/* ==========================================================================
+   ATLAS Personal OS — Master Design System (Obsidiana / Bioluminiscente)
+   ========================================================================== */
 
 :root {
-    /* 1. Deep Obsidiana Surfaces */
-    --atlas-bg-canvas: #090b10;
-    --atlas-bg-dock: #10141e;
-    --atlas-bg-surface: #121724;
-    --atlas-bg-surface-hover: #181f30;
-    --atlas-bg-elevated: #171e2e;
+    /* 1. Superficies y Fondos Base */
+    --atlas-bg-canvas: #07090e;
+    --atlas-bg-dock: rgba(13, 17, 28, 0.92);
+    --atlas-bg-surface: rgba(18, 24, 40, 0.85);
+    --atlas-bg-surface-hover: rgba(28, 36, 60, 0.90);
+    --atlas-bg-elevated: rgba(24, 32, 54, 0.88);
+    --atlas-bg-floating: rgba(15, 20, 34, 0.96);
 
-    /* 2. Hairline & Subtle Borders */
-    --atlas-border: rgba(255, 255, 255, 0.07);
-    --atlas-border-subtle: rgba(255, 255, 255, 0.12);
-    --atlas-border-focus: rgba(99, 102, 241, 0.60);
+    /* 2. Gradientes de Superficie (Dark Glassmorphism) */
+    --atlas-gradient-card: linear-gradient(180deg, rgba(20, 26, 44, 0.85) 0%, rgba(10, 14, 25, 0.92) 100%);
+    --atlas-gradient-card-hover: linear-gradient(180deg, rgba(28, 36, 60, 0.90) 0%, rgba(13, 18, 32, 0.95) 100%);
+    --atlas-gradient-ai: linear-gradient(180deg, rgba(30, 24, 60, 0.85) 0%, rgba(14, 12, 30, 0.92) 100%);
 
-    /* 3. Typography Hierarchy */
-    --atlas-text-hero: #f8fafc;
+    /* 3. Bordes e Iluminación Milimétrica */
+    --atlas-border: rgba(255, 255, 255, 0.08);
+    --atlas-border-subtle: rgba(255, 255, 255, 0.04);
+    --atlas-border-highlight: rgba(255, 255, 255, 0.16);
+    --atlas-border-top: rgba(255, 255, 255, 0.14);
+    --atlas-border-focus: rgba(139, 92, 246, 0.60);
+
+    /* 4. Tipografía y Textos */
+    --atlas-text-hero: #ffffff;
     --atlas-text-body: #cbd5e1;
     --atlas-text-muted: #64748b;
     --atlas-text-disabled: #334155;
 
-    /* 4. Accent Hero (Indigo / Violeta Frío) */
-    --atlas-accent-primary: #6366f1;
-    --atlas-accent-glow: #818cf8;
-    --atlas-accent-subtle: rgba(99, 102, 241, 0.12);
-    --atlas-accent-focus: rgba(99, 102, 241, 0.25);
+    /* 5. Acentos Hero (Violeta / Índigo / Cian / Rosa) */
+    --atlas-accent-primary: #8b5cf6;
+    --atlas-accent-indigo: #6366f1;
+    --atlas-accent-cyan: #06b6d4;
+    --atlas-accent-pink: #ec4899;
+    --atlas-accent-glow: #a78bfa;
+    --atlas-accent-subtle: rgba(139, 92, 246, 0.14);
+    --atlas-accent-focus: rgba(139, 92, 246, 0.28);
 
-    /* 5. Semantic Status Colors */
+    /* 6. Iluminación Bioluminiscente (Glows) */
+    --atlas-glow-purple: 0 0 28px rgba(139, 92, 246, 0.35);
+    --atlas-glow-emerald: 0 0 22px rgba(16, 185, 129, 0.30);
+    --atlas-glow-orange: 0 0 22px rgba(249, 115, 22, 0.30);
+    --atlas-glow-cyan: 0 0 22px rgba(6, 182, 212, 0.30);
+
+    /* 7. Colores de Estado Semántico */
     --atlas-success: #10b981;
-    --atlas-success-subtle: rgba(16, 185, 129, 0.12);
+    --atlas-success-subtle: rgba(16, 185, 129, 0.14);
     --atlas-warning: #f59e0b;
-    --atlas-warning-subtle: rgba(245, 158, 11, 0.12);
+    --atlas-warning-subtle: rgba(245, 158, 11, 0.14);
     --atlas-danger: #f43f5e;
-    --atlas-danger-subtle: rgba(244, 63, 94, 0.12);
+    --atlas-danger-subtle: rgba(244, 63, 94, 0.14);
+    --atlas-info: #38bdf8;
+    --atlas-info-subtle: rgba(56, 189, 248, 0.14);
 }
 
 html, body {
@@ -76,43 +97,127 @@ html, body {
     background: rgba(255, 255, 255, 0.20);
 }
 
-/* Surface Utility Classes */
+/* ==========================================================================
+   Superficies y Glassmorphism
+   ========================================================================== */
+
 .atlas-canvas {
     background-color: var(--atlas-bg-canvas);
 }
 
 .atlas-dock {
-    background-color: var(--atlas-bg-dock);
+    background: var(--atlas-bg-dock);
+    backdrop-filter: blur(24px);
     border: 1px solid var(--atlas-border);
-    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65);
+    border-top: 1px solid var(--atlas-border-top);
+    box-shadow: 0 24px 48px -8px rgba(0, 0, 0, 0.75);
 }
 
 .atlas-surface {
-    background-color: var(--atlas-bg-surface);
+    background: var(--atlas-gradient-card);
+    backdrop-filter: blur(16px);
     border: 1px solid var(--atlas-border);
+    border-top: 1px solid var(--atlas-border-top);
+    box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.50);
 }
 
 .atlas-elevated {
-    background-color: var(--atlas-bg-elevated);
-    border: 1px solid var(--atlas-border-subtle);
-    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.85);
+    background: var(--atlas-gradient-card-hover);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--atlas-border-highlight);
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.75);
 }
 
-/* Tactile Micro-Interactions */
+.atlas-floating {
+    background: var(--atlas-bg-floating);
+    backdrop-filter: blur(28px);
+    border: 1px solid var(--atlas-border-highlight);
+    border-top: 1px solid rgba(255, 255, 255, 0.24);
+    box-shadow: 0 28px 56px -12px rgba(0, 0, 0, 0.90);
+}
+
+.atlas-panel-ai {
+    background: var(--atlas-gradient-ai);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.25);
+    border-top: 1px solid rgba(139, 92, 246, 0.40);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.60), 0 0 24px rgba(139, 92, 246, 0.15);
+}
+
+/* ==========================================================================
+   Fondo Atmosférico Paisajístico
+   ========================================================================== */
+
+.atlas-atmospheric-bg {
+    background: radial-gradient(circle at 50% 95%, rgba(139, 92, 246, 0.12) 0%, rgba(30, 27, 75, 0.08) 40%, transparent 70%);
+}
+
+/* ==========================================================================
+   Glows y Luces Cromáticas
+   ========================================================================== */
+
+.glow-purple {
+    box-shadow: var(--atlas-glow-purple);
+}
+
+.glow-emerald {
+    box-shadow: var(--atlas-glow-emerald);
+}
+
+.glow-orange {
+    box-shadow: var(--atlas-glow-orange);
+}
+
+.glow-cyan {
+    box-shadow: var(--atlas-glow-cyan);
+}
+
+/* ==========================================================================
+   Microinteracciones Táctiles y Física
+   ========================================================================== */
+
 .atlas-clickable {
-    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.12s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.12s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), 
+                background-color 0.12s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.12s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.12s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .atlas-clickable:active {
     transform: scale(0.98);
 }
 
-/* Snappy Animations */
+.atlas-card-hover {
+    transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), 
+                border-color 0.16s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.atlas-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: var(--atlas-border-highlight);
+    box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.65);
+}
+
+/* ==========================================================================
+   Animaciones Snappy & Orbe
+   ========================================================================== */
+
 @keyframes atlasSpringIn {
-    0% { opacity: 0; transform: translateY(6px) scale(0.99); }
+    0% { opacity: 0; transform: translateY(8px) scale(0.99); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .animate-atlas-in {
-    animation: atlasSpringIn 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: atlasSpringIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes atlasOrbPulse {
+    0%, 100% { transform: scale(1); opacity: 0.90; filter: drop-shadow(0 0 18px rgba(139, 92, 246, 0.55)); }
+    50% { transform: scale(1.04); opacity: 1; filter: drop-shadow(0 0 28px rgba(167, 139, 250, 0.80)); }
+}
+
+.animate-atlas-orb {
+    animation: atlasOrbPulse 3.5s ease-in-out infinite;
 }

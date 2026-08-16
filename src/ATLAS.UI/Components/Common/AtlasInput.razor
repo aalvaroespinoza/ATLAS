@@ -1,62 +1,66 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="space-y-1 @ContainerClass">
-    @if (!string.IsNullOrWhiteSpace(Label))
+<div class="relative flex items-center w-full @Class">
+    @if (PrefixIcon != null)
     {
-        <div class="flex items-center justify-between">
-            <label class="text-[11px] font-mono uppercase tracking-wider text-slate-400">
-                @Label
-                @if (IsRequired)
-                {
-                    <span class="text-sky-400 ml-0.5">*</span>
-                }
-            </label>
-            @if (!string.IsNullOrWhiteSpace(RightLabel))
-            {
-                <span class="text-[10px] font-mono text-slate-500">@RightLabel</span>
-            }
+        <div class="absolute left-3.5 flex items-center pointer-events-none text-slate-400">
+            @PrefixIcon
         </div>
     }
 
-    <div class="relative">
-        <input 
-            type="@Type"
-            value="@Value"
-            @oninput="HandleInput"
-            placeholder="@Placeholder"
-            disabled="@IsDisabled"
-            class="w-full px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed @(IsMono ? "font-mono" : "font-sans") @(HasError ? "border-rose-500/50 focus:border-rose-500" : "") @Class" />
-    </div>
+    <input 
+        type="@Type"
+        value="@Value"
+        @oninput="HandleInput"
+        @onkeydown="HandleKeyDown"
+        placeholder="@Placeholder"
+        disabled="@IsDisabled"
+        class="w-full bg-white/[0.04] hover:bg-white/[0.06] focus:bg-white/[0.07] border border-white/[0.08] focus:border-violet-500/50 rounded-xl px-3.5 py-2 text-xs md:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/25 transition-all duration-150 font-sans @(PrefixIcon != null ? "pl-9" : "") @(Clearable && !string.IsNullOrEmpty(Value) ? "pr-8" : "")"
+        @attributes="AdditionalAttributes" />
 
-    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    @if (Clearable && !string.IsNullOrEmpty(Value))
     {
-        <p class="text-[11px] text-rose-400 font-mono">@ErrorMessage</p>
-    }
-    else if (!string.IsNullOrWhiteSpace(HelperText))
-    {
-        <p class="text-[11px] text-slate-500 font-sans">@HelperText</p>
+        <button 
+            type="button" 
+            @onclick="Clear" 
+            class="absolute right-2.5 p-1 rounded-md text-slate-500 hover:text-slate-200 transition-colors cursor-pointer"
+            title="Limpiar">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
     }
 </div>
 
 @code {
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
-    [Parameter] public string? Label { get; set; }
-    [Parameter] public string? RightLabel { get; set; }
-    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Escribir...";
     [Parameter] public string Type { get; set; } = "text";
-    [Parameter] public bool IsRequired { get; set; }
     [Parameter] public bool IsDisabled { get; set; }
-    [Parameter] public bool IsMono { get; set; }
-    [Parameter] public bool HasError { get; set; }
-    [Parameter] public string? ErrorMessage { get; set; }
-    [Parameter] public string? HelperText { get; set; }
+    [Parameter] public bool Clearable { get; set; } = true;
+    [Parameter] public RenderFragment? PrefixIcon { get; set; }
     [Parameter] public string? Class { get; set; }
-    [Parameter] public string? ContainerClass { get; set; }
+    [Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleInput(ChangeEventArgs e)
     {
         Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (OnKeyDown.HasDelegate)
+        {
+            await OnKeyDown.InvokeAsync(e);
+        }
+    }
+
+    private async Task Clear()
+    {
+        Value = string.Empty;
         await ValueChanged.InvokeAsync(Value);
     }
 }

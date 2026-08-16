@@ -1,0 +1,44 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="space-y-1.5 @Class">
+    @if (IsLoading)
+    {
+        @if (LoadingSlot != null)
+        {
+            @LoadingSlot
+        }
+        else
+        {
+            <AtlasLoadingState Message="@LoadingMessage" />
+        }
+    }
+    else if (IsEmpty)
+    {
+        @if (EmptySlot != null)
+        {
+            @EmptySlot
+        }
+        else
+        {
+            <AtlasEmptyState Title="@EmptyTitle" Description="@EmptyDescription" />
+        }
+    }
+    else
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string LoadingMessage { get; set; } = "Cargando...";
+    [Parameter] public RenderFragment? LoadingSlot { get; set; }
+
+    [Parameter] public bool IsEmpty { get; set; }
+    [Parameter] public string EmptyTitle { get; set; } = "Sin elementos";
+    [Parameter] public string? EmptyDescription { get; set; }
+    [Parameter] public RenderFragment? EmptySlot { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

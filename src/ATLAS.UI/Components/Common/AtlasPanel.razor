@@ -1,0 +1,78 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="rounded-2xl p-5 md:p-6 transition-all duration-150 @GetVariantClasses() @Class">
+    @if (!string.IsNullOrWhiteSpace(Title) || Icon != null || !string.IsNullOrWhiteSpace(ActionText) || HeaderExtra != null)
+    {
+        <div class="flex items-center justify-between gap-3 mb-4 select-none">
+            <div class="flex items-center gap-2.5 min-w-0">
+                @if (Icon != null)
+                {
+                    <div class="shrink-0 flex items-center justify-center text-slate-300">
+                        @Icon
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Title))
+                {
+                    <h3 class="text-sm md:text-base font-semibold text-white tracking-tight truncate">
+                        @Title
+                    </h3>
+                }
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+                @if (HeaderExtra != null)
+                {
+                    @HeaderExtra
+                }
+                @if (!string.IsNullOrWhiteSpace(ActionText))
+                {
+                    <button 
+                        type="button" 
+                        @onclick="HandleActionClick" 
+                        class="text-[11.5px] font-medium text-slate-400 hover:text-white transition-colors cursor-pointer atlas-clickable">
+                        @ActionText
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <div class="space-y-3">
+        @ChildContent
+    </div>
+
+    @if (FooterContent != null)
+    {
+        <div class="mt-4 pt-3 border-t border-white/[0.06]">
+            @FooterContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? Icon { get; set; }
+    [Parameter] public string? ActionText { get; set; }
+    [Parameter] public EventCallback OnAction { get; set; }
+    [Parameter] public RenderFragment? HeaderExtra { get; set; }
+    [Parameter] public RenderFragment? FooterContent { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string Variant { get; set; } = "standard"; // standard, elevated, ai, metric
+    [Parameter] public string? Class { get; set; }
+
+    private async Task HandleActionClick()
+    {
+        if (OnAction.HasDelegate)
+        {
+            await OnAction.InvokeAsync();
+        }
+    }
+
+    private string GetVariantClasses() => Variant.ToLowerInvariant() switch
+    {
+        "elevated" => "atlas-elevated",
+        "ai" => "atlas-panel-ai",
+        "metric" => "atlas-surface atlas-card-hover",
+        _ => "atlas-surface"
+    };
+}

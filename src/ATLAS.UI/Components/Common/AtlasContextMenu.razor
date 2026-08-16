@@ -4,8 +4,8 @@
 {
     <div class="fixed inset-0 z-50 bg-transparent" @onclick="Close">
         <div 
-            class="absolute atlas-elevated rounded-xl p-1 min-w-[180px] space-y-0.5 animate-atlas-in" 
-            style="left: @(X)px; top: @(Y)px;" 
+            class="absolute z-50 min-w-[200px] atlas-floating rounded-xl p-1.5 shadow-floating border border-white/[0.12] space-y-0.5 animate-atlas-in @Class"
+            style="@GetPositionStyle()"
             @onclick:stopPropagation="true">
             @ChildContent
         </div>
@@ -17,11 +17,14 @@
     [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
     [Parameter] public double X { get; set; }
     [Parameter] public double Y { get; set; }
+    [Parameter] public string? Class { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    public async Task Close()
+    private async Task Close()
     {
         IsOpen = false;
         await IsOpenChanged.InvokeAsync(false);
     }
+
+    private string GetPositionStyle() => $"left: {X}px; top: {Y}px;";
 }

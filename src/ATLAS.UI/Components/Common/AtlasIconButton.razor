@@ -6,14 +6,16 @@
     disabled="@IsDisabled"
     title="@Title"
     aria-label="@(Title ?? "Acción")"
-    class="inline-flex items-center justify-center rounded-xl transition-all duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetSizeClasses() @GetVariantClasses() @Class"
+    class="inline-flex items-center justify-center transition-all duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 atlas-clickable @GetSizeClasses() @GetShapeClasses() @GetVariantClasses() @GetGlowClasses() @Class"
     @attributes="AdditionalAttributes">
     @ChildContent
 </button>
 
 @code {
-    [Parameter] public string Variant { get; set; } = "ghost"; // ghost, secondary, accent
-    [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (34px), lg (40px)
+    [Parameter] public string Variant { get; set; } = "ghost"; // ghost, secondary, accent, hero-glow
+    [Parameter] public string Shape { get; set; } = "rounded"; // rounded, circle
+    [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (36px), lg (44px)
+    [Parameter] public string Glow { get; set; } = "none"; // none, purple, cyan, emerald, orange
     [Parameter] public bool IsDisabled { get; set; }
     [Parameter] public string? Title { get; set; }
     [Parameter] public string? Class { get; set; }
@@ -23,7 +25,7 @@
 
     private async Task HandleClick(MouseEventArgs e)
     {
-        if (!IsDisabled)
+        if (!IsDisabled && OnClick.HasDelegate)
         {
             await OnClick.InvokeAsync(e);
         }
@@ -31,15 +33,31 @@
 
     private string GetVariantClasses() => Variant.ToLowerInvariant() switch
     {
+        "hero-glow" => "bg-gradient-to-r from-violet-600 to-purple-600 text-white border border-violet-400/40 shadow-glow-purple",
         "secondary" => "bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.14] text-slate-300 hover:text-white border border-white/[0.08]",
-        "accent" => "bg-indigo-500/15 hover:bg-indigo-500/25 active:bg-indigo-500/35 text-indigo-300 hover:text-white border border-indigo-500/30",
+        "accent" => "bg-violet-500/15 hover:bg-violet-500/25 active:bg-violet-500/35 text-violet-300 hover:text-white border border-violet-500/30",
         _ => "bg-transparent hover:bg-white/[0.06] active:bg-white/[0.10] text-slate-400 hover:text-slate-100"
+    };
+
+    private string GetShapeClasses() => Shape.ToLowerInvariant() switch
+    {
+        "circle" => "rounded-full",
+        _ => "rounded-xl"
+    };
+
+    private string GetGlowClasses() => Glow.ToLowerInvariant() switch
+    {
+        "purple" => "shadow-glow-purple",
+        "cyan" => "shadow-glow-cyan",
+        "emerald" => "shadow-glow-emerald",
+        "orange" => "shadow-glow-orange",
+        _ => ""
     };
 
     private string GetSizeClasses() => Size.ToLowerInvariant() switch
     {
-        "lg" => "w-10 h-10",
-        "md" => "w-8.5 h-8.5",
-        _ => "w-7 h-7"
+        "lg" => "w-11 h-11",
+        "md" => "w-9 h-9",
+        _ => "w-7.5 h-7.5"
     };
 }

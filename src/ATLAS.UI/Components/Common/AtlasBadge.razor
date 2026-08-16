@@ -1,36 +1,44 @@
 @namespace ATLAS.UI.Components.Common
 
-<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-mono leading-none select-none border @GetVariantClasses() @Class">
-    @if (ShowDot)
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium select-none @GetVariantClasses() @Class">
+    @if (Dot)
     {
-        <span class="w-1.5 h-1.5 rounded-full shrink-0 @GetDotClasses()"></span>
+        <span class="w-1.5 h-1.5 rounded-full shrink-0 @GetDotColorClass()"></span>
     }
-    <span>@ChildContent</span>
+    @if (!string.IsNullOrWhiteSpace(Text))
+    {
+        <span>@Text</span>
+    }
+    @if (ChildContent != null)
+    {
+        @ChildContent
+    }
 </span>
 
 @code {
-    [Parameter] public string Variant { get; set; } = "neutral"; // neutral, accent, success, warning, danger, mono
-    [Parameter] public bool ShowDot { get; set; } = true;
-    [Parameter] public string? Class { get; set; }
+    [Parameter] public string Variant { get; set; } = "neutral"; // purple, emerald, orange, cyan, rose, neutral, success, warning, danger, accent
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public bool Dot { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
 
     private string GetVariantClasses() => Variant.ToLowerInvariant() switch
     {
-        "accent" => "bg-indigo-500/10 text-indigo-300 border-indigo-500/25",
-        "success" => "bg-emerald-500/10 text-emerald-300 border-emerald-500/25",
-        "warning" => "bg-amber-500/10 text-amber-300 border-amber-500/25",
-        "danger" => "bg-rose-500/10 text-rose-300 border-rose-500/25",
-        "mono" => "bg-white/[0.03] text-slate-400 border-white/[0.06]",
-        _ => "bg-white/[0.04] text-slate-300 border-white/[0.08]"
+        "purple" or "accent" => "bg-violet-500/15 text-violet-300 border border-violet-500/30",
+        "emerald" or "success" => "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+        "orange" or "warning" => "bg-orange-500/15 text-orange-300 border border-orange-500/30",
+        "cyan" or "info" => "bg-cyan-500/15 text-cyan-300 border border-cyan-500/30",
+        "rose" or "danger" => "bg-rose-500/15 text-rose-300 border border-rose-500/30",
+        _ => "bg-white/[0.06] text-slate-300 border border-white/[0.08]"
     };
 
-    private string GetDotClasses() => Variant.ToLowerInvariant() switch
+    private string GetDotColorClass() => Variant.ToLowerInvariant() switch
     {
-        "accent" => "bg-indigo-400",
-        "success" => "bg-emerald-400",
-        "warning" => "bg-amber-400",
-        "danger" => "bg-rose-400",
-        "mono" => "bg-slate-500",
+        "purple" or "accent" => "bg-violet-400 shadow-sm shadow-violet-400/80",
+        "emerald" or "success" => "bg-emerald-400 shadow-sm shadow-emerald-400/80",
+        "orange" or "warning" => "bg-orange-400 shadow-sm shadow-orange-400/80",
+        "cyan" or "info" => "bg-cyan-400 shadow-sm shadow-cyan-400/80",
+        "rose" or "danger" => "bg-rose-400 shadow-sm shadow-rose-400/80",
         _ => "bg-slate-400"
     };
 }

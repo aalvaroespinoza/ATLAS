@@ -1,27 +1,44 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="relative inline-flex items-center justify-center shrink-0 @Class">
-    <div class="rounded-full bg-gradient-to-tr from-indigo-600 to-indigo-400 flex items-center justify-center text-white font-mono font-bold select-none shadow-sm shadow-indigo-500/20 @GetSizeClasses()">
-        @Initials
+<div class="relative inline-flex items-center justify-center select-none @GetSizeClasses() @Class">
+    <div class="w-full h-full rounded-full overflow-hidden p-0.5 bg-gradient-to-tr from-violet-600 via-indigo-500 to-cyan-400 shadow-sm">
+        <div class="w-full h-full rounded-full overflow-hidden bg-[#121828] flex items-center justify-center text-white font-semibold text-xs">
+            @if (!string.IsNullOrWhiteSpace(ImageUrl))
+            {
+                <img src="@ImageUrl" alt="@(Name ?? "Usuario")" class="w-full h-full object-cover" />
+            }
+            else
+            {
+                <span>@GetInitials(Name)</span>
+            }
+        </div>
     </div>
 
-    @if (ShowStatus)
+    @if (IsOnline)
     {
-        <span class="absolute bottom-0 right-0 w-2 h-2 rounded-full border-2 border-[#10141e] @(IsOnline ? "bg-emerald-400" : "bg-slate-500")"></span>
+        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#07090e] shadow-sm shadow-emerald-400/80"></span>
     }
 </div>
 
 @code {
-    [Parameter] public string Initials { get; set; } = "A";
-    [Parameter] public string Size { get; set; } = "sm"; // sm (24px), md (32px), lg (40px)
-    [Parameter] public bool ShowStatus { get; set; } = true;
+    [Parameter] public string? Name { get; set; }
+    [Parameter] public string? ImageUrl { get; set; }
     [Parameter] public bool IsOnline { get; set; } = true;
+    [Parameter] public string Size { get; set; } = "md"; // sm (28px), md (36px), lg (44px)
     [Parameter] public string? Class { get; set; }
 
     private string GetSizeClasses() => Size.ToLowerInvariant() switch
     {
-        "lg" => "w-10 h-10 text-sm",
-        "md" => "w-8 h-8 text-xs",
-        _ => "w-6 h-6 text-[10px]"
+        "lg" => "w-11 h-11 text-sm",
+        "sm" => "w-7 h-7 text-[10px]",
+        _ => "w-9 h-9 text-xs"
     };
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "A";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
 }
