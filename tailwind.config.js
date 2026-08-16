@@ -11,6 +11,10 @@ module.exports = {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace']
       },
+      transitionTimingFunction: {
+        'atlas': 'cubic-bezier(0.16, 1, 0.3, 1)',
+        DEFAULT: 'cubic-bezier(0.16, 1, 0.3, 1)'
+      },
       colors: {
         atlas: {
           canvas: '#090b10',
