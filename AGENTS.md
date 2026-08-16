@@ -137,44 +137,9 @@ ATLAS.sln
 - **Etapa 4b:** Módulo de Finanzas y Transacciones (Completada en Core y UI).
 - **Etapa 5:** UI MAUI Blazor Hybrid + WebView2 (Completada).
 - **Etapa 6:** Integración Gmail OAuth + Roadmaps Secuenciales (Completada).
-- **Etapas 7 a 12 (Reset Visual & Funcional, no planeado con el usuario
-  de antemano — pedido abierto de diseño que se expandió sin control):**
-  Design System Índigo/Obsidiana, Personal Dock, Command Launcher,
-  Universal Search, Context Actions, microinteracciones. Completado a
-  nivel código, **adoptado retroactivamente como lenguaje visual
-  oficial del proyecto** tras revisión.
+- **Etapas 7 a 12 (Reset Visual & Funcional, no planeado con el usuario de antemano — pedido abierto de diseño que se expandió sin control):** Design System Índigo/Obsidiana, Personal Dock, Command Launcher, Universal Search, Context Actions, microinteracciones. Completado a nivel código, **adoptado retroactivamente como lenguaje visual oficial del proyecto** tras revisión.
 - **Etapa 13:** Blindaje del Lenguaje Visual (Completada).
-- **Sync cloud (Supabase):** implementado con seguridad insuficiente
-  (RLS abierto). **Pendiente de hardening — ver Etapa 14.**
-- **Pendiente sin hacer:** limpieza de código muerto (`NavMenu.razor`,
-  `DesignSystemDemo.razor`, `DockPrototype.razor`), y
-  `finance.categorize` (categorización automática de gastos con IA,
-  planeada originalmente para el bloque 7b y nunca implementada porque
-  el número de etapa se usó para otra cosa).
-
-## Alcance actual — Etapa 14: Hardening de Supabase + limpieza (no avanzar sin confirmación)
-
-**14a — Seguridad de Supabase:**
-- Agregar Supabase Auth (email/password, un solo usuario: Álvaro).
-- Agregar columna `user_id` a las 7 tablas sincronizadas, poblada con
-  el `auth.uid()` del usuario autenticado.
-- Reemplazar las políticas `USING (true)` por políticas scoped:
-  `USING (auth.uid() = user_id)` en cada tabla, para SELECT/INSERT/
-  UPDATE/DELETE.
-- El login se hace una sola vez desde Configuración; el refresh token
-  de la sesión va a `ISecretVault`, igual que el resto de credenciales.
-- Rotar la anon key actual del proyecto de Supabase (buena práctica
-  dado que el schema estuvo público con políticas abiertas, aunque la
-  key en sí nunca se filtró).
-
-**14b — Limpieza de código muerto (después de 14a):**
-- Eliminar `NavMenu.razor` (reemplazado por `AtlasPersonalDock`, sin
-  referencias activas).
-- Eliminar o mover fuera de `Components/Pages` los prototipos
-  `DesignSystemDemo.razor` y `DockPrototype.razor` si no se usan en
-  producción.
-
-**14c — Retomar 7b: categorización automática de gastos con IA:**
-- Command `finance.categorize` (transaction_id → sugiere categoría vía
-  `ai.ask`/Gemini sobre la descripción, sugerencia editable, nunca
-  sobreescribe una categoría cargada a mano sin confirmación).
+- **Etapa 14 (Hardening de Supabase, Limpieza de Código y finance.categorize):** Completada.
+  - **14a:** Supabase Auth (Email/Password) implementado con refresh token en `ISecretVault`, columna `user_id` en las 7 tablas y políticas RLS estrictas `USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)`.
+  - **14b:** Eliminado `NavMenu.razor` y prototipos movidos a `docs/prototypes/` fuera de `Components/Pages/`.
+  - **14c:** Implementado `finance.categorize` con Gemini (`IAiProvider`), sugerencias editables en UI y confirmación manual obligatoria sin sobreescritura automática.
