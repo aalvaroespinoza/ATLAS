@@ -6,25 +6,32 @@
 
 <div class="space-y-6 max-w-3xl pb-16 animate-atlas-in">
     
-    <!-- Page Header & Clean Segmented Switcher -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
-        <h1 class="text-lg font-bold tracking-tight text-white">
-            Hábitos & Roadmaps
-        </h1>
+    <!-- Page Header & Rich Segmented Switcher -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+        <div class="space-y-0.5">
+            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                <span>Hábitos & Roadmaps</span>
+            </h1>
+            <p class="text-xs text-slate-400">
+                Construcción de disciplina diaria y rutas estratégicas de objetivos.
+            </p>
+        </div>
 
-        <!-- Segmented Tab Switcher -->
-        <div class="flex items-center p-1 rounded-xl bg-white/[0.04] border border-white/[0.06] select-none">
+        <!-- Segmented Tab Switcher with Glow Depth -->
+        <div class="flex items-center p-1 rounded-2xl bg-[#090b10]/80 border border-white/[0.08] shadow-inner select-none backdrop-blur-md">
             <button 
                 type="button"
                 @onclick="@(() => activeTab = "habits")"
-                class="px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer @(activeTab == "habits" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "text-slate-400 hover:text-slate-200")">
-                Hábitos (@habits.Count)
+                class="px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer atlas-clickable flex items-center gap-1.5 @(activeTab == "habits" ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-md shadow-emerald-500/25 border border-emerald-400/30" : "text-slate-400 hover:text-slate-200")">
+                <span>🌿 Hábitos</span>
+                <span class="text-[10px] font-mono opacity-80">(@habits.Count)</span>
             </button>
             <button 
                 type="button"
                 @onclick="@(() => activeTab = "roadmaps")"
-                class="px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer @(activeTab == "roadmaps" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "text-slate-400 hover:text-slate-200")">
-                Roadmaps (@roadmaps.Count)
+                class="px-4 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 cursor-pointer atlas-clickable flex items-center gap-1.5 @(activeTab == "roadmaps" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
+                <span>🎯 Roadmaps</span>
+                <span class="text-[10px] font-mono opacity-80">(@roadmaps.Count)</span>
             </button>
         </div>
     </div>
@@ -32,34 +39,34 @@
     <!-- Status Message Indicator -->
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
-        <div class="px-3.5 py-2 rounded-xl text-xs font-medium flex items-center justify-between animate-atlas-in @(isSuccess ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-300" : "bg-rose-500/10 border border-rose-500/20 text-rose-300")">
+        <div class="px-3.5 py-2.5 rounded-xl text-xs font-medium flex items-center justify-between animate-atlas-in @(isSuccess ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 shadow-md shadow-emerald-950/20" : "bg-rose-500/15 border border-rose-500/30 text-rose-200 shadow-md shadow-rose-950/20")">
             <span>@(isSuccess ? "✓ " : "✕ ") @statusMessage</span>
-            <button @onclick="() => statusMessage = null" class="text-slate-400 hover:text-white text-xs">✕</button>
+            <button type="button" @onclick="() => statusMessage = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
         </div>
     }
 
-    <!-- TAB 1: HÁBITOS DIARIOS -->
+    <!-- TAB 1: HÁBITOS DIARIOS (Glow Emerald / Riqueza Visual) -->
     @if (activeTab == "habits")
     {
-        <div class="space-y-4">
+        <div class="space-y-5 animate-atlas-in">
             
-            <!-- Quick New Habit Row -->
-            <div class="atlas-surface rounded-2xl p-3 flex flex-col sm:flex-row items-center gap-2.5">
+            <!-- Quick New Habit Bar (Depth Card with Emerald Accent) -->
+            <div class="p-3.5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-emerald-500/20 shadow-lg shadow-black/40 flex flex-col sm:flex-row items-center gap-2.5 backdrop-blur-md">
                 <div class="flex-1 w-full">
                     <AtlasInput 
                         @bind-Value="newHabitName" 
-                        Placeholder="Nuevo hábito (ej: Leer 20 min, Meditar, Gimnasio)..." />
+                        Placeholder="Nuevo hábito diario (ej: Leer 20 min, Meditar, Gimnasio)..." />
                 </div>
                 
-                <AtlasButton 
-                    Variant="primary" 
-                    Size="md" 
-                    OnClick="CreateHabitAsync">
+                <button 
+                    type="button" 
+                    @onclick="CreateHabitAsync"
+                    class="w-full sm:w-auto h-8.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] transition-all duration-150 border border-emerald-400/30 shadow-md shadow-emerald-500/20 cursor-pointer shrink-0">
                     + Crear Hábito
-                </AtlasButton>
+                </button>
             </div>
 
-            <!-- Habits Checklist -->
+            <!-- Habits Checklist Cards -->
             @if (isLoading)
             {
                 <AtlasLoadingState Message="Cargando hábitos..." />
@@ -68,44 +75,78 @@
             {
                 <AtlasEmptyState 
                     Title="Sin hábitos registrados" 
-                    Description="Creá tu primer hábito diario arriba para empezar a construir constancia." />
+                    Description="Creá tu primer hábito diario arriba para empezar a construir constancia con rachas 🔥." />
             }
             else
             {
-                <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
+                <div class="space-y-2.5">
                     @foreach (var habit in habits)
                     {
                         var isDoneToday = completedHabitIds.Contains(habit.Id);
-                        <AtlasListItem 
-                            Title="@habit.Name" 
-                            Subtitle="@($"Frecuencia: {habit.Frequency}")" 
-                            MetaText="@(isDoneToday ? "COMPLETADO" : "PENDIENTE")">
-                            <PrefixContent>
-                                <input 
-                                    type="checkbox" 
-                                    checked="@isDoneToday"
-                                    @onchange="() => ToggleHabitTodayAsync(habit)"
-                                    class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 focus:ring-indigo-500/30 cursor-pointer" />
-                            </PrefixContent>
-                            <SuffixContent>
-                                <AtlasBadge Variant="@(isDoneToday ? "success" : "neutral")">
-                                    @(isDoneToday ? "✓ Hecho hoy" : "Pendiente")
-                                </AtlasBadge>
-                            </SuffixContent>
-                        </AtlasListItem>
+                        var streak = habitStreaks.GetValueOrDefault(habit.Id, 0);
+
+                        <div class="p-4 rounded-2xl bg-gradient-to-b from-white/[0.04] to-white/[0.01] border @(isDoneToday ? "border-emerald-500/30 shadow-emerald-950/20" : "border-white/[0.08] hover:border-white/[0.15]") shadow-lg shadow-black/30 transition-all duration-150 flex items-center justify-between gap-3 group">
+                            
+                            <!-- Checkbox & Info -->
+                            <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                                <label class="relative flex items-center justify-center cursor-pointer select-none">
+                                    <input 
+                                        type="checkbox" 
+                                        checked="@isDoneToday"
+                                        @onchange="() => ToggleHabitTodayAsync(habit)"
+                                        class="w-5 h-5 rounded-lg text-emerald-500 bg-slate-900 border-slate-700 focus:ring-emerald-500/30 focus:ring-offset-0 transition-all cursor-pointer" />
+                                </label>
+
+                                <div class="space-y-0.5 min-w-0 flex-1">
+                                    <div class="flex items-center gap-2.5 flex-wrap">
+                                        <span class="text-xs font-semibold text-slate-100 truncate @(isDoneToday ? "text-emerald-200" : "")">
+                                            @habit.Name
+                                        </span>
+
+                                        <!-- Streak Flame Indicator -->
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-mono font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/25 shadow-sm shadow-amber-500/10">
+                                            <span>🔥</span>
+                                            <span>@streak @(streak == 1 ? "día" : "días")</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="text-[11px] font-mono text-slate-400">
+                                        Frecuencia: @habit.Frequency
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right Status Badge -->
+                            <div class="shrink-0">
+                                @if (isDoneToday)
+                                {
+                                    <span class="px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-500/10 flex items-center gap-1">
+                                        <span>✓</span>
+                                        <span>Hecho hoy</span>
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="px-2.5 py-1 rounded-xl text-[11px] font-mono font-medium bg-white/[0.04] text-slate-400 border border-white/[0.08]">
+                                        Pendiente
+                                    </span>
+                                }
+                            </div>
+
+                        </div>
                     }
                 </div>
             }
         </div>
     }
 
-    <!-- TAB 2: ROADMAPS ESTRATÉGICOS -->
+    <!-- TAB 2: ROADMAPS ESTRATÉGICOS (Glow Violet / Riqueza Visual) -->
     @if (activeTab == "roadmaps")
     {
-        <div class="space-y-5">
+        <div class="space-y-5 animate-atlas-in">
             
-            <!-- Quick New Roadmap Row -->
-            <div class="atlas-surface rounded-2xl p-3.5 space-y-2.5">
+            <!-- Quick New Roadmap Bar (Depth Card with Indigo Accent) -->
+            <div class="p-4 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-indigo-500/20 shadow-lg shadow-black/40 space-y-3 backdrop-blur-md">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <div class="sm:col-span-2">
                         <AtlasInput 
@@ -113,12 +154,12 @@
                             Placeholder="Título de la meta o roadmap (ej: Lanzar MVP)..." />
                     </div>
                     
-                    <AtlasButton 
-                        Variant="primary" 
-                        Size="md" 
-                        OnClick="CreateRoadmapAsync">
+                    <button 
+                        type="button" 
+                        @onclick="CreateRoadmapAsync"
+                        class="h-8.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all duration-150 border border-indigo-400/30 shadow-md shadow-indigo-500/20 cursor-pointer">
                         + Crear Roadmap
-                    </AtlasButton>
+                    </button>
                 </div>
                 
                 <AtlasInput 
@@ -126,7 +167,7 @@
                     Placeholder="Hitos iniciales separados por coma (ej: Fundamentos, Prototipo, Lanzamiento)..." />
             </div>
 
-            <!-- Roadmaps List -->
+            <!-- Roadmaps List with Rich Cards -->
             @if (isLoading)
             {
                 <AtlasLoadingState Message="Cargando roadmaps..." />
@@ -135,7 +176,7 @@
             {
                 <AtlasEmptyState 
                     Title="Sin roadmaps activos" 
-                    Description="Creá un roadmap arriba para descomponer objetivos complejos en etapas." />
+                    Description="Creá un roadmap arriba para descomponer objetivos complejos en etapas secuenciales." />
             }
             else
             {
@@ -143,16 +184,19 @@
                     @foreach (var roadmap in roadmaps)
                     {
                         var isCompleted = roadmap.ProgressPercentage >= 100;
-                        <div class="atlas-surface rounded-2xl p-5 space-y-3.5 shadow-md">
+                        var completedCount = roadmap.Milestones.Count(m => m.Status.Equals("completed", StringComparison.OrdinalIgnoreCase));
+                        var totalMilestones = roadmap.Milestones.Count;
+
+                        <div class="p-5 rounded-2xl bg-gradient-to-b from-[#121726]/90 to-[#0c101c]/90 border @(isCompleted ? "border-emerald-500/30 shadow-emerald-950/20" : "border-indigo-500/25 hover:border-indigo-500/40 shadow-indigo-950/20") shadow-xl space-y-4 transition-all duration-150 backdrop-blur-md">
                             
-                            <!-- Header & Progress -->
-                            <div class="flex items-center justify-between text-xs gap-3">
+                            <!-- Header & Progress Stats -->
+                            <div class="flex items-start justify-between text-xs gap-3">
                                 <div class="space-y-1 min-w-0">
-                                    <div class="flex items-center gap-2.5">
+                                    <div class="flex items-center gap-2.5 flex-wrap">
                                         <h3 class="text-sm font-semibold text-white truncate">@roadmap.Title</h3>
-                                        <AtlasBadge Variant="@(isCompleted ? "success" : "accent")">
-                                            @(isCompleted ? "Completado" : "En Curso")
-                                        </AtlasBadge>
+                                        <span class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold uppercase tracking-wider @(isCompleted ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" : "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30")">
+                                            @(isCompleted ? "✓ Completado" : "En Curso")
+                                        </span>
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(roadmap.Description))
                                     {
@@ -160,39 +204,46 @@
                                     }
                                 </div>
 
-                                <div class="text-right shrink-0 font-mono text-xs">
-                                    <span class="text-indigo-300 font-bold">@roadmap.ProgressPercentage%</span>
-                                    <span class="text-slate-500 block text-[10px]">
-                                        @roadmap.Milestones.Count(m => m.Status == "completed")/@roadmap.Milestones.Count hitos
+                                <div class="text-right shrink-0 font-mono text-xs space-y-0.5">
+                                    <span class="@(isCompleted ? "text-emerald-300" : "text-indigo-300") font-bold text-sm">
+                                        @roadmap.ProgressPercentage%
+                                    </span>
+                                    <span class="text-slate-500 block text-[10.5px]">
+                                        @completedCount/@totalMilestones hitos
                                     </span>
                                 </div>
                             </div>
 
-                            <!-- Progress Track -->
-                            <AtlasProgress Value="@roadmap.ProgressPercentage" Variant="accent" />
+                            <!-- Progress Track with Violet/Emerald Gradient -->
+                            <div class="w-full bg-slate-900/80 rounded-full h-2 overflow-hidden border border-white/[0.06] p-0.5">
+                                <div 
+                                    class="h-full rounded-full transition-all duration-300 @(isCompleted ? "bg-gradient-to-r from-emerald-500 to-teal-400" : "bg-gradient-to-r from-indigo-500 to-violet-500 shadow-sm shadow-indigo-500/50")"
+                                    style="width: @(Math.Clamp(roadmap.ProgressPercentage, 0, 100))%">
+                                </div>
+                            </div>
 
                             <!-- Milestones Checklist -->
-                            <div class="pt-2 space-y-2 border-t border-white/[0.04]">
+                            <div class="pt-2 space-y-2 border-t border-white/[0.06]">
                                 @if (roadmap.Milestones.Count > 0)
                                 {
                                     <div class="divide-y divide-white/[0.03]">
                                         @foreach (var milestone in roadmap.Milestones.OrderBy(m => m.OrderIndex))
                                         {
                                             var mDone = milestone.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
-                                            <div class="py-2 flex items-center justify-between text-xs gap-3">
-                                                <label class="flex items-center gap-2.5 cursor-pointer select-none flex-1 min-w-0">
+                                            <div class="py-2.5 flex items-center justify-between text-xs gap-3 group">
+                                                <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
                                                     <input 
                                                         type="checkbox" 
                                                         checked="@mDone"
                                                         @onchange="(e) => ToggleMilestoneAsync(milestone, e)"
-                                                        class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 focus:ring-indigo-500/30 cursor-pointer" />
+                                                        class="w-4.5 h-4.5 rounded-lg text-indigo-500 bg-slate-900 border-slate-700 focus:ring-indigo-500/30 transition-all cursor-pointer" />
                                                     <span class="@(mDone ? "line-through text-slate-500" : "text-slate-200 font-medium") truncate">
                                                         Paso @(milestone.OrderIndex + 1): @milestone.Title
                                                     </span>
                                                 </label>
                                                 @if (milestone.CompletedAt.HasValue)
                                                 {
-                                                    <span class="text-[10px] font-mono text-slate-500 shrink-0">
+                                                    <span class="text-[10.5px] font-mono text-slate-500 shrink-0">
                                                         @milestone.CompletedAt.Value.ToLocalTime().ToString("dd MMM")
                                                     </span>
                                                 }
@@ -201,8 +252,8 @@
                                     </div>
                                 }
 
-                                <!-- Fast Add Milestone -->
-                                <div class="flex items-center gap-2 pt-2">
+                                <!-- Fast Add Milestone Input -->
+                                <div class="flex items-center gap-2 pt-2.5">
                                     <div class="flex-1">
                                         <AtlasInput 
                                             @bind-Value="newMilestoneTitles[roadmap.Id]" 
@@ -238,13 +289,14 @@
     // Habits state
     private List<Habit> habits = [];
     private HashSet<string> completedHabitIds = [];
+    private readonly Dictionary<string, int> habitStreaks = new();
     private string newHabitName = string.Empty;
 
     // Roadmaps state
     private List<Roadmap> roadmaps = [];
     private string newRoadmapTitle = string.Empty;
     private string newRoadmapSteps = string.Empty;
-    private Dictionary<string, string> newMilestoneTitles = [];
+    private readonly Dictionary<string, string> newMilestoneTitles = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -256,12 +308,15 @@
         isLoading = true;
         try
         {
-            // 1. Load Habits
+            // 1. Load Habits & Events for Streaks
             var allHabits = await HabitRepository.GetAllAsync();
             habits = allHabits.ToList();
 
             var todayEvents = await HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
             completedHabitIds = todayEvents.Select(e => e.HabitId).ToHashSet();
+
+            var allEvents = await HabitRepository.GetEventsAsync();
+            CalculateStreaks(habits, allEvents.ToList());
 
             // 2. Load Roadmaps
             var allRoadmaps = await RoadmapRepository.GetAllAsync();
@@ -283,6 +338,38 @@
         finally
         {
             isLoading = false;
+        }
+    }
+
+    private void CalculateStreaks(List<Habit> habitList, List<HabitEvent> eventList)
+    {
+        habitStreaks.Clear();
+        var today = DateTimeOffset.UtcNow.Date;
+
+        foreach (var habit in habitList)
+        {
+            var eventDates = eventList
+                .Where(e => e.HabitId == habit.Id)
+                .Select(e => e.CompletedAt.Date)
+                .Distinct()
+                .OrderByDescending(d => d)
+                .ToHashSet();
+
+            var streak = 0;
+            var checkDate = today;
+
+            if (!eventDates.Contains(today))
+            {
+                checkDate = today.AddDays(-1);
+            }
+
+            while (eventDates.Contains(checkDate))
+            {
+                streak++;
+                checkDate = checkDate.AddDays(-1);
+            }
+
+            habitStreaks[habit.Id] = streak;
         }
     }
 
