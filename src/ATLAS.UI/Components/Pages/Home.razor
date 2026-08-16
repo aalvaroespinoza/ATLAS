@@ -286,25 +286,35 @@
 
         try
         {
+            // Concurrent parallel fetching across all independent repositories
+            var habitsTask = HabitRepository.GetAllAsync();
+            var todayEventsTask = HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
+            var roadmapsTask = RoadmapRepository.GetAllAsync(status: "active");
+            var goalsTask = GoalRepository.GetAllAsync(status: "active");
+            var notesTask = NoteRepository.GetRecentAsync(5);
+            var txsTask = TransactionRepository.GetRecentAsync(3);
+
+            await Task.WhenAll(habitsTask, todayEventsTask, roadmapsTask, goalsTask, notesTask, txsTask);
+
             // 1. Habits Data
-            var allHabits = (await HabitRepository.GetAllAsync()).ToList();
+            var allHabits = (await habitsTask).ToList();
             allHabitsCount = allHabits.Count;
-            var todayEvents = await HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
+            var todayEvents = await todayEventsTask;
             var completedIds = todayEvents.Select(e => e.HabitId).ToHashSet();
             pendingHabits = allHabits.Where(h => !completedIds.Contains(h.Id)).ToList();
 
             // 2. Roadmaps & Goals
-            var roadmaps = (await RoadmapRepository.GetAllAsync(status: "active")).ToList();
+            var roadmaps = (await roadmapsTask).ToList();
             activeRoadmaps = roadmaps.Where(r => r.ProgressPercentage < 100).Take(2).ToList();
 
-            var goals = (await GoalRepository.GetAllAsync(status: "active")).ToList();
+            var goals = (await goalsTask).ToList();
             // If roadmaps exist, show fewer standalone goals to avoid clutter
             activeGoals = goals.Where(g => g.Progress < 100).Take(activeRoadmaps.Count > 0 ? 1 : 2).ToList();
 
             // 3. Unified Activity Feed (Notes + Transactions)
             var feed = new List<FeedItem>();
 
-            var notes = await NoteRepository.GetRecentAsync(5);
+            var notes = await notesTask;
             foreach (var note in notes)
             {
                 var displayTitle = !string.IsNullOrWhiteSpace(note.Title) 
@@ -320,7 +330,7 @@
                 ));
             }
 
-            var txs = await TransactionRepository.GetRecentAsync(3);
+            var txs = await txsTask;
             foreach (var tx in txs)
             {
                 var isIncome = tx.Tipo == "income";

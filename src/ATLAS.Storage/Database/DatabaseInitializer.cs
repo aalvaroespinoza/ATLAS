@@ -31,10 +31,16 @@ public class DatabaseInitializer
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
-        // Enable foreign keys
+        // Enable high-performance pragmas & foreign keys
         await using (var pragmaCmd = connection.CreateCommand())
         {
-            pragmaCmd.CommandText = "PRAGMA foreign_keys = ON;";
+            pragmaCmd.CommandText = """
+                PRAGMA journal_mode = WAL;
+                PRAGMA synchronous = NORMAL;
+                PRAGMA foreign_keys = ON;
+                PRAGMA temp_store = MEMORY;
+                PRAGMA cache_size = -8000;
+                """;
             await pragmaCmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 

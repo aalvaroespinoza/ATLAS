@@ -308,19 +308,23 @@
         isLoading = true;
         try
         {
-            // 1. Load Habits & Events for Streaks
-            var allHabits = await HabitRepository.GetAllAsync();
-            habits = allHabits.ToList();
+            var allHabitsTask = HabitRepository.GetAllAsync();
+            var todayEventsTask = HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
+            var allEventsTask = HabitRepository.GetEventsAsync();
+            var allRoadmapsTask = RoadmapRepository.GetAllAsync();
 
-            var todayEvents = await HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
+            await Task.WhenAll(allHabitsTask, todayEventsTask, allEventsTask, allRoadmapsTask);
+
+            // 1. Load Habits & Events for Streaks
+            habits = (await allHabitsTask).ToList();
+            var todayEvents = await todayEventsTask;
             completedHabitIds = todayEvents.Select(e => e.HabitId).ToHashSet();
 
-            var allEvents = await HabitRepository.GetEventsAsync();
+            var allEvents = await allEventsTask;
             CalculateStreaks(habits, allEvents.ToList());
 
             // 2. Load Roadmaps
-            var allRoadmaps = await RoadmapRepository.GetAllAsync();
-            roadmaps = allRoadmaps.ToList();
+            roadmaps = (await allRoadmapsTask).ToList();
 
             foreach (var r in roadmaps)
             {

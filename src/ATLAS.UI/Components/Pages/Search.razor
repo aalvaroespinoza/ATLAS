@@ -358,17 +358,17 @@
         isLoading = true;
         try
         {
-            var notes = await NoteRepository.GetRecentAsync(100);
-            allNotes = notes.ToList();
+            var notesTask = NoteRepository.GetRecentAsync(100);
+            var roadmapsTask = RoadmapRepository.GetAllAsync();
+            var habitsTask = HabitRepository.GetAllAsync();
+            var txsTask = TransactionRepository.GetRecentAsync(100);
 
-            var roadmaps = await RoadmapRepository.GetAllAsync();
-            allRoadmaps = roadmaps.ToList();
+            await Task.WhenAll(notesTask, roadmapsTask, habitsTask, txsTask);
 
-            var habits = await HabitRepository.GetAllAsync();
-            allHabits = habits.ToList();
-
-            var txs = await TransactionRepository.GetRecentAsync(100);
-            allTransactions = txs.ToList();
+            allNotes = (await notesTask).ToList();
+            allRoadmaps = (await roadmapsTask).ToList();
+            allHabits = (await habitsTask).ToList();
+            allTransactions = (await txsTask).ToList();
 
             ApplyFilters();
 
