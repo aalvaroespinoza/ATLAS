@@ -17,80 +17,81 @@
                 Placeholder="Buscar notas, roadmaps, hábitos, finanzas..." />
         </div>
 
-        <!-- Filter Chips (Visible and Interactive) -->
-        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono select-none">
+        <!-- Filter Chips with Rich Depth & Elastic Interaction -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono select-none p-1 rounded-2xl bg-[#090b10]/80 border border-white/[0.08] shadow-inner backdrop-blur-md">
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("all"))"
-                class="px-2.5 py-1 rounded-lg transition-colors @(selectedFilter == "all" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "bg-white/[0.04] text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "all" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
                 Todos (@TotalResultCount)
             </button>
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("notes"))"
-                class="px-2.5 py-1 rounded-lg transition-colors @(selectedFilter == "notes" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "bg-white/[0.04] text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "notes" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
                 Notas (@filteredNotes.Count)
             </button>
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("roadmaps"))"
-                class="px-2.5 py-1 rounded-lg transition-colors @(selectedFilter == "roadmaps" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "bg-white/[0.04] text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "roadmaps" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
                 Roadmaps (@filteredRoadmaps.Count)
             </button>
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("habits"))"
-                class="px-2.5 py-1 rounded-lg transition-colors @(selectedFilter == "habits" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "bg-white/[0.04] text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "habits" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
                 Hábitos (@filteredHabits.Count)
             </button>
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("finance"))"
-                class="px-2.5 py-1 rounded-lg transition-colors @(selectedFilter == "finance" ? "bg-indigo-600 text-white font-semibold shadow-sm shadow-indigo-500/25" : "bg-white/[0.04] text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "finance" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
                 Finanzas (@filteredTransactions.Count)
             </button>
         </div>
     </div>
 
-    <!-- Master-Detail Split View (Craft & Linear Spatial Layout) -->
-    <div class="flex-1 flex min-h-0 rounded-2xl atlas-surface overflow-hidden">
+    <!-- Master-Detail Split View (Craft & Linear Spatial Layout with Rich Shadows) -->
+    <div class="flex-1 flex min-h-0 rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden backdrop-blur-md">
         
-        <!-- Left Panel: Grouped Search Results (40%) -->
-        <div class="w-full md:w-[38%] border-r border-white/[0.06] flex flex-col overflow-hidden bg-[#0d111a]">
+        <!-- Left Panel: Grouped Search Results (38%) -->
+        <div class="w-full md:w-[38%] border-r border-white/[0.08] flex flex-col overflow-hidden bg-gradient-to-b from-[#0d111a]/95 to-[#090c14]/95">
             
-            <div class="flex-1 overflow-y-auto p-2 space-y-4">
+            <div class="flex-1 overflow-y-auto p-2.5 space-y-4">
                 @if (isLoading)
                 {
                     <AtlasLoadingState Message="Buscando en SQLite..." />
                 }
                 else if (TotalResultCount == 0)
                 {
-                    <div class="py-12 px-4 text-center space-y-1 select-none">
-                        <p class="text-xs font-medium text-slate-400">Sin coincidencias para "@searchQuery"</p>
-                        <p class="text-[11px] text-slate-500">Probá con otra palabra clave o capturá una nueva nota.</p>
+                    <div class="py-16 px-4 text-center space-y-1.5 select-none">
+                        <p class="text-xs font-semibold text-slate-300">Sin coincidencias para "@searchQuery"</p>
+                        <p class="text-[11px] text-slate-500 font-mono">Probá con otra palabra clave o capturá una nueva nota.</p>
                     </div>
                 }
                 else
                 {
-                    <!-- 1. GROUP: KNOWLEDGE / NOTAS (Only if non-empty and filter matches) -->
+                    <!-- 1. GROUP: KNOWLEDGE / NOTAS -->
                     @if (ShouldShow("notes") && filteredNotes.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 font-semibold">
-                                Knowledge / Notas (@filteredNotes.Count)
+                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
+                                <span>📝</span>
+                                <span>Knowledge / Notas (@filteredNotes.Count)</span>
                             </span>
-                            <div class="space-y-0.5">
+                            <div class="space-y-1">
                                 @foreach (var note in filteredNotes)
                                 {
                                     var isSel = selectedItem?.Id == note.Id;
                                     <div 
                                         @onclick="() => SelectNote(note)"
-                                        class="p-2.5 rounded-xl cursor-pointer transition-all @(isSel ? "bg-indigo-500/15 border border-indigo-500/30 text-white font-semibold" : "hover:bg-white/[0.03] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-indigo-950/80 to-violet-950/50 border border-indigo-500/40 text-white shadow-md shadow-indigo-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs truncate font-medium">@GetNoteTitle(note)</span>
+                                            <span class="text-xs truncate font-semibold">@GetNoteTitle(note)</span>
                                             <span class="text-[10px] font-mono text-slate-500 shrink-0">@note.CreatedAt.ToLocalTime().ToString("dd MMM")</span>
                                         </div>
-                                        <p class="text-[11px] text-slate-400 line-clamp-1 pt-0.5 font-normal">
+                                        <p class="text-[11px] text-slate-400 line-clamp-1 pt-1 font-normal">
                                             @note.Content
                                         </p>
                                     </div>
@@ -99,48 +100,50 @@
                         </div>
                     }
 
-                    <!-- 2. GROUP: ROADMAPS (Only if non-empty and filter matches) -->
+                    <!-- 2. GROUP: ROADMAPS -->
                     @if (ShouldShow("roadmaps") && filteredRoadmaps.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 font-semibold">
-                                Roadmaps & Metas (@filteredRoadmaps.Count)
+                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
+                                <span>🎯</span>
+                                <span>Roadmaps & Metas (@filteredRoadmaps.Count)</span>
                             </span>
-                            <div class="space-y-0.5">
+                            <div class="space-y-1">
                                 @foreach (var r in filteredRoadmaps)
                                 {
                                     var isSel = selectedItem?.Id == r.Id;
                                     <div 
                                         @onclick="() => SelectRoadmap(r)"
-                                        class="p-2.5 rounded-xl cursor-pointer transition-all @(isSel ? "bg-indigo-500/15 border border-indigo-500/30 text-white font-semibold" : "hover:bg-white/[0.03] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-indigo-950/80 to-violet-950/50 border border-indigo-500/40 text-white shadow-md shadow-indigo-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs truncate font-medium">@r.Title</span>
-                                            <span class="text-[10px] font-mono text-indigo-300 font-semibold">@r.ProgressPercentage%</span>
+                                            <span class="text-xs truncate font-semibold">@r.Title</span>
+                                            <span class="text-[10.5px] font-mono text-indigo-300 font-bold">@r.ProgressPercentage%</span>
                                         </div>
-                                        <span class="text-[10px] font-mono text-slate-500">@(r.Milestones?.Count ?? 0) hitos configurados</span>
+                                        <span class="text-[10px] font-mono text-slate-500 pt-0.5 block">@(r.Milestones?.Count ?? 0) hitos configurados</span>
                                     </div>
                                 }
                             </div>
                         </div>
                     }
 
-                    <!-- 3. GROUP: HABITS (Only if non-empty and filter matches) -->
+                    <!-- 3. GROUP: HABITS -->
                     @if (ShouldShow("habits") && filteredHabits.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 font-semibold">
-                                Hábitos (@filteredHabits.Count)
+                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
+                                <span>🌿</span>
+                                <span>Hábitos (@filteredHabits.Count)</span>
                             </span>
-                            <div class="space-y-0.5">
+                            <div class="space-y-1">
                                 @foreach (var h in filteredHabits)
                                 {
                                     var isSel = selectedItem?.Id == h.Id;
                                     <div 
                                         @onclick="() => SelectHabit(h)"
-                                        class="p-2.5 rounded-xl cursor-pointer transition-all @(isSel ? "bg-indigo-500/15 border border-indigo-500/30 text-white font-semibold" : "hover:bg-white/[0.03] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/40 text-white shadow-md shadow-emerald-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs truncate font-medium">@h.Name</span>
-                                            <AtlasBadge Variant="success">@h.Frequency</AtlasBadge>
+                                            <span class="text-xs truncate font-semibold">@h.Name</span>
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">@h.Frequency</span>
                                         </div>
                                     </div>
                                 }
@@ -148,28 +151,29 @@
                         </div>
                     }
 
-                    <!-- 4. GROUP: FINANCES (Only if non-empty and filter matches) -->
+                    <!-- 4. GROUP: FINANCES -->
                     @if (ShouldShow("finance") && filteredTransactions.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-500 uppercase tracking-wider px-2 font-semibold">
-                                Finanzas (@filteredTransactions.Count)
+                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
+                                <span>💳</span>
+                                <span>Finanzas (@filteredTransactions.Count)</span>
                             </span>
-                            <div class="space-y-0.5">
+                            <div class="space-y-1">
                                 @foreach (var tx in filteredTransactions)
                                 {
                                     var isSel = selectedItem?.Id == tx.Id;
                                     var isIncome = tx.Tipo == "income";
                                     <div 
                                         @onclick="() => SelectTransaction(tx)"
-                                        class="p-2.5 rounded-xl cursor-pointer transition-all @(isSel ? "bg-indigo-500/15 border border-indigo-500/30 text-white font-semibold" : "hover:bg-white/[0.03] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? (isIncome ? "bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/40 text-white shadow-md shadow-emerald-950/30" : "bg-gradient-to-r from-rose-950/60 to-red-950/40 border border-rose-500/40 text-white shadow-md shadow-rose-950/30") : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs truncate font-medium">@tx.Descripcion</span>
-                                            <span class="text-[10.5px] font-mono font-semibold @(isIncome ? "text-emerald-400" : "text-slate-200")">
+                                            <span class="text-xs truncate font-semibold">@tx.Descripcion</span>
+                                            <span class="text-[10.5px] font-mono font-bold @(isIncome ? "text-emerald-300" : "text-rose-300")">
                                                 @(isIncome ? "+" : "-")$@tx.Monto.ToString("N0", new CultureInfo("es-AR"))
                                             </span>
                                         </div>
-                                        <span class="text-[10px] font-mono text-slate-500">@tx.Fecha.ToLocalTime().ToString("dd MMM yyyy")</span>
+                                        <span class="text-[10px] font-mono text-slate-500 pt-0.5 block">@tx.Fecha.ToLocalTime().ToString("dd MMM yyyy")</span>
                                     </div>
                                 }
                             </div>
@@ -180,13 +184,13 @@
 
         </div>
 
-        <!-- Right Panel: Live Contextual Preview (60%) -->
-        <div class="flex-1 flex flex-col overflow-hidden bg-[#0f1420]">
+        <!-- Right Panel: Live Contextual Preview (62%) -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#101524]/95 to-[#0b0e18]/95">
             
             @if (selectedItem == null)
             {
                 <div class="flex-1 flex items-center justify-center text-xs text-slate-500 font-mono select-none">
-                    Seleccioná un elemento para ver su detalle o resumir con IA
+                    Seleccioná un elemento para ver su detalle o ejecutar acciones con IA
                 </div>
             }
             else
@@ -208,13 +212,13 @@
                     <!-- AI Summary / Action Result Banner (if generated) -->
                     @if (!string.IsNullOrWhiteSpace(aiOutput))
                     {
-                        <div class="atlas-elevated rounded-2xl p-4 space-y-2 border border-indigo-500/30 animate-atlas-in">
-                            <div class="flex items-center justify-between text-[10.5px] font-mono font-semibold text-indigo-400 uppercase">
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/70 to-violet-950/70 border border-indigo-500/40 shadow-lg shadow-indigo-950/40 space-y-2 animate-atlas-in">
+                            <div class="flex items-center justify-between text-[10.5px] font-mono font-semibold text-indigo-300 uppercase">
                                 <span class="flex items-center gap-1.5">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                                    <span class="w-2 h-2 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/80"></span>
                                     <span>Respuesta Gemini AI:</span>
                                 </span>
-                                <button @onclick="() => aiOutput = null" class="text-slate-400 hover:text-white text-xs">✕</button>
+                                <button type="button" @onclick="() => aiOutput = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
                             </div>
                             <div class="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap font-sans">
                                 @aiOutput
@@ -225,25 +229,36 @@
                     <!-- Rich Body Detail by Category -->
                     @if (selectedItem.Category == "Nota")
                     {
-                        <div class="text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap font-sans selection:bg-indigo-500/30">
+                        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap font-sans selection:bg-indigo-500/30">
                             @selectedItem.BodyContent
                         </div>
                     }
                     else if (selectedItem.Category == "Roadmap" && selectedRoadmapDetail != null)
                     {
                         <div class="space-y-4">
-                            <AtlasProgress Value="@selectedRoadmapDetail.ProgressPercentage" ShowLabel="true" Label="Avance general de la ruta" />
+                            <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                                <div class="flex items-center justify-between text-xs font-mono">
+                                    <span class="text-slate-300 font-semibold">Avance del Roadmap</span>
+                                    <span class="text-indigo-300 font-bold">@selectedRoadmapDetail.ProgressPercentage%</span>
+                                </div>
+                                <div class="w-full bg-slate-900/80 rounded-full h-2 overflow-hidden border border-white/[0.06] p-0.5">
+                                    <div 
+                                        class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 shadow-sm shadow-indigo-500/50 transition-all duration-300"
+                                        style="width: @(Math.Clamp(selectedRoadmapDetail.ProgressPercentage, 0, 100))%">
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="space-y-2 pt-2">
                                 <span class="text-[11px] font-mono text-slate-400 uppercase block font-semibold">Hitos estructurados:</span>
-                                <div class="space-y-1.5">
+                                <div class="space-y-2">
                                     @if (selectedRoadmapDetail.Milestones != null)
                                     {
                                         @foreach (var m in selectedRoadmapDetail.Milestones.OrderBy(x => x.OrderIndex))
                                         {
                                             var isCompleted = m.Status == "completed";
-                                            <div class="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
-                                                <div class="flex items-center gap-2.5">
+                                            <div class="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between text-xs">
+                                                <div class="flex items-center gap-3">
                                                     <span class="@(isCompleted ? "text-emerald-400" : "text-slate-500") font-bold">
                                                         @(isCompleted ? "✓" : "○")
                                                     </span>
@@ -251,7 +266,7 @@
                                                         Paso @(m.OrderIndex + 1): @m.Title
                                                     </span>
                                                 </div>
-                                                <span class="text-[10px] font-mono text-slate-500">@m.Status</span>
+                                                <span class="text-[10.5px] font-mono text-slate-400 uppercase">@m.Status</span>
                                             </div>
                                         }
                                     }
@@ -261,12 +276,12 @@
                     }
                     else if (selectedItem.Category == "Finanza")
                     {
-                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3">
+                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3.5">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs text-slate-400 font-mono">Monto registrado:</span>
                                 <span class="text-base font-bold font-mono text-white">@selectedItem.BodyContent</span>
                             </div>
-                            <AtlasDivider />
+                            <div class="h-px bg-white/[0.06]"></div>
                             <div class="flex items-center justify-between text-xs font-mono text-slate-400">
                                 <span>Estado: Confirmado en SQLite</span>
                                 <span>Moneda: ARS</span>
@@ -275,7 +290,7 @@
                     }
                     else
                     {
-                        <div class="text-xs text-slate-300 leading-relaxed">
+                        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-slate-300 leading-relaxed">
                             @selectedItem.BodyContent
                         </div>
                     }
@@ -283,13 +298,12 @@
                 </div>
 
                 <!-- Floating Bottom Contextual Action Bar -->
-                <div class="h-12 px-6 border-t border-white/[0.08] bg-[#0c1017] flex items-center justify-between text-xs">
+                <div class="h-14 px-6 border-t border-white/[0.08] bg-[#090b10]/90 backdrop-blur-md flex items-center justify-between text-xs">
                     <div class="flex items-center gap-2.5">
-                        
                         <AtlasContextActionBar Target="@selectedDomainObject" OnActionExecuted="HandleContextActionResult" />
                     </div>
 
-                    <span class="text-[10px] font-mono text-slate-500">ID: @selectedItem.Id[..Math.Min(8, selectedItem.Id.Length)]...</span>
+                    <span class="text-[10.5px] font-mono text-slate-500">ID: @selectedItem.Id[..Math.Min(8, selectedItem.Id.Length)]...</span>
                 </div>
             }
 
@@ -399,110 +413,151 @@
         else
         {
             filteredNotes = allNotes
-                .Where(n => (n.Title != null && n.Title.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
-                            n.Content.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                .Where(n => (n.Content != null && n.Content.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                             (n.Tags != null && n.Tags.Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             filteredRoadmaps = allRoadmaps
-                .Where(r => r.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                .Where(r => (r.Title != null && r.Title.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                             (r.Description != null && r.Description.Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             filteredHabits = allHabits
-                .Where(h => h.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-                            (h.Description != null && h.Description.Contains(q, StringComparison.OrdinalIgnoreCase)))
+                .Where(h => h.Name != null && h.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             filteredTransactions = allTransactions
-                .Where(t => t.Descripcion.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                .Where(t => (t.Descripcion != null && t.Descripcion.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                             (t.Categoria != null && t.Categoria.Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
+
+        // Auto-select first item if previous selection vanished
+        if (selectedItem != null)
+        {
+            var exists = filteredNotes.Any(n => n.Id == selectedItem.Id) ||
+                         filteredRoadmaps.Any(r => r.Id == selectedItem.Id) ||
+                         filteredHabits.Any(h => h.Id == selectedItem.Id) ||
+                         filteredTransactions.Any(t => t.Id == selectedItem.Id);
+
+            if (!exists)
+            {
+                selectedItem = null;
+                selectedDomainObject = null;
+                selectedRoadmapDetail = null;
+                SelectFirstAvailable();
+            }
+        }
+        else
+        {
+            SelectFirstAvailable();
+        }
+    }
+
+    private void SelectFirstAvailable()
+    {
+        if (ShouldShow("notes") && filteredNotes.Count > 0)
+            SelectNote(filteredNotes[0]);
+        else if (ShouldShow("roadmaps") && filteredRoadmaps.Count > 0)
+            SelectRoadmap(filteredRoadmaps[0]);
+        else if (ShouldShow("habits") && filteredHabits.Count > 0)
+            SelectHabit(filteredHabits[0]);
+        else if (ShouldShow("finance") && filteredTransactions.Count > 0)
+            SelectTransaction(filteredTransactions[0]);
     }
 
     private void SelectNote(Note note)
     {
-        selectedRoadmapDetail = null;
         selectedDomainObject = note;
+        selectedRoadmapDetail = null;
         aiOutput = null;
-        actionFeedback = null;
+
         selectedItem = new SearchUnifiedItem(
             Id: note.Id,
             Category: "Nota",
-            BadgeVariant: "accent",
+            BadgeVariant: "neutral",
             Title: GetNoteTitle(note),
-            MetaInfo: $"{note.CreatedAt.ToLocalTime():dd/MM/yyyy HH:mm} • Origen: {note.Source}",
+            MetaInfo: $"{note.CreatedAt.ToLocalTime():dd MMM yyyy HH:mm} • {note.Type}",
             BodyContent: note.Content
         );
     }
 
     private void SelectRoadmap(Roadmap roadmap)
     {
-        selectedRoadmapDetail = roadmap;
         selectedDomainObject = roadmap;
+        selectedRoadmapDetail = roadmap;
         aiOutput = null;
-        actionFeedback = null;
+
         selectedItem = new SearchUnifiedItem(
             Id: roadmap.Id,
             Category: "Roadmap",
-            BadgeVariant: "warning",
+            BadgeVariant: "accent",
             Title: roadmap.Title,
-            MetaInfo: $"Progreso actual: {roadmap.ProgressPercentage}% • {roadmap.CreatedAt.ToLocalTime():dd/MM/yyyy}",
-            BodyContent: roadmap.Description ?? "Sin descripción"
+            MetaInfo: $"{roadmap.Milestones?.Count ?? 0} hitos • {roadmap.ProgressPercentage}% avance",
+            BodyContent: roadmap.Description ?? string.Empty
         );
     }
 
     private void SelectHabit(Habit habit)
     {
-        selectedRoadmapDetail = null;
         selectedDomainObject = habit;
+        selectedRoadmapDetail = null;
         aiOutput = null;
-        actionFeedback = null;
+
         selectedItem = new SearchUnifiedItem(
             Id: habit.Id,
             Category: "Hábito",
             BadgeVariant: "success",
             Title: habit.Name,
-            MetaInfo: $"Frecuencia: {habit.Frequency} • Creado: {habit.CreatedAt.ToLocalTime():dd/MM/yyyy}",
-            BodyContent: habit.Description ?? "Hábito registrado en el sistema personal."
+            MetaInfo: $"Frecuencia: {habit.Frequency}",
+            BodyContent: $"Hábito configurado con frecuencia {habit.Frequency}."
         );
     }
 
     private void SelectTransaction(Transaction tx)
     {
-        selectedRoadmapDetail = null;
         selectedDomainObject = tx;
+        selectedRoadmapDetail = null;
         aiOutput = null;
-        actionFeedback = null;
+
         var isIncome = tx.Tipo == "income";
-        var amountText = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))} ARS";
+        var amountFormatted = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))} ({tx.Tipo})";
 
         selectedItem = new SearchUnifiedItem(
             Id: tx.Id,
             Category: "Finanza",
             BadgeVariant: isIncome ? "success" : "neutral",
             Title: tx.Descripcion,
-            MetaInfo: $"Fecha: {tx.Fecha.ToLocalTime():dd/MM/yyyy HH:mm} • Tipo: {tx.Tipo}",
-            BodyContent: amountText
+            MetaInfo: $"{tx.Fecha.ToLocalTime():dd MMM yyyy HH:mm} • {tx.Origen}",
+            BodyContent: amountFormatted
         );
-    }
-
-    private void HandleContextActionResult(AtlasContextActionBar.ContextActionResult actionResult)
-    {
-        if (actionResult.Result.IsSuccess && actionResult.Result.Data != null)
-        {
-            aiOutput = actionResult.Result.Data.ToString();
-        }
-        else if (!actionResult.Result.IsSuccess)
-        {
-            actionFeedback = actionResult.Result.ErrorMessage ?? "Error al ejecutar acción.";
-        }
     }
 
     private static string GetNoteTitle(Note note)
     {
-        if (!string.IsNullOrWhiteSpace(note.Title)) return note.Title;
-        return note.Content.Length > 40 ? note.Content[..40] + "..." : note.Content;
+        if (string.IsNullOrWhiteSpace(note.Content)) return "Nota sin título";
+        var lines = note.Content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var first = lines.Length > 0 ? lines[0] : note.Content;
+        if (first.Length > 45) return first[..45] + "...";
+        return first;
+    }
+
+    private void HandleContextActionResult(AtlasContextActionBar.ContextActionResult contextResult)
+    {
+        if (contextResult.Result.IsSuccess)
+        {
+            if (contextResult.Result.Data is string str && !string.IsNullOrWhiteSpace(str))
+            {
+                aiOutput = str;
+            }
+            else
+            {
+                aiOutput = "Acción ejecutada correctamente.";
+            }
+        }
+        else
+        {
+            aiOutput = $"Error: {contextResult.Result.ErrorMessage}";
+        }
     }
 }

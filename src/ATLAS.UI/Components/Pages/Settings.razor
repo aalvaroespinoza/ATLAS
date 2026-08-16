@@ -9,34 +9,41 @@
 
 <div class="space-y-8 max-w-2xl pb-16 animate-atlas-in">
     
-    <!-- Header -->
-    <div class="space-y-1 border-b border-white/[0.08] pb-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-lg font-bold tracking-tight text-white">
-                Configuración & Bóveda de Claves
-            </h1>
-            <div class="flex items-center gap-2 text-xs font-mono">
+    <!-- Page Header & Vault Status Indicator -->
+    <div class="p-5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 backdrop-blur-md space-y-2">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-0.5">
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    <span>Configuración & Bóveda de Claves</span>
+                </h1>
+                <p class="text-xs text-slate-400">
+                    Administrá tus credenciales y conexiones encriptadas en Windows Credential Locker.
+                </p>
+            </div>
+
+            <div class="shrink-0">
                 @if (hasPinConfigured)
                 {
-                    <span class="@(isVaultUnlocked ? "text-amber-400" : "text-emerald-400") flex items-center gap-1.5">
+                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-medium @(isVaultUnlocked ? "bg-amber-500/15 text-amber-300 border border-amber-500/30 shadow-sm shadow-amber-500/10" : "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 shadow-sm shadow-emerald-500/10")">
+                        <span class="w-2 h-2 rounded-full @(isVaultUnlocked ? "bg-amber-400 shadow-sm shadow-amber-400/80" : "bg-emerald-400 shadow-sm shadow-emerald-400/80")"></span>
                         <span>@(isVaultUnlocked ? "🔓 Bóveda Desbloqueada" : "🔒 Protegido con PIN")</span>
                     </span>
                 }
                 else
                 {
-                    <span class="text-slate-500">● Sin PIN configurado</span>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-mono text-slate-400 bg-white/[0.04] border border-white/[0.08]">
+                        <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+                        <span>Sin PIN configurado</span>
+                    </span>
                 }
             </div>
         </div>
-        <p class="text-xs text-slate-400">
-            Administrá tus credenciales y conexiones encriptadas en Windows Credential Locker.
-        </p>
     </div>
 
     <!-- Notification / Status Feedback -->
     @if (!string.IsNullOrWhiteSpace(feedbackMessage))
     {
-        <div class="px-3.5 py-2.5 rounded-xl text-xs flex items-center justify-between font-medium animate-atlas-in @(isFeedbackSuccess ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-200" : "bg-rose-500/15 border border-rose-500/30 text-rose-200")">
+        <div class="px-4 py-3 rounded-2xl text-xs flex items-center justify-between font-medium animate-atlas-in shadow-lg @(isFeedbackSuccess ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 shadow-emerald-950/20" : "bg-rose-500/15 border border-rose-500/30 text-rose-200 shadow-rose-950/20")">
             <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @feedbackMessage</span>
             <button type="button" @onclick="() => feedbackMessage = null" class="text-slate-400 hover:text-white text-xs ml-2 cursor-pointer">✕</button>
         </div>
@@ -46,7 +53,7 @@
     <section class="space-y-3">
         <AtlasSectionHeader Title="Seguridad & Acceso (PIN de 4 dígitos)" />
 
-        <div class="atlas-surface rounded-2xl p-5 space-y-4">
+        <div class="p-5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 space-y-4 backdrop-blur-md">
             @if (!hasPinConfigured)
             {
                 <!-- Crear PIN inicial -->
@@ -66,14 +73,14 @@
                                 @bind="newPinInput"
                                 @bind:event="oninput"
                                 placeholder="•••• (4 dígitos)" 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-white text-xs font-mono text-center tracking-widest focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                         </div>
-                        <AtlasButton 
-                            Variant="primary" 
-                            Size="md" 
-                            OnClick="SetInitialPinAsync">
+                        <button 
+                            type="button"
+                            @onclick="SetInitialPinAsync"
+                            class="h-8.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 shadow-md shadow-indigo-500/20 cursor-pointer">
                             Guardar PIN
-                        </AtlasButton>
+                        </button>
                     </div>
                 </div>
             }
@@ -83,7 +90,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="space-y-1">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/80"></span>
                             <span class="text-xs font-semibold text-slate-200">PIN de 4 dígitos activo</span>
                         </div>
                         <p class="text-[11px] text-slate-400">
@@ -99,28 +106,28 @@
                                 @bind="unlockPinInput"
                                 @bind:event="oninput"
                                 placeholder="••••" 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-white text-xs font-mono text-center tracking-widest focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                         </div>
-                        <AtlasButton 
-                            Variant="primary" 
-                            Size="md" 
-                            OnClick="UnlockVaultAsync">
+                        <button 
+                            type="button"
+                            @onclick="UnlockVaultAsync"
+                            class="h-8.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 shadow-md shadow-indigo-500/20 cursor-pointer">
                             🔓 Desbloquear
-                        </AtlasButton>
+                        </button>
                     </div>
                 </div>
 
                 @if (isChangingPin)
                 {
-                    <div class="pt-3 border-t border-white/[0.06] space-y-3 animate-atlas-in">
+                    <div class="pt-3.5 border-t border-white/[0.06] space-y-3 animate-atlas-in">
                         <span class="text-xs font-semibold text-slate-200 block">Cambiar PIN de Seguridad</span>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <input type="password" maxlength="4" @bind="oldPinChangeInput" @bind:event="oninput" placeholder="PIN Actual (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500" />
-                            <input type="password" maxlength="4" @bind="newPinChangeInput" @bind:event="oninput" placeholder="Nuevo PIN (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-white text-xs font-mono focus:outline-none focus:border-indigo-500" />
+                            <input type="password" maxlength="4" @bind="oldPinChangeInput" @bind:event="oninput" placeholder="PIN Actual (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-white text-xs font-mono text-center tracking-widest focus:outline-none focus:border-indigo-500" />
+                            <input type="password" maxlength="4" @bind="newPinChangeInput" @bind:event="oninput" placeholder="Nuevo PIN (4 dígitos)" class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.1] text-white text-xs font-mono text-center tracking-widest focus:outline-none focus:border-indigo-500" />
                         </div>
                         <div class="flex items-center gap-2">
-                            <AtlasButton Variant="primary" Size="sm" OnClick="ChangePinAsync">Actualizar PIN</AtlasButton>
-                            <AtlasButton Variant="secondary" Size="sm" OnClick="() => isChangingPin = false">Cancelar</AtlasButton>
+                            <button type="button" @onclick="ChangePinAsync" class="h-7 px-3 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">Actualizar PIN</button>
+                            <button type="button" @onclick="() => isChangingPin = false" class="h-7 px-3 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] active:scale-[0.98] transition-all cursor-pointer">Cancelar</button>
                         </div>
                     </div>
                 }
@@ -138,8 +145,8 @@
                 <!-- Bóveda Desbloqueada -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="space-y-0.5">
-                        <span class="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                        <span class="text-xs font-semibold text-amber-300 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/80"></span>
                             <span>Bóveda desbloqueada</span>
                         </span>
                         <p class="text-[11px] text-slate-400">
@@ -148,9 +155,12 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        <AtlasButton Variant="secondary" Size="sm" OnClick="LockVault">
+                        <button 
+                            type="button" 
+                            @onclick="LockVault"
+                            class="h-8 px-3.5 rounded-xl text-xs font-medium text-slate-200 bg-white/[0.06] hover:bg-white/[0.1] active:scale-[0.98] border border-white/[0.1] transition-all cursor-pointer">
                             🔒 Bloquear Bóveda
-                        </AtlasButton>
+                        </button>
                     </div>
                 </div>
             }
@@ -169,12 +179,12 @@
             </button>
         </div>
 
-        <div class="atlas-surface rounded-2xl p-5 space-y-4">
+        <div class="p-5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-indigo-500/20 shadow-lg shadow-black/40 space-y-4 backdrop-blur-md">
             
             <!-- Supabase Connection & Auth Status Badges -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-3.5">
                 <div class="flex items-center gap-2.5">
-                    <span class="w-2 h-2 rounded-full @(hasSupabaseConfigured && isSupabaseAuthenticated ? "bg-emerald-400" : hasSupabaseConfigured ? "bg-amber-400" : "bg-slate-600")"></span>
+                    <span class="w-2.5 h-2.5 rounded-full @(hasSupabaseConfigured && isSupabaseAuthenticated ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : hasSupabaseConfigured ? "bg-amber-400 shadow-sm shadow-amber-400/80" : "bg-slate-600")"></span>
                     <span class="text-xs font-semibold text-white">Supabase Cloud</span>
                     @if (isSupabaseAuthenticated)
                     {
@@ -199,7 +209,7 @@
                         <span class="font-mono text-indigo-400 font-semibold">Script SQL de creación con RLS scoped a auth.uid():</span>
                         <button type="button" @onclick="() => showSqlModal = false" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
                     </div>
-                    <pre class="text-[10px] font-mono text-slate-300 overflow-x-auto max-h-48 p-2.5 bg-black/40 rounded-lg select-all whitespace-pre">@SupabaseSchemaSql</pre>
+                    <pre class="text-[10px] font-mono text-slate-300 overflow-x-auto max-h-48 p-2.5 bg-black/40 rounded-lg select-all whitespace-pre border border-white/[0.04]">@SupabaseSchemaSql</pre>
                     <p class="text-[10px] text-slate-400">
                         Copiá este script y ejecutalo en el <strong>SQL Editor</strong> de tu proyecto en Supabase.
                     </p>
@@ -215,7 +225,7 @@
                         @bind="supabaseUrlInput" 
                         @bind:event="oninput"
                         placeholder="https://your-project.supabase.co" 
-                        class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                        class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
                 <div class="space-y-1">
@@ -225,58 +235,70 @@
                         @bind="supabaseKeyInput" 
                         @bind:event="oninput"
                         placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
-                        class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                        class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                 </div>
 
                 <div class="flex items-center gap-2 pt-1">
-                    <AtlasButton Variant="primary" Size="sm" OnClick="SaveSupabaseKeysAsync">
+                    <button 
+                        type="button" 
+                        @onclick="SaveSupabaseKeysAsync"
+                        class="h-7.5 px-3.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">
                         Guardar API Keys
-                    </AtlasButton>
+                    </button>
                     @if (hasSupabaseConfigured)
                     {
-                        <AtlasButton Variant="danger" Size="sm" OnClick="DeleteSupabaseKeysAsync">
+                        <button 
+                            type="button" 
+                            @onclick="DeleteSupabaseKeysAsync"
+                            class="h-7.5 px-3.5 rounded-lg text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                             Eliminar Keys
-                        </AtlasButton>
+                        </button>
                     }
                 </div>
             </div>
 
             <!-- 2.2 Supabase Auth (Email & Password) Login Section -->
-            <div class="pt-3 border-t border-white/[0.06] space-y-3">
+            <div class="pt-3.5 border-t border-white/[0.06] space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold text-slate-200 block">Autenticación de Usuario (Supabase Auth)</span>
                     @if (isSupabaseAuthenticated)
                     {
-                        <span class="text-[10px] font-mono text-emerald-400">● Token JWT persistido</span>
+                        <span class="text-[10.5px] font-mono text-emerald-400 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            <span>Token JWT persistido</span>
+                        </span>
                     }
                 </div>
 
                 @if (isSupabaseAuthenticated)
                 {
-                    <div class="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2">
+                    <div class="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] space-y-2.5">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-1">
                             <span class="text-slate-300 font-medium">Sesión activa como: <strong class="text-white">@supabaseUserEmail</strong></span>
                             <span class="text-[10.5px] font-mono text-slate-500">ID: @supabaseUserId</span>
                         </div>
                         
                         <div class="flex items-center justify-between pt-1 flex-wrap gap-2">
-                            <AtlasButton Variant="danger" Size="sm" OnClick="SignOutSupabase">
+                            <button 
+                                type="button" 
+                                @onclick="SignOutSupabase"
+                                class="h-7 px-3 rounded-lg text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                                 Cerrar Sesión
-                            </AtlasButton>
+                            </button>
 
-                            <AtlasButton 
-                                Variant="accent" 
-                                Size="sm" 
-                                OnClick="SyncSupabaseAsync" 
-                                IsLoading="isSyncingSupabase">
-                                🔄 Sincronizar Ahora con Supabase
-                            </AtlasButton>
+                            <button 
+                                type="button" 
+                                @onclick="SyncSupabaseAsync"
+                                disabled="@isSyncingSupabase"
+                                class="h-7 px-3.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 shadow-sm shadow-indigo-500/20 cursor-pointer disabled:opacity-50">
+                                🔄 @(isSyncingSupabase ? "Sincronizando..." : "Sincronizar Ahora")
+                            </button>
                         </div>
                     </div>
                 }
                 else
                 {
-                    <div class="space-y-3 bg-white/[0.02] p-3.5 rounded-xl border border-white/[0.06]">
+                    <div class="space-y-3 bg-black/30 p-3.5 rounded-xl border border-white/[0.06]">
                         <p class="text-[11px] text-slate-400">
                             Iniciá sesión con tu email y contraseña de Supabase. El token de sesión se guardará en tu bóveda segura para sincronizar con RLS.
                         </p>
@@ -287,24 +309,24 @@
                                 @bind="loginEmailInput" 
                                 @bind:event="oninput"
                                 placeholder="tu-email@ejemplo.com" 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
 
                             <input 
                                 type="password" 
                                 @bind="loginPasswordInput" 
                                 @bind:event="oninput"
                                 placeholder="Contraseña de Supabase" 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-white text-xs font-sans placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
                         </div>
 
                         <div class="flex items-center justify-between pt-1">
-                            <AtlasButton 
-                                Variant="primary" 
-                                Size="sm" 
-                                OnClick="SignInSupabaseAsync"
-                                IsLoading="isSigningIn">
-                                Conectar Cuenta (Iniciar Sesión)
-                            </AtlasButton>
+                            <button 
+                                type="button" 
+                                @onclick="SignInSupabaseAsync"
+                                disabled="@isSigningIn"
+                                class="h-7.5 px-3.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer disabled:opacity-50">
+                                @(isSigningIn ? "Conectando..." : "Conectar Cuenta (Iniciar Sesión)")
+                            </button>
                             <span class="text-[10px] font-mono text-slate-500">Un solo login permanente</span>
                         </div>
                     </div>
@@ -316,17 +338,15 @@
 
     <!-- 3. SECCIÓN: GESTIÓN DE CLAVES DE OTRAS APIS -->
     <section class="space-y-4">
-        <div class="flex items-center justify-between">
-            <AtlasSectionHeader Title="Otras Integraciones & APIs" />
-        </div>
+        <AtlasSectionHeader Title="Otras Integraciones & APIs" />
 
         <div class="space-y-3">
             
             <!-- 1. GOOGLE GEMINI AI -->
-            <div class="atlas-surface rounded-2xl p-4 space-y-3">
+            <div class="p-4.5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 space-y-3.5 backdrop-blur-md">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full @(hasGeminiKey ? "bg-emerald-400" : "bg-slate-600")"></span>
+                        <span class="w-2.5 h-2.5 rounded-full @(hasGeminiKey ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : "bg-slate-600")"></span>
                         <span class="text-xs font-semibold text-white">Google Gemini AI</span>
                     </div>
                     <AtlasBadge Variant="@(hasGeminiKey ? "success" : "neutral")">
@@ -343,27 +363,33 @@
                                 @bind="geminiKeyInput" 
                                 @bind:event="oninput"
                                 placeholder="AIzaSy..." 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        <AtlasButton Variant="primary" Size="md" OnClick="SaveGeminiKeyAsync">
+                        <button 
+                            type="button" 
+                            @onclick="SaveGeminiKeyAsync"
+                            class="h-8.5 px-3.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">
                             Guardar
-                        </AtlasButton>
+                        </button>
                         @if (hasGeminiKey)
                         {
-                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteGeminiKeyAsync">
+                            <button 
+                                type="button" 
+                                @onclick="DeleteGeminiKeyAsync"
+                                class="h-8.5 px-3 rounded-xl text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                                 Eliminar
-                            </AtlasButton>
+                            </button>
                         }
                     </div>
                 </div>
             </div>
 
             <!-- 2. BOT DE TELEGRAM -->
-            <div class="atlas-surface rounded-2xl p-4 space-y-3">
+            <div class="p-4.5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 space-y-3.5 backdrop-blur-md">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full @(hasTelegramToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                        <span class="w-2.5 h-2.5 rounded-full @(hasTelegramToken ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : "bg-slate-600")"></span>
                         <span class="text-xs font-semibold text-white">Bot de Telegram</span>
                     </div>
                     <AtlasBadge Variant="@(hasTelegramToken ? "success" : "neutral")">
@@ -380,27 +406,33 @@
                                 @bind="telegramTokenInput" 
                                 @bind:event="oninput"
                                 placeholder="123456789:ABCdefGHIjklMNOpqr..." 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        <AtlasButton Variant="primary" Size="md" OnClick="SaveTelegramTokenAsync">
+                        <button 
+                            type="button" 
+                            @onclick="SaveTelegramTokenAsync"
+                            class="h-8.5 px-3.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">
                             Guardar
-                        </AtlasButton>
+                        </button>
                         @if (hasTelegramToken)
                         {
-                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteTelegramTokenAsync">
+                            <button 
+                                type="button" 
+                                @onclick="DeleteTelegramTokenAsync"
+                                class="h-8.5 px-3 rounded-xl text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                                 Eliminar
-                            </AtlasButton>
+                            </button>
                         }
                     </div>
                 </div>
             </div>
 
             <!-- 3. MERCADO PAGO -->
-            <div class="atlas-surface rounded-2xl p-4 space-y-3">
+            <div class="p-4.5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 space-y-3.5 backdrop-blur-md">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full @(hasMpToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                        <span class="w-2.5 h-2.5 rounded-full @(hasMpToken ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : "bg-slate-600")"></span>
                         <span class="text-xs font-semibold text-white">Mercado Pago</span>
                     </div>
                     <AtlasBadge Variant="@(hasMpToken ? "success" : "neutral")">
@@ -417,27 +449,33 @@
                                 @bind="mpTokenInput" 
                                 @bind:event="oninput"
                                 placeholder="APP_USR-..." 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        <AtlasButton Variant="primary" Size="md" OnClick="SaveMpTokenAsync">
+                        <button 
+                            type="button" 
+                            @onclick="SaveMpTokenAsync"
+                            class="h-8.5 px-3.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">
                             Guardar
-                        </AtlasButton>
+                        </button>
                         @if (hasMpToken)
                         {
-                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteMpTokenAsync">
+                            <button 
+                                type="button" 
+                                @onclick="DeleteMpTokenAsync"
+                                class="h-8.5 px-3 rounded-xl text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                                 Eliminar
-                            </AtlasButton>
+                            </button>
                         }
                     </div>
                 </div>
             </div>
 
             <!-- 4. GMAIL OAUTH -->
-            <div class="atlas-surface rounded-2xl p-4 space-y-3">
+            <div class="p-4.5 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 space-y-3.5 backdrop-blur-md">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5">
-                        <span class="w-2 h-2 rounded-full @(hasGmailToken ? "bg-emerald-400" : "bg-slate-600")"></span>
+                        <span class="w-2.5 h-2.5 rounded-full @(hasGmailToken ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : "bg-slate-600")"></span>
                         <span class="text-xs font-semibold text-white">Gmail OAuth (Read-Only)</span>
                     </div>
                     <AtlasBadge Variant="@(hasGmailToken ? "success" : "neutral")">
@@ -454,17 +492,23 @@
                                 @bind="gmailTokenInput" 
                                 @bind:event="oninput"
                                 placeholder="1//04..." 
-                                class="w-full px-3.5 py-2 rounded-xl bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
+                                class="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/[0.08] text-slate-100 text-xs font-mono placeholder-slate-500 focus:outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/20" />
                         </div>
 
-                        <AtlasButton Variant="primary" Size="md" OnClick="SaveGmailTokenAsync">
+                        <button 
+                            type="button" 
+                            @onclick="SaveGmailTokenAsync"
+                            class="h-8.5 px-3.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/30 cursor-pointer">
                             Guardar
-                        </AtlasButton>
+                        </button>
                         @if (hasGmailToken)
                         {
-                            <AtlasButton Variant="danger" Size="md" OnClick="DeleteGmailTokenAsync">
+                            <button 
+                                type="button" 
+                                @onclick="DeleteGmailTokenAsync"
+                                class="h-8.5 px-3 rounded-xl text-xs font-medium text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 active:scale-[0.98] border border-rose-500/20 transition-all cursor-pointer">
                                 Eliminar
-                            </AtlasButton>
+                            </button>
                         }
                     </div>
                 </div>
@@ -474,13 +518,13 @@
     </section>
 
     <!-- 4. NOTICIA DE ALMACENAMIENTO SEGURO -->
-    <div class="atlas-surface rounded-2xl p-4 text-xs text-slate-400 space-y-1 font-mono text-[11px]">
-        <div class="text-slate-300 font-semibold uppercase text-[10px] flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+    <div class="p-4.5 rounded-2xl bg-gradient-to-b from-indigo-950/40 to-slate-950/40 border border-indigo-500/25 shadow-md text-xs text-slate-300 space-y-1 font-mono text-[11px] backdrop-blur-md">
+        <div class="text-indigo-300 font-semibold uppercase text-[10px] flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/80"></span>
             <span>Almacenamiento Local & Encriptado</span>
         </div>
         <p class="text-slate-400 leading-relaxed font-sans text-xs">
-            Todas las claves son encriptadas por Windows Credential Locker (DPAPI) y custodiadas localmente.
+            Todas las claves son encriptadas por Windows Credential Locker (DPAPI) y custodiadas localmente en este equipo.
         </p>
     </div>
 
