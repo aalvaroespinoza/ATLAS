@@ -189,4 +189,49 @@ public class GeminiProviderTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => provider.AskAsync("Hola"));
         Assert.Contains("API key not valid", ex.Message);
     }
+
+    [Fact]
+    public async Task GeminiProvider_WithModelsPrefixInModelName_StripsPrefixCorrectly()
+    {
+        // Arrange
+        var vault = new InMemorySecretVault();
+        vault.SetSecret(GeminiProvider.SecretKeyName, "AIzaSyTestMockKey123");
+
+        var geminiResponseJson = """
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            { "text": "Respuesta correcta." }
+                        ]
+                    }
+                }
+            ]
+        }
+        """;
+
+        string? requestedUrl = null;
+        var mockHandler = new MockHttpMessageHandler(req =>
+        {
+            requestedUrl = req.RequestUri?.ToString();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(geminiResponseJson, Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(mockHandler);
+        // Pass "models/gemini-1.5-flash-latest" with prefix
+        var provider = new GeminiProvider(vault, httpClient, model: "models/gemini-1.5-flash-latest");
+
+        // Act
+        var result = await provider.AskAsync("Hola");
+
+        // Assert
+        Assert.Equal("Respuesta correcta.", result);
+        Assert.NotNull(requestedUrl);
+        Assert.StartsWith("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent", requestedUrl);
+        Assert.DoesNotContain("models/models/", requestedUrl);
+    }
 }

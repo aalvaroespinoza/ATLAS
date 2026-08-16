@@ -1,12 +1,11 @@
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using ATLAS.Core.Security;
 
 namespace ATLAS.Core.Ai;
 
 /// <summary>
-/// Implementation of IAiProvider using the Google Gemini API (gemini-1.5-flash free tier).
+/// Implementation of IAiProvider using the Google Gemini API (Google AI Studio).
 /// </summary>
 public class GeminiProvider : IAiProvider
 {
@@ -15,13 +14,20 @@ public class GeminiProvider : IAiProvider
     private readonly string _model;
 
     public const string SecretKeyName = SecretKeys.GeminiApiKey;
-    public const string DefaultModel = "gemini-1.5-flash";
+    public const string DefaultModel = "gemini-1.5-flash-latest";
 
     public GeminiProvider(ISecretVault secretVault, HttpClient? httpClient = null, string model = DefaultModel)
     {
         _secretVault = secretVault ?? throw new ArgumentNullException(nameof(secretVault));
         _httpClient = httpClient ?? new HttpClient();
-        _model = model;
+
+        var cleanModel = string.IsNullOrWhiteSpace(model) ? DefaultModel : model.Trim();
+        if (cleanModel.StartsWith("models/", StringComparison.OrdinalIgnoreCase))
+        {
+            cleanModel = cleanModel["models/".Length..];
+        }
+
+        _model = cleanModel;
     }
 
     public async Task<string> SummarizeAsync(string text, CancellationToken cancellationToken = default)
