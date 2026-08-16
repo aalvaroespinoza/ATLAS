@@ -4,31 +4,51 @@
 
 <div class="space-y-6 max-w-3xl pb-16 animate-atlas-in">
     
-    <!-- Page Header & Typographic Balance Line (Anti-Dashboard: No Cards) -->
-    <div class="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 border-b border-white/[0.08] pb-4">
-        <div class="space-y-1">
-            <h1 class="text-lg font-bold tracking-tight text-white">
-                Finanzas
-            </h1>
-            <div class="flex items-center gap-3 font-mono text-xs text-slate-400">
-                <span>Balance: <strong class="text-white font-semibold">$@((totalIncome - totalExpense).ToString("N0", new CultureInfo("es-AR")))</strong></span>
-                <span>•</span>
-                <span class="text-emerald-400 font-semibold">+$@totalIncome.ToString("N0", new CultureInfo("es-AR"))</span>
-                <span>•</span>
-                <span class="text-slate-300 font-semibold">-$@totalExpense.ToString("N0", new CultureInfo("es-AR"))</span>
+    <!-- Page Header & Rich Typographic Balance Summary (Anti-Dashboard: No Vanity Cards) -->
+    <div class="p-4 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 backdrop-blur-md space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="space-y-0.5">
+                <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                    <span>Finanzas</span>
+                </h1>
+                <p class="text-xs text-slate-400">
+                    Registro de movimientos, flujo de fondos y categorización inteligente.
+                </p>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(actionFeedback))
+            {
+                <span class="px-3 py-1 rounded-xl text-xs font-mono @(isFeedbackSuccess ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" : "bg-rose-500/15 text-rose-300 border border-rose-500/30") animate-atlas-in">
+                    @(isFeedbackSuccess ? "✓ " : "✕ ") @actionFeedback
+                </span>
+            }
         </div>
 
-        @if (!string.IsNullOrWhiteSpace(actionFeedback))
-        {
-            <span class="text-xs font-mono @(isFeedbackSuccess ? "text-emerald-400" : "text-rose-400") animate-atlas-in">
-                @(isFeedbackSuccess ? "✓ " : "✕ ") @actionFeedback
-            </span>
-        }
+        <!-- Real Balance Bar -->
+        <div class="pt-2 border-t border-white/[0.06] flex items-center justify-between flex-wrap gap-3 font-mono text-xs">
+            <div class="flex items-center gap-2">
+                <span class="text-slate-400">Balance Neto:</span>
+                <span class="text-sm font-bold @((totalIncome - totalExpense) >= 0 ? "text-white" : "text-rose-300")">
+                    $@((totalIncome - totalExpense).ToString("N0", new CultureInfo("es-AR")))
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 shadow-sm shadow-emerald-500/10">
+                    <span>↑</span>
+                    <span>+$@totalIncome.ToString("N0", new CultureInfo("es-AR"))</span>
+                </span>
+                
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-300 border border-rose-500/25 shadow-sm shadow-rose-500/10">
+                    <span>↓</span>
+                    <span>-$@totalExpense.ToString("N0", new CultureInfo("es-AR"))</span>
+                </span>
+            </div>
+        </div>
     </div>
 
-    <!-- Quick Add Expense / Income Input Bar -->
-    <div class="atlas-surface rounded-2xl p-3.5 flex flex-col sm:flex-row items-center gap-2.5">
+    <!-- Quick Add Expense / Income Input Bar (Depth Card) -->
+    <div class="p-4 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 flex flex-col sm:flex-row items-center gap-2.5 backdrop-blur-md">
         <div class="w-full sm:w-36">
             <AtlasInput 
                 Type="number"
@@ -39,19 +59,19 @@
         <div class="flex-1 w-full">
             <AtlasInput 
                 @bind-Value="newDescription" 
-                Placeholder="Descripción (ej: Supermercado, Alquiler, Transferencia)..." />
+                Placeholder="Descripción (ej: Supermercado, Alquiler, Sueldo)..." />
         </div>
         
-        <AtlasButton 
-            Variant="primary" 
-            Size="md" 
-            OnClick="AddExpenseAsync">
-            + Registrar
-        </AtlasButton>
+        <button 
+            type="button" 
+            @onclick="AddExpenseAsync"
+            class="w-full sm:w-auto h-8.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all duration-150 border border-indigo-400/30 shadow-md shadow-indigo-500/20 cursor-pointer shrink-0">
+            + Registrar Gasto
+        </button>
     </div>
 
-    <!-- Grouped Transactions Stream -->
-    <div class="space-y-4">
+    <!-- Grouped Transactions Stream with Rich Color Cards -->
+    <div class="space-y-3.5">
         <div class="flex items-center justify-between">
             <AtlasSectionHeader 
                 Title="Movimientos Registrados" 
@@ -70,7 +90,7 @@
         }
         else
         {
-            <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
+            <div class="space-y-2.5">
                 @foreach (var tx in transactions)
                 {
                     var isIncome = tx.Tipo == "income";
@@ -78,77 +98,85 @@
                     var hasSuggestion = pendingSuggestions.ContainsKey(tx.Id);
                     var isCategorizing = categorizingId == tx.Id;
 
-                    <div class="p-3.5 hover:bg-white/[0.02] transition-colors space-y-2">
+                    <div class="p-4 rounded-2xl @(isIncome ? "bg-gradient-to-b from-[#0f1d18]/90 to-[#0a1411]/90 border border-emerald-500/25 hover:border-emerald-500/40 shadow-lg shadow-emerald-950/20" : "bg-gradient-to-b from-[#1a1118]/90 to-[#120a10]/90 border border-rose-500/20 hover:border-rose-500/35 shadow-lg shadow-rose-950/20") space-y-3 transition-all duration-150 backdrop-blur-md">
+                        
                         <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <span class="w-2 h-2 rounded-full shrink-0 @(isIncome ? "bg-emerald-400" : "bg-slate-500")"></span>
-                                <div class="min-w-0 space-y-0.5">
+                            
+                            <!-- Left: Indicator & Description & Origin -->
+                            <div class="flex items-center gap-3.5 min-w-0 flex-1">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0 @(isIncome ? "bg-emerald-400 shadow-sm shadow-emerald-400/80" : "bg-rose-400 shadow-sm shadow-rose-400/80")"></span>
+                                
+                                <div class="min-w-0 space-y-0.5 flex-1">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="text-xs font-medium text-slate-100 truncate">@tx.Descripcion</span>
+                                        <span class="text-xs font-semibold text-slate-100 truncate">@tx.Descripcion</span>
                                         
                                         @if (!string.IsNullOrWhiteSpace(tx.Categoria))
                                         {
-                                            <AtlasBadge Variant="neutral">@tx.Categoria</AtlasBadge>
+                                            <span class="px-2 py-0.5 rounded-lg text-[10.5px] font-mono font-medium bg-white/[0.06] text-slate-300 border border-white/[0.08]">
+                                                @tx.Categoria
+                                            </span>
                                         }
                                     </div>
-                                    <div class="text-[11px] font-mono text-slate-500">
-                                        @tx.Fecha.ToLocalTime().ToString("dd MMM yyyy HH:mm") • @tx.Origen
+                                    <div class="text-[11px] font-mono text-slate-400">
+                                        @tx.Fecha.ToLocalTime().ToString("dd MMM yyyy HH:mm") • <span class="capitalize text-slate-500">@tx.Origen</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center gap-3 shrink-0">
+                            <!-- Right: AI Button & Amount Badge -->
+                            <div class="flex items-center gap-2.5 shrink-0">
                                 @if (!hasSuggestion && !isCategorizing)
                                 {
                                     <button 
                                         type="button" 
                                         @onclick="() => RequestAiCategoryAsync(tx.Id)"
                                         title="Sugerir categoría con Gemini"
-                                        class="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
+                                        class="px-2.5 py-1 rounded-xl text-[11px] font-mono text-indigo-300 hover:text-white bg-indigo-500/15 hover:bg-indigo-500/25 active:scale-[0.98] border border-indigo-500/30 transition-all duration-150 cursor-pointer flex items-center gap-1">
                                         <span>✦ IA</span>
                                     </button>
                                 }
                                 else if (isCategorizing)
                                 {
-                                    <span class="text-[11px] font-mono text-indigo-300 animate-pulse flex items-center gap-1">
+                                    <span class="px-2.5 py-1 rounded-xl text-[11px] font-mono text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 animate-pulse flex items-center gap-1">
                                         <span>✦ Analizando...</span>
                                     </span>
                                 }
 
-                                <span class="font-mono text-xs font-semibold @(isIncome ? "text-emerald-400" : "text-slate-200")">
+                                <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-xl shadow-sm @(isIncome ? "text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 shadow-emerald-500/10" : "text-rose-300 bg-rose-500/15 border border-rose-500/30 shadow-rose-500/10")">
                                     @amountStr
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Editable AI Suggestion Confirmation Bar -->
+                        <!-- Editable AI Suggestion Confirmation Bar (Violet Depth Card) -->
                         @if (hasSuggestion)
                         {
-                            <div class="mt-2 p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-atlas-in">
+                            <div class="p-3 rounded-xl bg-gradient-to-r from-indigo-950/60 to-violet-950/60 border border-indigo-500/40 shadow-md shadow-indigo-950/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-atlas-in">
                                 <div class="flex items-center gap-2 flex-1">
-                                    <span class="text-[11px] font-mono text-indigo-300 shrink-0">✦ Sugerencia IA:</span>
+                                    <span class="text-[11px] font-mono text-indigo-300 shrink-0 font-semibold">✦ Sugerencia IA:</span>
                                     <input 
                                         type="text" 
                                         @bind="pendingSuggestions[tx.Id]" 
-                                        class="flex-1 max-w-xs px-2.5 py-1 rounded-lg bg-white/[0.06] border border-indigo-500/40 text-xs text-white font-medium focus:outline-none focus:border-indigo-400" />
+                                        class="flex-1 max-w-xs px-2.5 py-1 rounded-lg bg-black/40 border border-indigo-500/50 text-xs text-white font-medium focus:outline-none focus:border-indigo-400 font-sans" />
                                 </div>
 
                                 <div class="flex items-center gap-2 shrink-0">
-                                    <AtlasButton 
-                                        Variant="primary" 
-                                        Size="sm" 
-                                        OnClick="() => ConfirmCategoryAsync(tx.Id)">
+                                    <button 
+                                        type="button" 
+                                        @onclick="() => ConfirmCategoryAsync(tx.Id)"
+                                        class="h-7 px-3 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 active:scale-[0.98] transition-all border border-indigo-400/40 shadow-sm shadow-indigo-500/20 cursor-pointer">
                                         ✓ Confirmar
-                                    </AtlasButton>
-                                    <AtlasButton 
-                                        Variant="ghost" 
-                                        Size="sm" 
-                                        OnClick="() => DismissSuggestion(tx.Id)">
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        @onclick="() => DismissSuggestion(tx.Id)"
+                                        class="h-7 px-2.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] active:scale-[0.98] transition-all cursor-pointer">
                                         ✕ Descartar
-                                    </AtlasButton>
+                                    </button>
                                 </div>
                             </div>
                         }
+
                     </div>
                 }
             </div>
