@@ -112,6 +112,8 @@ public class SupabaseSyncTests
             Task.FromResult<IReadOnlyList<Transaction>>(new List<Transaction>());
         public Task<int> CreateBatchAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default) =>
             Task.FromResult(0);
+        public Task<bool> UpdateCategoryAsync(string id, string? categoria, string? subcategoria = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
     }
 
     [Fact]

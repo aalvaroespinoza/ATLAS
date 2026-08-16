@@ -167,6 +167,30 @@ public class TransactionsRepository : ITransactionRepository
         return insertedCount;
     }
 
+    public async Task<bool> UpdateCategoryAsync(string id, string? categoria, string? subcategoria = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id)) return false;
+
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+        const string sql = """
+            UPDATE transactions
+            SET categoria = @categoria,
+                subcategoria = @subcategoria
+            WHERE id = @id;
+            """;
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("@id", id.Trim());
+        command.Parameters.AddWithValue("@categoria", (object?)categoria?.Trim() ?? DBNull.Value);
+        command.Parameters.AddWithValue("@subcategoria", (object?)subcategoria?.Trim() ?? DBNull.Value);
+
+        var rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        return rowsAffected > 0;
+    }
+
     private static void PopulateCommandParameters(SqliteCommand command, Transaction transaction)
     {
         command.Parameters.AddWithValue("@id", transaction.Id);

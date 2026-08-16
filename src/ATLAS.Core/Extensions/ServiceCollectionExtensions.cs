@@ -35,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<HabitCreateCommand>();
         services.AddTransient<HabitCompleteCommand>();
         services.AddTransient<FinanceAddTransactionCommand>();
+        services.AddTransient<FinanceCategorizeCommand>();
         services.AddTransient<FinanceSyncMercadoPagoCommand>();
         services.AddTransient<GmailListRecentCommand>();
         services.AddTransient<RoadmapCreateCommand>();

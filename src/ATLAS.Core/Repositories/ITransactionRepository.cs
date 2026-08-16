@@ -31,4 +31,9 @@ public interface ITransactionRepository
     /// Inserts a batch of transactions idempotently (ignoring duplicates matching id_externo).
     /// </summary>
     Task<int> CreateBatchAsync(IEnumerable<Transaction> transactions, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates the category and optional subcategory of an existing transaction.
+    /// </summary>
+    Task<bool> UpdateCategoryAsync(string id, string? categoria, string? subcategoria = null, CancellationToken cancellationToken = default);
 }

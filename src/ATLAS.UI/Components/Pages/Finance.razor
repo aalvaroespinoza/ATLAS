@@ -75,21 +75,81 @@
                 {
                     var isIncome = tx.Tipo == "income";
                     var amountStr = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))}";
+                    var hasSuggestion = pendingSuggestions.ContainsKey(tx.Id);
+                    var isCategorizing = categorizingId == tx.Id;
 
-                    <AtlasListItem 
-                        Title="@tx.Descripcion" 
-                        Subtitle="@($"{tx.Fecha.ToLocalTime():dd MMM yyyy HH:mm} • {tx.Origen}")"
-                        MetaText="@amountStr"
-                        Class="group">
-                        <PrefixContent>
-                            <span class="w-2 h-2 rounded-full @(isIncome ? "bg-emerald-400" : "bg-slate-500")"></span>
-                        </PrefixContent>
-                        <SuffixContent>
-                            <span class="font-mono text-xs font-semibold @(isIncome ? "text-emerald-400" : "text-slate-200")">
-                                @amountStr
-                            </span>
-                        </SuffixContent>
-                    </AtlasListItem>
+                    <div class="p-3.5 hover:bg-white/[0.02] transition-colors space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="w-2 h-2 rounded-full shrink-0 @(isIncome ? "bg-emerald-400" : "bg-slate-500")"></span>
+                                <div class="min-w-0 space-y-0.5">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="text-xs font-medium text-slate-100 truncate">@tx.Descripcion</span>
+                                        
+                                        @if (!string.IsNullOrWhiteSpace(tx.Categoria))
+                                        {
+                                            <AtlasBadge Variant="neutral">@tx.Categoria</AtlasBadge>
+                                        }
+                                    </div>
+                                    <div class="text-[11px] font-mono text-slate-500">
+                                        @tx.Fecha.ToLocalTime().ToString("dd MMM yyyy HH:mm") • @tx.Origen
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 shrink-0">
+                                @if (!hasSuggestion && !isCategorizing)
+                                {
+                                    <button 
+                                        type="button" 
+                                        @onclick="() => RequestAiCategoryAsync(tx.Id)"
+                                        title="Sugerir categoría con Gemini"
+                                        class="text-[11px] font-mono text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 px-2 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
+                                        <span>✦ IA</span>
+                                    </button>
+                                }
+                                else if (isCategorizing)
+                                {
+                                    <span class="text-[11px] font-mono text-indigo-300 animate-pulse flex items-center gap-1">
+                                        <span>✦ Analizando...</span>
+                                    </span>
+                                }
+
+                                <span class="font-mono text-xs font-semibold @(isIncome ? "text-emerald-400" : "text-slate-200")">
+                                    @amountStr
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Editable AI Suggestion Confirmation Bar -->
+                        @if (hasSuggestion)
+                        {
+                            <div class="mt-2 p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-atlas-in">
+                                <div class="flex items-center gap-2 flex-1">
+                                    <span class="text-[11px] font-mono text-indigo-300 shrink-0">✦ Sugerencia IA:</span>
+                                    <input 
+                                        type="text" 
+                                        @bind="pendingSuggestions[tx.Id]" 
+                                        class="flex-1 max-w-xs px-2.5 py-1 rounded-lg bg-white/[0.06] border border-indigo-500/40 text-xs text-white font-medium focus:outline-none focus:border-indigo-400" />
+                                </div>
+
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <AtlasButton 
+                                        Variant="primary" 
+                                        Size="sm" 
+                                        OnClick="() => ConfirmCategoryAsync(tx.Id)">
+                                        ✓ Confirmar
+                                    </AtlasButton>
+                                    <AtlasButton 
+                                        Variant="ghost" 
+                                        Size="sm" 
+                                        OnClick="() => DismissSuggestion(tx.Id)">
+                                        ✕ Descartar
+                                    </AtlasButton>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 }
             </div>
         }
@@ -107,6 +167,9 @@
     private string newDescription = string.Empty;
     private string? actionFeedback;
     private bool isFeedbackSuccess;
+
+    private string? categorizingId;
+    private readonly Dictionary<string, string> pendingSuggestions = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,5 +244,72 @@
             actionFeedback = ex.Message;
             isFeedbackSuccess = false;
         }
+    }
+
+    private async Task RequestAiCategoryAsync(string transactionId)
+    {
+        categorizingId = transactionId;
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(FinanceCategorizeCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["transaction_id"] = transactionId
+            });
+
+            if (result.IsSuccess && result.Data is string suggestedCategory && !string.IsNullOrWhiteSpace(suggestedCategory))
+            {
+                pendingSuggestions[transactionId] = suggestedCategory;
+            }
+            else
+            {
+                actionFeedback = result.ErrorMessage ?? "No se pudo obtener sugerencia de IA.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = $"Error: {ex.Message}";
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            categorizingId = null;
+        }
+    }
+
+    private async Task ConfirmCategoryAsync(string transactionId)
+    {
+        if (!pendingSuggestions.TryGetValue(transactionId, out var category) || string.IsNullOrWhiteSpace(category))
+        {
+            return;
+        }
+
+        try
+        {
+            var updated = await TransactionRepository.UpdateCategoryAsync(transactionId, category.Trim());
+            if (updated)
+            {
+                pendingSuggestions.Remove(transactionId);
+                actionFeedback = $"Categoría '{category.Trim()}' confirmada y guardada.";
+                isFeedbackSuccess = true;
+                _ = Task.Delay(2500).ContinueWith(_ => { actionFeedback = null; InvokeAsync(StateHasChanged); });
+                await LoadTransactionsAsync();
+            }
+            else
+            {
+                actionFeedback = "No se pudo actualizar la categoría en la base de datos.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = $"Error: {ex.Message}";
+            isFeedbackSuccess = false;
+        }
+    }
+
+    private void DismissSuggestion(string transactionId)
+    {
+        pendingSuggestions.Remove(transactionId);
     }
 }
