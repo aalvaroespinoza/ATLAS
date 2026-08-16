@@ -1,27 +1,476 @@
 @page "/habits-goals"
+@inject IHabitRepository HabitRepository
+@inject IGoalRepository GoalRepository
+@inject IRoadmapRepository RoadmapRepository
+@inject ICommandRegistry CommandRegistry
 
-<div class="space-y-8">
-    <!-- Header -->
-    <div class="space-y-1.5">
-        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-            Hábitos y Goals
-        </h1>
-        <p class="text-sm text-slate-400">
-            Gestioná tu constancia diaria y el avance de tus metas personales.
-        </p>
-    </div>
-
-    <!-- Placeholder Section Card -->
-    <div class="p-8 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4">
-        <div class="flex items-center gap-3 text-amber-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
-            </svg>
-            <h2 class="text-base font-semibold text-slate-200">Constancia y Progreso</h2>
+<div class="space-y-6 max-w-5xl pb-12">
+    
+    <!-- Page Header & Tab Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+        <div class="space-y-1">
+            <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span>
+                Hábitos, Metas & Roadmaps
+            </h1>
+            <p class="text-xs text-slate-400">
+                Constancia cotidiana, objetivos a largo plazo y planificación secuencial en etapas.
+            </p>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
-            Próximamente acá vas a contar con el panel paralelo de Hábitos diarios (<code class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">habit.complete</code>, <code class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">habit.create</code>) y Metas activas con barras de avance (<code class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">goal.update_progress</code>).
-        </p>
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center p-1 rounded-xl bg-slate-950/60 border border-slate-800">
+            <button 
+                type="button"
+                @onclick="@(() => activeTab = "habits")"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer @(activeTab == "habits" ? "bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30" : "text-slate-400 hover:text-slate-200")">
+                Hábitos Diarios
+            </button>
+            <button 
+                type="button"
+                @onclick="@(() => activeTab = "roadmaps")"
+                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer @(activeTab == "roadmaps" ? "bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30" : "text-slate-400 hover:text-slate-200")">
+                Metas & Roadmaps
+            </button>
+        </div>
     </div>
+
+    <!-- Notification / Status Banner -->
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <div class="p-3.5 rounded-xl border flex items-center justify-between transition-all duration-300 @(isSuccess ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-rose-500/10 border-rose-500/30 text-rose-300")">
+            <div class="flex items-center gap-2.5 text-xs font-medium">
+                <span>@(isSuccess ? "✓" : "✕")</span>
+                <span>@statusMessage</span>
+            </div>
+            <button @onclick="() => statusMessage = null" class="text-slate-400 hover:text-slate-200 text-xs p-1">✕</button>
+        </div>
+    }
+
+    <!-- ======================================================================= -->
+    <!-- TAB 1: HÁBITOS DIARIOS -->
+    <!-- ======================================================================= -->
+    @if (activeTab == "habits")
+    {
+        <div class="space-y-6">
+            
+            <!-- Quick New Habit Form Bar -->
+            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl flex flex-col sm:flex-row items-center gap-3">
+                <input 
+                    type="text" 
+                    @bind="newHabitName" 
+                    placeholder="Nuevo hábito (ej: Leer 20 min, Meditar, Ejercicio)..." 
+                    class="w-full px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500/50" />
+                
+                <button 
+                    type="button"
+                    @onclick="CreateHabitAsync"
+                    disabled="@string.IsNullOrWhiteSpace(newHabitName)"
+                    class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-medium text-xs shadow-md transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed">
+                    + Crear Hábito
+                </button>
+            </div>
+
+            <!-- Habits Checklist Grid -->
+            @if (isLoading)
+            {
+                <div class="p-8 text-center text-xs text-slate-500">Cargando hábitos...</div>
+            }
+            else if (habits.Count == 0)
+            {
+                <div class="p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-xs text-slate-500">
+                    No tenés hábitos registrados todavía. Creá el primero arriba para empezar a construir tu racha.
+                </div>
+            }
+            else
+            {
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach (var habit in habits)
+                    {
+                        var isDoneToday = completedHabitIds.Contains(habit.Id);
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border @(isDoneToday ? "border-emerald-500/30 bg-emerald-950/10" : "border-slate-800/80") backdrop-blur-xl flex items-center justify-between gap-4 transition-all">
+                            <div class="space-y-1 min-w-0">
+                                <h3 class="text-sm font-semibold @(isDoneToday ? "text-emerald-300 line-through opacity-80" : "text-slate-200") truncate">
+                                    @habit.Name
+                                </h3>
+                                <p class="text-[11px] text-slate-400 capitalize">
+                                    Frecuencia: @habit.Frequency
+                                </p>
+                            </div>
+
+                            <button 
+                                type="button"
+                                @onclick="() => ToggleHabitTodayAsync(habit)"
+                                class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer @(isDoneToday ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-700")">
+                                <span>@(isDoneToday ? "✓ Hecho" : "Marcar")</span>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    <!-- ======================================================================= -->
+    <!-- TAB 2: METAS & ROADMAPS (ETAPA 6) -->
+    <!-- ======================================================================= -->
+    @if (activeTab == "roadmaps")
+    {
+        <div class="space-y-6">
+            
+            <!-- Quick New Roadmap / Goal Bar -->
+            <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-3">
+                <div class="text-xs font-semibold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span>Nuevo Roadmap Estratégico</span>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <input 
+                        type="text" 
+                        @bind="newRoadmapTitle" 
+                        placeholder="Título del Roadmap (ej: Aprender Rust, Lanzar MVP)..." 
+                        class="sm:col-span-2 px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+                    
+                    <button 
+                        type="button"
+                        @onclick="CreateRoadmapAsync"
+                        disabled="@string.IsNullOrWhiteSpace(newRoadmapTitle)"
+                        class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium text-xs shadow-md transition-all cursor-pointer disabled:cursor-not-allowed">
+                        + Crear Roadmap
+                    </button>
+                </div>
+                
+                <input 
+                    type="text" 
+                    @bind="newRoadmapSteps" 
+                    placeholder="Hitos iniciales opcionales separados por coma (ej: Fundamentos, Proyecto Básico, Despliegue)..." 
+                    class="w-full px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+            </div>
+
+            <!-- Roadmaps List -->
+            @if (isLoading)
+            {
+                <div class="p-8 text-center text-xs text-slate-500">Cargando roadmaps y metas...</div>
+            }
+            else if (roadmaps.Count == 0)
+            {
+                <div class="p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-xs text-slate-500 space-y-2">
+                    <p>No tenés roadmaps registrados todavía.</p>
+                    <p class="text-slate-400">Creá un roadmap arriba para descomponer cualquier objetivo en etapas accionables.</p>
+                </div>
+            }
+            else
+            {
+                <div class="space-y-4">
+                    @foreach (var roadmap in roadmaps)
+                    {
+                        var isCompleted = roadmap.ProgressPercentage >= 100;
+                        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl shadow-xl space-y-4">
+                            
+                            <!-- Roadmap Header & Progress Bar -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-base font-bold text-white">@roadmap.Title</h3>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider @(isCompleted ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-sky-500/15 text-sky-400 border border-sky-500/30")">
+                                            @(isCompleted ? "Completado" : "En Curso")
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(roadmap.Description))
+                                    {
+                                        <p class="text-xs text-slate-400">@roadmap.Description</p>
+                                    }
+                                </div>
+
+                                <div class="text-right shrink-0">
+                                    <span class="text-lg font-bold text-sky-400">@roadmap.ProgressPercentage%</span>
+                                    <span class="text-[11px] text-slate-500 block">@roadmap.Milestones.Count(m => m.Status == "completed") de @roadmap.Milestones.Count hitos</span>
+                                </div>
+                            </div>
+
+                            <!-- Progress Track -->
+                            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full transition-all duration-500" style="width: @(roadmap.ProgressPercentage)%"></div>
+                            </div>
+
+                            <!-- Milestones Stepper Checklist -->
+                            <div class="pt-2 space-y-2 border-t border-slate-800/60">
+                                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Hitos y Etapas:</h4>
+                                
+                                @if (roadmap.Milestones.Count == 0)
+                                {
+                                    <p class="text-xs text-slate-500 italic">No hay hitos en esta ruta. Agregá el primer paso abajo.</p>
+                                }
+                                else
+                                {
+                                    <div class="space-y-2">
+                                        @foreach (var milestone in roadmap.Milestones.OrderBy(m => m.OrderIndex))
+                                        {
+                                            var mDone = milestone.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
+                                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 border @(mDone ? "border-emerald-500/20 bg-emerald-950/10 text-emerald-300" : "border-slate-800/60 text-slate-200") text-xs gap-3">
+                                                <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked="@mDone"
+                                                        @onchange="(e) => ToggleMilestoneAsync(milestone, e)"
+                                                        class="w-4 h-4 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500/30 cursor-pointer" />
+                                                    <span class="@(mDone ? "line-through opacity-70" : "font-medium") truncate">
+                                                        @milestone.Title
+                                                    </span>
+                                                </label>
+                                                @if (milestone.CompletedAt.HasValue)
+                                                {
+                                                    <span class="text-[10px] text-slate-500 shrink-0">@milestone.CompletedAt.Value.ToLocalTime().ToString("dd MMM")</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
+                                <!-- Fast Add Milestone Row -->
+                                <div class="flex items-center gap-2 pt-2">
+                                    <input 
+                                        type="text" 
+                                        @bind="newMilestoneTitles[roadmap.Id]" 
+                                        placeholder="Agregar siguiente hito o etapa..." 
+                                        class="flex-1 px-3 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+                                    
+                                    <button 
+                                        type="button"
+                                        @onclick="() => AddMilestoneToRoadmapAsync(roadmap.Id)"
+                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-600 hover:text-white text-slate-300 text-xs font-medium transition-all cursor-pointer">
+                                        + Agregar Paso
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+                </div>
+            }
+
+        </div>
+    }
+
 </div>
+
+@code {
+    private string activeTab = "habits";
+    private bool isLoading = true;
+    private string? statusMessage;
+    private bool isSuccess;
+
+    // Habits state
+    private List<Habit> habits = [];
+    private HashSet<string> completedHabitIds = [];
+    private string newHabitName = string.Empty;
+
+    // Roadmaps state
+    private List<Roadmap> roadmaps = [];
+    private string newRoadmapTitle = string.Empty;
+    private string newRoadmapSteps = string.Empty;
+    private Dictionary<string, string> newMilestoneTitles = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        isLoading = true;
+        try
+        {
+            // 1. Load Habits
+            var allHabits = await HabitRepository.GetAllAsync();
+            habits = allHabits.ToList();
+
+            var todayEvents = await HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
+            completedHabitIds = todayEvents.Select(e => e.HabitId).ToHashSet();
+
+            // 2. Load Roadmaps
+            var allRoadmaps = await RoadmapRepository.GetAllAsync();
+            roadmaps = allRoadmaps.ToList();
+
+            foreach (var r in roadmaps)
+            {
+                if (!newMilestoneTitles.ContainsKey(r.Id))
+                {
+                    newMilestoneTitles[r.Id] = string.Empty;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error al cargar datos: {ex.Message}";
+            isSuccess = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CreateHabitAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newHabitName)) return;
+
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(HabitCreateCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["name"] = newHabitName.Trim(),
+                ["frequency"] = "daily"
+            });
+
+            if (result.IsSuccess)
+            {
+                newHabitName = string.Empty;
+                statusMessage = "✓ Hábito creado exitosamente.";
+                isSuccess = true;
+                await LoadDataAsync();
+            }
+            else
+            {
+                statusMessage = result.ErrorMessage ?? "Error al crear el hábito.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+
+    private async Task ToggleHabitTodayAsync(Habit habit)
+    {
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["habit_id"] = habit.Id
+            });
+
+            if (result.IsSuccess)
+            {
+                statusMessage = $"✓ Hábito '{habit.Name}' completado hoy.";
+                isSuccess = true;
+                await LoadDataAsync();
+            }
+            else
+            {
+                statusMessage = result.ErrorMessage ?? "Error al registrar hábito.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+
+    private async Task CreateRoadmapAsync()
+    {
+        if (string.IsNullOrWhiteSpace(newRoadmapTitle)) return;
+
+        try
+        {
+            var milestones = string.IsNullOrWhiteSpace(newRoadmapSteps)
+                ? new List<string>()
+                : newRoadmapSteps.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+            var result = await CommandRegistry.ExecuteAsync(RoadmapCreateCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["title"] = newRoadmapTitle.Trim(),
+                ["milestones"] = milestones
+            });
+
+            if (result.IsSuccess)
+            {
+                newRoadmapTitle = string.Empty;
+                newRoadmapSteps = string.Empty;
+                statusMessage = "✓ Roadmap estratégico creado exitosamente.";
+                isSuccess = true;
+                await LoadDataAsync();
+            }
+            else
+            {
+                statusMessage = result.ErrorMessage ?? "Error al crear el roadmap.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+
+    private async Task AddMilestoneToRoadmapAsync(string roadmapId)
+    {
+        if (!newMilestoneTitles.TryGetValue(roadmapId, out var title) || string.IsNullOrWhiteSpace(title))
+            return;
+
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(RoadmapAddMilestoneCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["roadmap_id"] = roadmapId,
+                ["title"] = title.Trim()
+            });
+
+            if (result.IsSuccess)
+            {
+                newMilestoneTitles[roadmapId] = string.Empty;
+                statusMessage = "✓ Hito añadido al roadmap.";
+                isSuccess = true;
+                await LoadDataAsync();
+            }
+            else
+            {
+                statusMessage = result.ErrorMessage ?? "Error al agregar hito.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+
+    private async Task ToggleMilestoneAsync(RoadmapMilestone milestone, ChangeEventArgs e)
+    {
+        var isChecked = e.Value is bool b && b;
+
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(RoadmapCompleteMilestoneCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["milestone_id"] = milestone.Id,
+                ["completed"] = isChecked
+            });
+
+            if (result.IsSuccess)
+            {
+                await LoadDataAsync();
+            }
+            else
+            {
+                statusMessage = result.ErrorMessage ?? "Error al actualizar hito.";
+                isSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            statusMessage = $"Error: {ex.Message}";
+            isSuccess = false;
+        }
+    }
+}

@@ -33,6 +33,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<FinanceAddTransactionCommand>();
         services.AddTransient<FinanceSyncMercadoPagoCommand>();
         services.AddTransient<GmailListRecentCommand>();
+        services.AddTransient<RoadmapCreateCommand>();
+        services.AddTransient<RoadmapAddMilestoneCommand>();
+        services.AddTransient<RoadmapCompleteMilestoneCommand>();
 
         return services;
     }

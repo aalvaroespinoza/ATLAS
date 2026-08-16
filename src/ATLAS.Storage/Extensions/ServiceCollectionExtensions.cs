@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGoalRepository>(_ => new GoalsRepository(connStr));
         services.AddSingleton<IHabitRepository>(_ => new HabitsRepository(connStr));
         services.AddSingleton<ITransactionRepository>(_ => new TransactionsRepository(connStr));
+        services.AddSingleton<IRoadmapRepository>(_ => new RoadmapRepository(connStr));
         return services;
     }
 }

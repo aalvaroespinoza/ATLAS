@@ -106,6 +106,36 @@ public class DatabaseInitializer
             CREATE INDEX IF NOT EXISTS idx_transactions_tipo ON transactions(tipo);
             CREATE INDEX IF NOT EXISTS idx_transactions_origen ON transactions(origen);
             CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_id_externo ON transactions(id_externo) WHERE id_externo IS NOT NULL;
+
+            -- Roadmaps table
+            CREATE TABLE IF NOT EXISTS roadmaps (
+                id TEXT PRIMARY KEY,
+                goal_id TEXT,
+                title TEXT NOT NULL,
+                description TEXT,
+                status TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_roadmaps_goal_id ON roadmaps(goal_id);
+            CREATE INDEX IF NOT EXISTS idx_roadmaps_status ON roadmaps(status);
+            CREATE INDEX IF NOT EXISTS idx_roadmaps_created_at ON roadmaps(created_at);
+
+            -- Roadmap Milestones table
+            CREATE TABLE IF NOT EXISTS roadmap_milestones (
+                id TEXT PRIMARY KEY,
+                roadmap_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                order_index INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                notes TEXT,
+                created_at TEXT NOT NULL,
+                completed_at TEXT,
+                FOREIGN KEY (roadmap_id) REFERENCES roadmaps(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_roadmap_milestones_roadmap_id ON roadmap_milestones(roadmap_id);
+            CREATE INDEX IF NOT EXISTS idx_roadmap_milestones_order_index ON roadmap_milestones(order_index);
             """;
 
         await using (var command = connection.CreateCommand())
