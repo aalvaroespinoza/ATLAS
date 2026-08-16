@@ -6,6 +6,11 @@
     <title>ATLAS</title>
     <base href="/" />
     
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -13,11 +18,15 @@
             darkMode: 'class',
             theme: {
                 extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    },
                     colors: {
                         atlas: {
-                            bg: '#0f172a',
-                            surface: '#1e293b',
-                            border: '#334155',
+                            bg: '#090d16',
+                            card: 'rgba(17, 24, 39, 0.75)',
+                            cardhover: 'rgba(31, 41, 55, 0.85)',
+                            border: 'rgba(51, 65, 85, 0.5)',
                             accent: '#38bdf8'
                         }
                     }
@@ -29,10 +38,10 @@
     <link rel="icon" href="data:,">
 </head>
 
-<body class="bg-slate-950 text-slate-100 font-sans antialiased select-none overflow-hidden">
+<body class="bg-[#090d16] text-slate-100 font-sans antialiased select-none overflow-hidden">
 
-    <div id="app" class="h-screen w-screen">
-        <div class="flex items-center justify-center h-full text-slate-400 text-sm">
+    <div id="app" class="h-screen w-screen flex">
+        <div class="flex items-center justify-center w-full h-full text-slate-400 text-sm">
             Iniciando ATLAS...
         </div>
     </div>

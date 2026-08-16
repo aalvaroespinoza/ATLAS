@@ -1,5 +1,7 @@
 using ATLAS.Core.Commands;
+using ATLAS.Core.Integrations.Gmail;
 using ATLAS.Core.Integrations.Telegram;
+using ATLAS.Core.Security;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ATLAS.Core.Extensions;
@@ -15,6 +17,10 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TelegramMessageProcessor>();
         services.AddSingleton<ITelegramListenerService, TelegramListenerService>();
 
+        // Gmail Integration
+        services.AddTransient<IGmailClient>(sp =>
+            new GmailClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
+
         // Commands
         services.AddTransient<CaptureNoteCommand>();
         services.AddTransient<KnowledgeSearchCommand>();
@@ -26,6 +32,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<HabitCompleteCommand>();
         services.AddTransient<FinanceAddTransactionCommand>();
         services.AddTransient<FinanceSyncMercadoPagoCommand>();
+        services.AddTransient<GmailListRecentCommand>();
 
         return services;
     }

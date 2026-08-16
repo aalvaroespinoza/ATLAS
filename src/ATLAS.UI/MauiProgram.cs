@@ -64,6 +64,7 @@ public static class MauiProgram
         commandRegistry.Register(services.GetRequiredService<HabitCompleteCommand>());
         commandRegistry.Register(services.GetRequiredService<FinanceAddTransactionCommand>());
         commandRegistry.Register(services.GetRequiredService<FinanceSyncMercadoPagoCommand>());
+        commandRegistry.Register(services.GetRequiredService<GmailListRecentCommand>());
 
         // 3. Start Telegram Listener in background
         var telegramListener = services.GetRequiredService<ITelegramListenerService>();

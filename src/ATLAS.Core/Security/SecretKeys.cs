@@ -20,4 +20,19 @@ public static class SecretKeys
     /// Mercado Pago personal access token for financial synchronization.
     /// </summary>
     public const string MercadoPagoAccessToken = "MercadoPagoAccessToken";
+
+    /// <summary>
+    /// Google Cloud OAuth Client ID for Gmail integration.
+    /// </summary>
+    public const string GmailClientId = "GmailClientId";
+
+    /// <summary>
+    /// Google Cloud OAuth Client Secret for Gmail integration.
+    /// </summary>
+    public const string GmailClientSecret = "GmailClientSecret";
+
+    /// <summary>
+    /// Google OAuth Refresh Token for offline access to Gmail.
+    /// </summary>
+    public const string GmailRefreshToken = "GmailRefreshToken";
 }

@@ -104,47 +104,14 @@ Telegram (long polling, mapeo de mensajes a Commands) andando. Finanzas
 (4b) queda pausado — se retoma después de Etapa 5, ya con UI para
 mostrar el balance en algo mejor que texto.
 
-## Alcance actual — Etapa 5: UI real en .NET MAUI Blazor Hybrid (no avanzar sin confirmación)
+## Etapa 5 — COMPLETADA
 
-Decisión tomada: la UI se construye en **.NET MAUI Blazor Hybrid**, no WinUI 3
-puro (comparado con mockups, se eligió la estética web/Tailwind). El Core,
-Storage y Commands no se tocan — siguen siendo C# puro, consumidos igual
-que antes, ahora desde componentes Razor en vez de XAML.
+UI construida en **.NET MAUI Blazor Hybrid** (target Windows únicamente, Tailwind vía Play CDN):
+- **5a (Setup MAUI Blazor):** Proyecto `ATLAS.UI` exclusivo para Windows, integración de Tailwind Play CDN, inyección de dependencias (`DatabaseInitializer`, `CommandRegistry`, `WindowsPasswordVault`, `TelegramListenerService`). Core, Storage y Tests 100% desacoplados e intactos.
+- **5b (Shell de navegación):** Sidebar curada de 6 items exactos (Inicio, Capturar, Buscar, Hábitos y Goals, Finanzas, Configuración) con estética glassmorphism (Opción B) y tipografía Inter.
+- **5c (Dashboard de Inicio y Páginas):** Dashboard en Inicio con las 5 tarjetas curadas del mockup (Hábitos de hoy con racha, Metas en foco, Finanzas con datos reales de SQLite, Segundo Cerebro con notas recientes, y AI Toolbox conectada a Gemini con `ai.ask`). Cero mock data.
 
-Sigue vigente el principio anti-saturación de la sección 3 del doc de
-producto: sidebar curada máximo 6 items, dashboard máximo 4-6 tarjetas.
-
-Se divide en tres bloques secuenciales:
-
-**5a — Setup del proyecto MAUI Blazor Hybrid:**
-- Nuevo proyecto `ATLAS.UI` (reemplaza al de WinUI 3, que nunca se llegó a
-  implementar con contenido real — solo existía el esqueleto).
-- Target únicamente Windows (sin Android/iOS/MacCatalyst) para no cargar
-  workloads ni complejidad innecesaria.
-- Tailwind vía CDN para esta etapa (Play CDN) — suficiente para iterar
-  rápido. Migrar a un build pipeline de Tailwind real queda para más
-  adelante, solo si el CDN empieza a molestar (FOUC, tamaño).
-- El Launcher (Ctrl+Space) sigue siendo una ventana flotante nativa
-  aparte — no hace falta que sea Blazor también, puede seguir en XAML
-  si eso resulta más simple para una ventana chica y rápida. Definir en
-  el plan, no asumir.
-
-**5b — Shell de navegación (Razor):**
-- Layout con sidebar de 6 items (Inicio, Capturar, Buscar, Hábitos y
-  Goals, Finanzas, Configuración), cada uno una página Razor que
-  consume los Commands/ViewModels existentes.
-
-**5c — Dashboard interactivo en Inicio:**
-- Tarjetas con datos reales (nunca mock data), reusando el mismo
-  contenido curado validado en el mockup: racha de hábitos, goals
-  activos, Segundo Cerebro, AI Toolbox, y Finanzas mostrando el estado
-  real de "pausado" si 4b sigue sin retomarse.
-
-Explícitamente **fuera de alcance** todavía: build pipeline de Tailwind,
-personalización de tarjetas, Roadmaps, Gmail, WhatsApp, IA local,
-retomar el bloque 4b de Mercado Pago.
-
-## Etapa 6 — Roadmaps + Gmail (después de cerrar Etapa 5)
+## Alcance actual — Etapa 6: Roadmaps + Gmail (o retomar Etapa 4b Finanzas en profundidad)
 
 ## Pendiente — Etapa 4b (Finanzas, retomar después de Etapa 5)
 
