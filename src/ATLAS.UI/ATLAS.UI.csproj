@@ -47,4 +47,9 @@
         <ProjectReference Include="..\ATLAS.Storage\ATLAS.Storage.csproj" />
     </ItemGroup>
 
+    <!-- Auto-compile Tailwind CSS at build time -->
+    <Target Name="BuildTailwindCss" BeforeTargets="BeforeBuild" Condition="'$(Configuration)' == 'Debug' or '$(Configuration)' == 'Release'">
+        <Exec Command="npm.cmd run build:css" WorkingDirectory="$(MSBuildProjectDirectory)\..\.." ContinueOnError="true" StandardOutputImportance="low" StandardErrorImportance="low" />
+    </Target>
+
 </Project>

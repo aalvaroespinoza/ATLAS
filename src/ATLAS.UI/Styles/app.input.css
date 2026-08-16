@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ATLAS Personal OS — Master Design System (Indigo / Obsidiana) */
+
+:root {
+    /* 1. Deep Obsidiana Surfaces */
+    --atlas-bg-canvas: #090b10;
+    --atlas-bg-dock: #10141e;
+    --atlas-bg-surface: #121724;
+    --atlas-bg-surface-hover: #181f30;
+    --atlas-bg-elevated: #171e2e;
+
+    /* 2. Hairline & Subtle Borders */
+    --atlas-border: rgba(255, 255, 255, 0.07);
+    --atlas-border-subtle: rgba(255, 255, 255, 0.12);
+    --atlas-border-focus: rgba(99, 102, 241, 0.60);
+
+    /* 3. Typography Hierarchy */
+    --atlas-text-hero: #f8fafc;
+    --atlas-text-body: #cbd5e1;
+    --atlas-text-muted: #64748b;
+    --atlas-text-disabled: #334155;
+
+    /* 4. Accent Hero (Indigo / Violeta Frío) */
+    --atlas-accent-primary: #6366f1;
+    --atlas-accent-glow: #818cf8;
+    --atlas-accent-subtle: rgba(99, 102, 241, 0.12);
+    --atlas-accent-focus: rgba(99, 102, 241, 0.25);
+
+    /* 5. Semantic Status Colors */
+    --atlas-success: #10b981;
+    --atlas-success-subtle: rgba(16, 185, 129, 0.12);
+    --atlas-warning: #f59e0b;
+    --atlas-warning-subtle: rgba(245, 158, 11, 0.12);
+    --atlas-danger: #f43f5e;
+    --atlas-danger-subtle: rgba(244, 63, 94, 0.12);
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--atlas-bg-canvas);
+    color: var(--atlas-text-hero);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+    background-color: var(--atlas-accent-focus);
+    color: #ffffff;
+}
+
+/* Hairline Scrollbars */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.10);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.20);
+}
+
+/* Surface Utility Classes */
+.atlas-canvas {
+    background-color: var(--atlas-bg-canvas);
+}
+
+.atlas-dock {
+    background-color: var(--atlas-bg-dock);
+    border: 1px solid var(--atlas-border);
+    box-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.65);
+}
+
+.atlas-surface {
+    background-color: var(--atlas-bg-surface);
+    border: 1px solid var(--atlas-border);
+}
+
+.atlas-elevated {
+    background-color: var(--atlas-bg-elevated);
+    border: 1px solid var(--atlas-border-subtle);
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.85);
+}
+
+/* Tactile Micro-Interactions */
+.atlas-clickable {
+    transition: transform 0.08s ease-out, background-color 0.12s ease-out, border-color 0.12s ease-out;
+}
+
+.atlas-clickable:active {
+    transform: scale(0.98);
+}
+
+/* Snappy Animations */
+@keyframes atlasSpringIn {
+    0% { opacity: 0; transform: translateY(6px) scale(0.99); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-atlas-in {
+    animation: atlasSpringIn 0.14s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

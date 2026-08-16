@@ -1,0 +1,12 @@
+{
+  "name": "atlas",
+  "version": "1.0.0",
+  "description": "ATLAS Personal OS",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/ATLAS.UI/Styles/app.input.css -o ./src/ATLAS.UI/wwwroot/app.css --minify",
+    "watch:css": "tailwindcss -i ./src/ATLAS.UI/Styles/app.input.css -o ./src/ATLAS.UI/wwwroot/app.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}
