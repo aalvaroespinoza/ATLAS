@@ -3,384 +3,251 @@
 @inject IGoalRepository GoalRepository
 @inject INoteRepository NoteRepository
 @inject ITransactionRepository TransactionRepository
+@inject IRoadmapRepository RoadmapRepository
 @inject ICommandRegistry CommandRegistry
 @inject NavigationManager NavigationManager
 
-<div class="space-y-8 pb-10">
+<div class="space-y-8 max-w-3xl pb-16">
     
-    <!-- Top Greeting & Live Status Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="space-y-1">
-            <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-3">
+    <!-- Top Command Center Header -->
+    <div class="space-y-1 border-b border-white/[0.06] pb-4">
+        <div class="flex items-center justify-between">
+            <h1 class="text-lg font-semibold tracking-tight text-white flex items-center gap-2">
                 <span>@greeting, Álvaro</span>
             </h1>
-            <p class="text-xs text-slate-400 capitalize">
-                @DateTime.Now.ToString("dddd, dd 'de' MMMM", new CultureInfo("es-AR")) • Sistema operativo activo
-            </p>
+            <span class="text-[11px] font-mono text-slate-500 capitalize">
+                @DateTime.Now.ToString("dddd, dd 'de' MMMM", new CultureInfo("es-AR"))
+            </span>
         </div>
-
-        <!-- Fast Navigation Shortcuts -->
-        <div class="flex items-center gap-2">
-            <button 
-                @onclick="@(() => NavigationManager.NavigateTo("capture"))"
-                class="px-3.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>Nueva Nota</span>
-            </button>
-
-            <button 
-                @onclick="@(() => NavigationManager.NavigateTo("finance"))"
-                class="px-3.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Registrar Gasto</span>
-            </button>
-        </div>
+        <p class="text-xs text-slate-400">
+            Resumen consolidado de actividad y tareas prioritarias.
+        </p>
     </div>
 
-    <!-- 4 Main Cards Grid (2x2) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Feedback Banner -->
+    @if (!string.IsNullOrWhiteSpace(actionFeedback))
+    {
+        <div class="px-3.5 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs flex items-center justify-between text-slate-200 animate-fadeIn">
+            <span>@actionFeedback</span>
+            <button @onclick="() => actionFeedback = null" class="text-slate-500 hover:text-slate-300 text-xs">✕</button>
+        </div>
+    }
 
-        <!-- =================================================================== -->
-        <!-- CARD 1: HÁBITOS DE HOY & RACHA (AMBER) -->
-        <!-- =================================================================== -->
-        <div 
-            @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-            class="group p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900/85 border border-slate-800/80 hover:border-amber-500/40 backdrop-blur-xl transition-all duration-300 shadow-xl cursor-pointer flex flex-col justify-between space-y-4">
-            
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z" />
-                        </svg>
-                        <span>Hábitos de Hoy</span>
-                    </div>
-                    <span class="text-[11px] text-slate-500 group-hover:text-amber-300 transition-colors">Ver todos →</span>
-                </div>
-
-                @if (isLoading)
+    <!-- ======================================================================= -->
+    <!-- SECTION 1: ACCIÓN INMEDIATA / HÁBITOS DE HOY -->
+    <!-- ======================================================================= -->
+    <section class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold flex items-center gap-2">
+                <span>Acción Inmediata — Hábitos de Hoy</span>
+                @if (totalHabits > 0)
                 {
-                    <div class="animate-pulse space-y-2 py-2">
-                        <div class="h-5 bg-slate-800 rounded w-1/3"></div>
-                        <div class="h-2 bg-slate-800 rounded"></div>
-                    </div>
+                    <span class="text-[10px] font-mono text-slate-400 font-normal">(@completedHabits / @totalHabits)</span>
                 }
-                else if (totalHabits > 0)
-                {
-                    <div class="space-y-2">
-                        <div class="flex items-baseline justify-between">
-                            <span class="text-2xl font-bold text-white">@completedHabits / @totalHabits</span>
-                            <span class="text-xs font-semibold text-amber-400">@habitProgressPct%</span>
-                        </div>
-                        <!-- Progress Bar -->
-                        <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-amber-500 to-yellow-400 rounded-full transition-all duration-500" style="width: @(habitProgressPct)%"></div>
-                        </div>
-                    </div>
-
-                    <p class="text-xs text-slate-300 font-medium truncate pt-1">
-                        @if (nextPendingHabit != null)
-                        {
-                            <span class="text-slate-400">Próximo:</span> @nextPendingHabit.Name
-                        }
-                        else
-                        {
-                            <span class="text-emerald-400 font-semibold">✓ ¡Completaste todos tus hábitos de hoy!</span>
-                        }
-                    </p>
-                }
-                else
-                {
-                    <div class="py-3 text-xs text-slate-500">
-                        No hay hábitos configurados todavía. Hacé click para crear el primero.
-                    </div>
-                }
-            </div>
-
-            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Racha activa</span>
-                <span class="font-semibold text-amber-400">🔥 @activeStreak días seguidos</span>
-            </div>
+            </h2>
+            <button 
+                type="button" 
+                @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
+                class="text-[11px] text-slate-400 hover:text-slate-200 transition-colors">
+                Administrar →
+            </button>
         </div>
 
-        <!-- =================================================================== -->
-        <!-- CARD 2: GOALS ACTIVOS (SKY) -->
-        <!-- =================================================================== -->
-        <div 
-            @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-            class="group p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900/85 border border-slate-800/80 hover:border-sky-500/40 backdrop-blur-xl transition-all duration-300 shadow-xl cursor-pointer flex flex-col justify-between space-y-4">
-            
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-sky-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        <span>Metas en Foco</span>
-                    </div>
-                    <span class="text-[11px] text-slate-500 group-hover:text-sky-300 transition-colors">Ver todas →</span>
-                </div>
-
-                @if (isLoading)
-                {
-                    <div class="animate-pulse space-y-2 py-2">
-                        <div class="h-4 bg-slate-800 rounded w-2/3"></div>
-                        <div class="h-4 bg-slate-800 rounded w-1/2"></div>
-                    </div>
-                }
-                else if (activeGoals.Count > 0)
-                {
-                    <div class="space-y-2.5">
-                        @foreach (var goal in activeGoals)
-                        {
-                            <div class="space-y-1">
-                                <div class="flex items-center justify-between text-xs">
-                                    <span class="font-medium text-slate-200 truncate max-w-[200px]">@goal.Title</span>
-                                    <span class="font-semibold text-sky-400">@goal.Progress%</span>
-                                </div>
-                                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
-                                    <div class="h-full bg-sky-400 rounded-full" style="width: @(Math.Clamp(goal.Progress, 0, 100))%"></div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="py-4 text-xs text-slate-500">
-                        No hay metas activas registradas. Definí tus objetivos trimestrales o anuales.
-                    </div>
-                }
+        @if (isLoading)
+        {
+            <div class="py-4 text-xs font-mono text-slate-600">Cargando hábitos...</div>
+        }
+        else if (habits.Count == 0)
+        {
+            <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-400 flex items-center justify-between">
+                <span>No hay hábitos configurados.</span>
+                <button @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))" class="text-sky-400 hover:underline">Crear uno</button>
             </div>
-
-            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Metas en curso</span>
-                <span class="font-semibold text-sky-400">@activeGoals.Count activas</span>
-            </div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- CARD 3: FINANZAS & BALANCE (ROSE) -->
-        <!-- =================================================================== -->
-        <div 
-            @onclick="@(() => NavigationManager.NavigateTo("finance"))"
-            class="group p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900/85 border border-slate-800/80 hover:border-rose-500/40 backdrop-blur-xl transition-all duration-300 shadow-xl cursor-pointer flex flex-col justify-between space-y-4">
-            
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-rose-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Finanzas (Últimos 30 días)</span>
-                    </div>
-                    <span class="text-[11px] text-slate-500 group-hover:text-rose-300 transition-colors">Detalle →</span>
-                </div>
-
-                @if (isLoading)
+        }
+        else
+        {
+            <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+                @foreach (var habit in habits)
                 {
-                    <div class="animate-pulse space-y-2 py-2">
-                        <div class="h-6 bg-slate-800 rounded w-1/2"></div>
-                        <div class="h-3 bg-slate-800 rounded w-3/4"></div>
-                    </div>
-                }
-                else if (hasTransactions)
-                {
-                    <div class="space-y-1.5">
-                        <div class="flex items-baseline gap-2">
-                            <span class="text-2xl font-bold @(netBalance >= 0 ? "text-emerald-400" : "text-rose-400")">
-                                @(netBalance >= 0 ? "+" : "-") $@Math.Abs(netBalance).ToString("N0", new CultureInfo("es-AR"))
+                    var isDone = completedHabitIds.Contains(habit.Id);
+                    <div class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors gap-3">
+                        <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
+                            <input 
+                                type="checkbox" 
+                                checked="@isDone"
+                                @onchange="() => ToggleHabitAsync(habit)"
+                                class="w-3.5 h-3.5 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500/30 cursor-pointer" />
+                            <span class="text-xs @(isDone ? "line-through text-slate-400" : "text-slate-200 font-medium") truncate">
+                                @habit.Name
                             </span>
-                            <span class="text-xs text-slate-400">balance neto</span>
-                        </div>
-                        <div class="flex items-center gap-4 text-xs text-slate-400 pt-1">
-                            <span>Gastos: <strong class="text-rose-300">$@totalExpenses.ToString("N0", new CultureInfo("es-AR"))</strong></span>
-                            <span>•</span>
-                            <span>Ingresos: <strong class="text-emerald-300">$@totalIncome.ToString("N0", new CultureInfo("es-AR"))</strong></span>
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="py-3 space-y-1">
-                        <div class="text-sm font-semibold text-slate-400">Sin movimientos registrados</div>
-                        <p class="text-xs text-slate-500">
-                            Cargá tus gastos con <kbd class="px-1 py-0.5 rounded bg-slate-800 text-[10px]">/expense</kbd> o sincronizá con Mercado Pago.
-                        </p>
+                        </label>
+                        <span class="text-[10px] font-mono text-slate-400 shrink-0">@habit.Frequency</span>
                     </div>
                 }
             </div>
+        }
+    </section>
 
-            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Estado de integración</span>
-                <span class="font-medium @(hasTransactions ? "text-emerald-400" : "text-slate-500")">
-                    @(hasTransactions ? "Sincronizado" : "Listo para cargar")
-                </span>
-            </div>
-        </div>
-
-        <!-- =================================================================== -->
-        <!-- CARD 4: SEGUNDO CEREBRO / CAPTURAS (INDIGO) -->
-        <!-- =================================================================== -->
-        <div 
-            @onclick="@(() => NavigationManager.NavigateTo("search"))"
-            class="group p-6 rounded-2xl bg-slate-900/60 hover:bg-slate-900/85 border border-slate-800/80 hover:border-indigo-500/40 backdrop-blur-xl transition-all duration-300 shadow-xl cursor-pointer flex flex-col justify-between space-y-4">
-            
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <span>Segundo Cerebro</span>
-                    </div>
-                    <span class="text-[11px] text-slate-500 group-hover:text-indigo-300 transition-colors">Explorar →</span>
-                </div>
-
-                @if (isLoading)
-                {
-                    <div class="animate-pulse space-y-2 py-2">
-                        <div class="h-4 bg-slate-800 rounded w-full"></div>
-                        <div class="h-4 bg-slate-800 rounded w-4/5"></div>
-                    </div>
-                }
-                else if (recentNotes.Count > 0)
-                {
-                    <div class="space-y-2">
-                        @foreach (var note in recentNotes)
-                        {
-                            <div class="flex items-center justify-between gap-3 text-xs">
-                                <span class="font-medium text-slate-200 truncate">
-                                    @(!string.IsNullOrWhiteSpace(note.Title) ? note.Title : (note.Content.Length > 35 ? note.Content[..35] + "..." : note.Content))
-                                </span>
-                                <span class="text-[10px] text-slate-500 shrink-0">@FormatRelative(note.CreatedAt)</span>
-                            </div>
-                        }
-                    </div>
-                }
-                else
-                {
-                    <div class="py-4 text-xs text-slate-500">
-                        No hay notas capturadas todavía. Capturá tus pensamientos presionando Ctrl+Space.
-                    </div>
-                }
-            </div>
-
-            <div class="pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Notas indexadas</span>
-                <span class="font-semibold text-indigo-400">@recentNotes.Count recientes</span>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- CARD 5: AI TOOLBOX (GEMINI) - Prominente / Ancha -->
-    <!-- =================================================================== -->
-    <div class="p-6 md:p-8 rounded-2xl bg-gradient-to-br from-slate-900/80 via-indigo-950/20 to-slate-900/80 border border-slate-800/90 backdrop-blur-xl shadow-2xl space-y-4">
-        
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 text-xs font-semibold uppercase tracking-wider text-sky-400">
-                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-                <span>AI Toolbox (Google Gemini)</span>
-            </div>
-            <span class="text-[11px] text-slate-400">Preguntá o sintetizá información de tu Second Brain</span>
-        </div>
-
-        <!-- Interactive AI Query Input -->
-        <div class="flex items-center gap-3">
-            <div class="relative flex-1">
-                <input 
-                    type="text" 
-                    @bind="aiPromptInput"
-                    @bind:event="oninput"
-                    @onkeydown="HandleAiKeyDown"
-                    placeholder="Escribí una pregunta o pedí un resumen (ej: ¿Cuáles son mis prioridades de hoy?)..." 
-                    class="w-full pl-4 pr-10 py-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-100 text-xs sm:text-sm placeholder-slate-500 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/30 transition-all" />
-                
-                @if (isAiThinking)
-                {
-                    <div class="absolute right-3.5 top-3.5">
-                        <svg class="animate-spin w-4 h-4 text-sky-400" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                        </svg>
-                    </div>
-                }
-            </div>
-
+    <!-- ======================================================================= -->
+    <!-- SECTION 2: EN PROGRESO / METAS & ROADMAPS ACTIVOS -->
+    <!-- ======================================================================= -->
+    <section class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                En Progreso — Metas & Roadmaps
+            </h2>
             <button 
-                type="button"
-                @onclick="ExecuteAiQueryAsync"
-                disabled="@(isAiThinking || string.IsNullOrWhiteSpace(aiPromptInput))"
-                class="px-5 py-3 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium text-xs shadow-lg shadow-sky-600/20 hover:shadow-sky-500/30 transition-all flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                <span>Consultar</span>
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+                type="button" 
+                @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
+                class="text-[11px] text-slate-400 hover:text-slate-200 transition-colors">
+                Ver todos →
             </button>
         </div>
 
-        <!-- AI Response Box -->
-        @if (!string.IsNullOrWhiteSpace(aiResponse))
+        @if (isLoading)
         {
-            <div class="p-4 rounded-xl bg-slate-950/70 border border-sky-500/30 text-xs text-slate-200 leading-relaxed space-y-2 animate-fadeIn">
-                <div class="flex items-center justify-between text-[11px] font-semibold text-sky-400">
-                    <span>Respuesta de ATLAS AI:</span>
-                    <button @onclick="() => aiResponse = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
-                </div>
-                <div class="whitespace-pre-wrap">@aiResponse</div>
+            <div class="py-4 text-xs font-mono text-slate-600">Cargando metas...</div>
+        }
+        else if (activeGoals.Count == 0 && activeRoadmaps.Count == 0)
+        {
+            <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-400 flex items-center justify-between">
+                <span>No hay metas o roadmaps activos en curso.</span>
+                <button @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))" class="text-sky-400 hover:underline">Planificar</button>
             </div>
         }
-        else if (!string.IsNullOrWhiteSpace(aiErrorMessage))
+        else
         {
-            <div class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-300 flex items-center justify-between">
-                <span>@aiErrorMessage</span>
-                <button @onclick="() => aiErrorMessage = null" class="text-rose-400 hover:text-rose-200 text-xs">✕</button>
-            </div>
-        }
+            <div class="space-y-2">
+                @foreach (var goal in activeGoals)
+                {
+                    <div class="p-3.5 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-medium text-slate-200 truncate">@goal.Title</span>
+                            <span class="text-[11px] font-mono text-slate-400 font-semibold">@goal.Progress%</span>
+                        </div>
+                        
+                        <!-- Slim Hairline Progress Bar -->
+                        <div class="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div class="h-full bg-slate-300 rounded-full transition-all duration-300" style="width: @(Math.Clamp(goal.Progress, 0, 100))%"></div>
+                        </div>
+                    </div>
+                }
 
-    </div>
+                @foreach (var roadmap in activeRoadmaps)
+                {
+                    <div class="p-3.5 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/10 transition-all space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-mono text-sky-400 uppercase">Roadmap</span>
+                                <span class="font-medium text-slate-200 truncate">@roadmap.Title</span>
+                            </div>
+                            <span class="text-[11px] font-mono text-slate-400 font-semibold">@roadmap.ProgressPercentage%</span>
+                        </div>
+                        
+                        <!-- Slim Hairline Progress Bar -->
+                        <div class="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                            <div class="h-full bg-sky-400 rounded-full transition-all duration-300" style="width: @(roadmap.ProgressPercentage)%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- SECTION 3: ACTIVIDAD RECIENTE (FEED UNIFICADO) -->
+    <!-- ======================================================================= -->
+    <section class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                Actividad Reciente & Cambios
+            </h2>
+            <button 
+                type="button" 
+                @onclick="@(() => NavigationManager.NavigateTo("search"))"
+                class="text-[11px] text-slate-400 hover:text-slate-200 transition-colors">
+                Explorar archivo →
+            </button>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="py-4 text-xs font-mono text-slate-600">Cargando actividad...</div>
+        }
+        else if (recentNotes.Count == 0 && recentTransactions.Count == 0)
+        {
+            <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-400">
+                Sin actividad registrada recientemente. Usá <kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-slate-400">Ctrl+Space</kbd> para capturar o registrar datos.
+            </div>
+        }
+        else
+        {
+            <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden text-xs">
+                
+                <!-- Notes -->
+                @foreach (var note in recentNotes)
+                {
+                    <div 
+                        @onclick="@(() => NavigationManager.NavigateTo("search"))"
+                        class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.02] cursor-pointer transition-colors gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="text-[10px] font-mono text-slate-400 uppercase shrink-0">Nota</span>
+                            <span class="text-slate-200 font-medium truncate">
+                                @(!string.IsNullOrWhiteSpace(note.Title) ? note.Title : (note.Content.Length > 40 ? note.Content[..40] + "..." : note.Content))
+                            </span>
+                        </div>
+                        <span class="text-[11px] font-mono text-slate-400 shrink-0">@FormatRelative(note.CreatedAt)</span>
+                    </div>
+                }
+
+                <!-- Transactions -->
+                @foreach (var tx in recentTransactions)
+                {
+                    <div 
+                        @onclick="@(() => NavigationManager.NavigateTo("finance"))"
+                        class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.02] cursor-pointer transition-colors gap-3">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <span class="text-[10px] font-mono text-slate-400 uppercase shrink-0">Finanza</span>
+                            <span class="text-slate-200 truncate">@tx.Descripcion</span>
+                        </div>
+                        <div class="flex items-center gap-3 shrink-0 font-mono text-[11px]">
+                            <span class="@(tx.Tipo == "income" ? "text-emerald-400 font-semibold" : "text-slate-300")">
+                                @(tx.Tipo == "income" ? "+" : "-")$@tx.Monto.ToString("N0", new CultureInfo("es-AR"))
+                            </span>
+                            <span class="text-slate-400">@FormatRelative(tx.Fecha)</span>
+                        </div>
+                    </div>
+                }
+
+            </div>
+        }
+    </section>
 
 </div>
 
 @code {
     private bool isLoading = true;
     private string greeting = "Hola";
+    private string? actionFeedback;
 
-    // Card 1: Habits
+    // Habits state
+    private List<Habit> habits = [];
+    private HashSet<string> completedHabitIds = [];
     private int totalHabits;
     private int completedHabits;
-    private int habitProgressPct;
-    private Habit? nextPendingHabit;
-    private int activeStreak = 7; // Calculated or active streak baseline
 
-    // Card 2: Goals
+    // Goals & Roadmaps state
     private List<Goal> activeGoals = [];
+    private List<Roadmap> activeRoadmaps = [];
 
-    // Card 3: Finance
-    private bool hasTransactions;
-    private decimal netBalance;
-    private decimal totalExpenses;
-    private decimal totalIncome;
-
-    // Card 4: Second Brain
+    // Recent items
     private List<Note> recentNotes = [];
-
-    // Card 5: AI Toolbox
-    private string aiPromptInput = string.Empty;
-    private bool isAiThinking;
-    private string? aiResponse;
-    private string? aiErrorMessage;
+    private List<Transaction> recentTransactions = [];
 
     protected override async Task OnInitializedAsync()
     {
         UpdateGreeting();
-        await LoadDashboardDataAsync();
+        await LoadCommandCenterDataAsync();
     }
 
     private void UpdateGreeting()
@@ -394,56 +261,37 @@
         };
     }
 
-    private async Task LoadDashboardDataAsync()
+    private async Task LoadCommandCenterDataAsync()
     {
         isLoading = true;
 
         try
         {
-            // 1. Load Habits
-            var habits = await HabitRepository.GetAllAsync();
+            // 1. Habits
+            var allHabits = await HabitRepository.GetAllAsync();
+            habits = allHabits.ToList();
             var todayEvents = await HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
-            var completedHabitIds = todayEvents.Select(e => e.HabitId).ToHashSet();
-
+            completedHabitIds = todayEvents.Select(e => e.HabitId).ToHashSet();
             totalHabits = habits.Count;
             completedHabits = habits.Count(h => completedHabitIds.Contains(h.Id));
-            habitProgressPct = totalHabits > 0 ? (int)Math.Round((double)completedHabits / totalHabits * 100) : 0;
-            nextPendingHabit = habits.FirstOrDefault(h => !completedHabitIds.Contains(h.Id));
 
-            // Calculate streak count from events
-            if (todayEvents.Count > 0)
-            {
-                activeStreak = Math.Max(1, todayEvents.Count);
-            }
-
-            // 2. Load Goals
+            // 2. Active Goals & Roadmaps
             var goals = await GoalRepository.GetAllAsync(status: "active");
             activeGoals = goals.Take(3).ToList();
 
-            // 3. Load Finance
-            var transactions = await TransactionRepository.GetRecentAsync(100);
-            var thirtyDaysAgo = DateTimeOffset.UtcNow.AddDays(-30);
-            var monthly = transactions.Where(t => t.Fecha >= thirtyDaysAgo).ToList();
+            var roadmaps = await RoadmapRepository.GetAllAsync(status: "active");
+            activeRoadmaps = roadmaps.Where(r => r.ProgressPercentage < 100).Take(2).ToList();
 
-            hasTransactions = monthly.Count > 0;
-            if (hasTransactions)
-            {
-                totalExpenses = monthly
-                    .Where(t => !t.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase))
-                    .Sum(t => t.Monto);
-                totalIncome = monthly
-                    .Where(t => t.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase))
-                    .Sum(t => t.Monto);
-                netBalance = totalIncome - totalExpenses;
-            }
-
-            // 4. Load Second Brain Notes
+            // 3. Recent Notes & Transactions
             var notes = await NoteRepository.GetRecentAsync(3);
             recentNotes = notes.ToList();
+
+            var txs = await TransactionRepository.GetRecentAsync(2);
+            recentTransactions = txs.ToList();
         }
-        catch
+        catch (Exception ex)
         {
-            // Fail gracefully on initial load
+            actionFeedback = $"Error al cargar datos: {ex.Message}";
         }
         finally
         {
@@ -451,47 +299,24 @@
         }
     }
 
-    private async Task HandleAiKeyDown(KeyboardEventArgs e)
+    private async Task ToggleHabitAsync(Habit habit)
     {
-        if (e.Key == "Enter" && !e.ShiftKey)
-        {
-            await ExecuteAiQueryAsync();
-        }
-    }
-
-    private async Task ExecuteAiQueryAsync()
-    {
-        if (isAiThinking || string.IsNullOrWhiteSpace(aiPromptInput)) return;
-
-        isAiThinking = true;
-        aiResponse = null;
-        aiErrorMessage = null;
-
         try
         {
-            var parameters = new Dictionary<string, object?>
+            var res = await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
             {
-                ["query"] = aiPromptInput.Trim()
-            };
+                ["habit_id"] = habit.Id
+            });
 
-            var result = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, parameters);
-            if (result.IsSuccess)
+            if (res.IsSuccess)
             {
-                aiResponse = result.Data?.ToString() ?? "Sin respuesta generada.";
-                aiPromptInput = string.Empty;
-            }
-            else
-            {
-                aiErrorMessage = result.ErrorMessage ?? "Error al consultar a Gemini. Verificá tu clave en Configuración.";
+                actionFeedback = $"✓ Hábito '{habit.Name}' registrado hoy.";
+                await LoadCommandCenterDataAsync();
             }
         }
         catch (Exception ex)
         {
-            aiErrorMessage = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isAiThinking = false;
+            actionFeedback = ex.Message;
         }
     }
 
@@ -501,10 +326,10 @@
         var now = DateTimeOffset.Now;
         var diff = now - dt;
 
-        if (diff.TotalMinutes < 1) return "hace instantes";
-        if (diff.TotalMinutes < 60) return $"hace {(int)diff.TotalMinutes}m";
-        if (diff.TotalHours < 24 && dt.Date == now.Date) return $"hoy {dt:HH:mm}";
-        if (diff.TotalDays < 2 && dt.Date == now.Date.AddDays(-1)) return $"ayer {dt:HH:mm}";
+        if (diff.TotalMinutes < 1) return "ahora";
+        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m";
+        if (diff.TotalHours < 24 && dt.Date == now.Date) return $"{dt:HH:mm}";
+        if (diff.TotalDays < 2 && dt.Date == now.Date.AddDays(-1)) return "ayer";
 
         return dt.ToString("dd MMM", new CultureInfo("es-AR"));
     }

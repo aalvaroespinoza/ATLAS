@@ -1,4 +1,34 @@
-/* ATLAS Personal OS Styles */
+/* ATLAS Personal Command Center — Design System CSS Tokens & Utilities */
+
+:root {
+    /* Backgrounds & Surfaces */
+    --atlas-bg-canvas: #0a0d14;
+    --atlas-bg-sidebar: #0d111a;
+    --atlas-bg-surface: #121722;
+    --atlas-bg-surface-hover: #181f2e;
+    --atlas-bg-elevated: #151b27;
+
+    /* Hairline Borders */
+    --atlas-border: rgba(255, 255, 255, 0.06);
+    --atlas-border-subtle: rgba(255, 255, 255, 0.12);
+    --atlas-border-focus: rgba(56, 189, 248, 0.50);
+
+    /* Typography Colors */
+    --atlas-text-primary: #f1f5f9;
+    --atlas-text-secondary: #94a3b8;
+    --atlas-text-tertiary: #64748b;
+    --atlas-text-disabled: #334155;
+
+    /* Accent & Semantics */
+    --atlas-accent: #38bdf8;
+    --atlas-accent-subtle: rgba(56, 189, 248, 0.12);
+    --atlas-success: #22c55e;
+    --atlas-success-subtle: rgba(34, 197, 94, 0.12);
+    --atlas-warning: #eab308;
+    --atlas-warning-subtle: rgba(234, 179, 8, 0.12);
+    --atlas-danger: #ef4444;
+    --atlas-danger-subtle: rgba(239, 68, 68, 0.12);
+}
 
 html, body {
     margin: 0;
@@ -6,14 +36,23 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #020617; /* slate-950 */
-    color: #f8fafc; /* slate-50 */
+    background-color: var(--atlas-bg-canvas);
+    color: var(--atlas-text-primary);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom subtle scrollbars */
+::selection {
+    background-color: rgba(56, 189, 248, 0.25);
+    color: #ffffff;
+}
+
+/* Discrete Scrollbars */
 ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -21,10 +60,34 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #334155; /* slate-700 */
+    background: rgba(255, 255, 255, 0.10);
     border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #475569; /* slate-600 */
+    background: rgba(255, 255, 255, 0.20);
+}
+
+/* Base Surfaces & Containers */
+.atlas-surface {
+    background-color: var(--atlas-bg-surface);
+    border: 1px solid var(--atlas-border);
+    border-radius: 8px;
+}
+
+.atlas-surface-elevated {
+    background-color: var(--atlas-bg-elevated);
+    border: 1px solid var(--atlas-border-subtle);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.70);
+}
+
+/* Animation utilities */
+@keyframes atlasFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-atlas-fade {
+    animation: atlasFadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

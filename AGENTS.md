@@ -7,7 +7,7 @@ de conversaciones anteriores salvo lo que esté acá.
 ## Qué es este proyecto
 
 ATLAS es un sistema personal **local-first** para Windows, construido en
-**C# + WinUI 3 + Windows App SDK**. Centraliza captura, conocimiento y
+**C# + .NET MAUI Blazor Hybrid (WebView2)**. Centraliza captura, conocimiento y
 automatización mediante un Core desacoplado de la UI.
 
 La especificación completa de producto vive en `/docs/ATLAS_PERSONAL_OS.md`.
@@ -40,17 +40,26 @@ Leela antes de proponer cualquier arquitectura o feature nueva. Este
    corre entre medio.
 10. Si una tarea requiere tocar más de 2-3 archivos nuevos o parece que se
     está saliendo del alcance pedido, parar y preguntar antes de seguir.
+11. **Regla de producto — Anti Dashboard:** ATLAS no debe mostrar una
+    capacidad únicamente porque exista. Las capacidades aparecen mediante
+    contexto, búsqueda, comandos o navegación cuando realmente aportan valor.
+    No crear una pantalla, tarjeta, widget o elemento de navegación
+    simplemente para representar un módulo existente.
+    **Prioridad estricta de la interfaz:**
+    1. Contexto
+    2. Acciones
+    3. Información relevante
+    4. Navegación
+    5. Configuración
+    *(Nunca invertir ese orden sin justificación explícita).*
 
 ## Stack técnico
 
 - C# / .NET (net10.0+)
-- **UI: .NET MAUI Blazor Hybrid** (Razor components + HTML/CSS renderizados vía
-  WebView2, target Windows únicamente — sin Android/iOS/MacCatalyst). Estilos
-  con Tailwind. Reemplaza al proyecto WinUI 3 planteado originalmente en
-  ATLAS.UI (decisión de Etapa 5, ver `/docs/decisions.md`).
-- SQLite vía `Microsoft.Data.Sqlite` (o `sqlite-net-pcl` si simplifica el ORM)
-- Core/Storage siguen siendo C# puro, sin ninguna referencia a UI — por eso
-  el cambio de WinUI a Blazor Hybrid no los toca.
+- **UI: .NET MAUI Blazor Hybrid** (Razor components + HTML/CSS/Tailwind renderizados vía
+  WebView2, target Windows únicamente — sin Android/iOS/MacCatalyst).
+- SQLite vía `Microsoft.Data.Sqlite`
+- Core/Storage siguen siendo C# puro, sin ninguna referencia a UI.
 - Sin ORMs pesados, sin DI containers externos salvo que se justifique
 
 ## Estructura del repo
@@ -58,7 +67,7 @@ Leela antes de proponer cualquier arquitectura o feature nueva. Este
 ```
 ATLAS.sln
 /src
-  /ATLAS.UI          (WinUI 3, ventanas, launcher flotante)
+  /ATLAS.UI          (.NET MAUI Blazor Hybrid Windows-only, Shell, Launcher flotante)
   /ATLAS.Core        (Command system, Event bus, servicios de contexto)
   /ATLAS.Storage     (SQLite, migraciones, repositorios)
 /docs
@@ -88,15 +97,19 @@ repo. La integración se hace atrás de una interfaz `IAiProvider` para poder
 cambiar de proveedor a futuro sin tocar el resto del Core (regla 12 del
 doc de producto).
 
-## Identidad visual (definida)
+## Identidad visual y experiencia — "Menos interfaz, más capacidad"
 
-ATLAS usa una estética inspirada en iOS: superficies con Mica/Acrylic
-(vidrio esmerilado), esquinas bien redondeadas, animaciones tipo spring
-en transiciones y hover states, tipografía con jerarquía clara (no todo
-el mismo tamaño/peso). Mismo lenguaje visual que ya usás en tu setup de
-Hyprland — no se inventa uno nuevo para ATLAS. Se define UNA vez en un
-`ResourceDictionary`/tema compartido antes de construir pantallas, no se
-improvisa pantalla por pantalla.
+ATLAS se concibe como un **Personal Command Center** premium, minimalista y
+profundamente integrado al sistema operativo, inspirado en Linear (jerarquía
+fuerte, navegación silenciosa), Craft (acceso rápido y split-view) y Raycast
+(command-first interaction):
+- **Superficies oscuras neutras** (#090d14 / #111620) con bordes hairline (1px white/0.07).
+- **Cero colecciones de tarjetas de colores ni gradientes llamativos**.
+- **Cero color-coding permanente por módulo**: un único acento primario sobrio y colores semánticos solo para estados (éxito, error, pendiente).
+- **Estructura basada en listas, filas, texto y separadores limpios**.
+- **Sidebar visualmente secundaria** y silenciosa (monocromo).
+- **Command Launcher (Ctrl+Space)** como punto de interacción hero y central.
+- **IA contextual** en el flujo de trabajo (no una sección gigante promocional).
 
 ## Etapa 4 — COMPLETADA (hasta el bloque 4a; 4b pendiente de retomar)
 

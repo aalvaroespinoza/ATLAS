@@ -1,35 +1,114 @@
 @inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
-<div class="flex h-screen w-screen bg-[#090d16] text-slate-100 antialiased overflow-hidden font-sans">
+<div class="flex h-screen w-screen bg-[#0a0d14] text-slate-100 antialiased overflow-hidden font-sans select-none"
+     tabindex="0"
+     @onkeydown="HandleGlobalKeyDown">
     
-    <!-- Sticky Glassmorphic Sidebar -->
-    <NavMenu />
+    <!-- Secondary Quiet Sidebar (Hidden on ultra-small screens, w-52 on desktop) -->
+    <div class="@(isSidebarOpen ? "block" : "hidden md:block")">
+        <NavMenu />
+    </div>
 
-    <!-- Main Content Canvas -->
-    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-[#090d16] to-slate-950">
+    <!-- Main Content Canvas Area -->
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden bg-[#0d121c]">
         
-        <!-- Top App Bar with Subtle Accent Glow -->
-        <header class="h-14 shrink-0 px-8 flex items-center justify-between border-b border-slate-800/60 bg-slate-950/40 backdrop-blur-xl">
-            <div class="flex items-center gap-3 text-xs text-slate-400">
-                <span class="w-2 h-2 rounded-full bg-sky-400/80"></span>
-                <span class="font-medium tracking-wide text-slate-300 uppercase text-[10px]">ATLAS Personal Workspace</span>
+        <!-- Header Integrado (38px) -->
+        <header class="h-[38px] shrink-0 px-4 md:px-6 flex items-center justify-between border-b border-white/[0.06] bg-[#0b0f17]">
+            
+            <!-- Left: Mobile Sidebar Toggle + Breadcrumb -->
+            <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                <button 
+                    type="button"
+                    @onclick="() => isSidebarOpen = !isSidebarOpen"
+                    class="md:hidden p-1 rounded text-slate-400 hover:text-white"
+                    title="Alternar navegación">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                
+                <span class="text-slate-600 hidden sm:inline">atlas /</span>
+                <span class="text-slate-300 font-medium">@GetContextPath()</span>
             </div>
             
+            <!-- Center/Right: Command Launcher Hero Pill Trigger -->
             <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400">
-                    <span class="text-slate-500">Acceso rápido:</span>
-                    <kbd class="font-mono text-[10px] text-slate-300 font-semibold">Ctrl + Space</kbd>
+                <button 
+                    type="button"
+                    @onclick="() => isLauncherOpen = true"
+                    class="flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] text-[11px] font-mono text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                    title="Abrir Command Launcher">
+                    <svg class="w-3 h-3 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <span class="hidden sm:inline">Comandos</span>
+                    <kbd class="px-1 py-0.2 rounded bg-white/[0.06] text-[9px] text-slate-300">Ctrl+Space</kbd>
+                </button>
+
+                <div class="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                    <span>local</span>
                 </div>
             </div>
+
         </header>
 
-        <!-- Scrollable Dynamic View Area -->
-        <main class="flex-1 overflow-y-auto overflow-x-hidden p-8">
-            <div class="max-w-6xl mx-auto">
+        <!-- Scrollable View Canvas (Optimal Reading Width) -->
+        <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8">
+            <div class="max-w-4xl mx-auto">
                 @Body
             </div>
         </main>
 
     </div>
 
+    <!-- Universal Command Launcher Modal Layer -->
+    <CommandLauncher @bind-IsOpen="isLauncherOpen" />
+
 </div>
+
+@code {
+    private bool isLauncherOpen;
+    private bool isSidebarOpen = true;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += (s, e) => StateHasChanged();
+    }
+
+    private string GetContextPath()
+    {
+        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(relative)) return "inicio";
+        if (relative.StartsWith("search") || relative.StartsWith("brain") || relative.StartsWith("capture")) return "segundo-cerebro";
+        if (relative.StartsWith("habits-goals")) return "habitos-metas";
+        if (relative.StartsWith("finance")) return "finanzas";
+        if (relative.StartsWith("settings")) return "ajustes";
+        if (relative.StartsWith("design-system")) return "design-system";
+        return relative;
+    }
+
+    private void HandleGlobalKeyDown(KeyboardEventArgs e)
+    {
+        // 1. Command Launcher Toggle
+        if ((e.CtrlKey && e.Key == " ") || (e.CtrlKey && (e.Key == "k" || e.Key == "K")))
+        {
+            isLauncherOpen = !isLauncherOpen;
+            return;
+        }
+
+        // 2. Alt + Number Navigation Shortcuts (1 to 5)
+        if (e.AltKey)
+        {
+            switch (e.Key)
+            {
+                case "1": NavigationManager.NavigateTo(""); break;
+                case "2": NavigationManager.NavigateTo("search"); break;
+                case "3": NavigationManager.NavigateTo("habits-goals"); break;
+                case "4": NavigationManager.NavigateTo("finance"); break;
+                case "5": NavigationManager.NavigateTo("settings"); break;
+            }
+        }
+    }
+}

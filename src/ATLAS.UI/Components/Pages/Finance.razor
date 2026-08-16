@@ -1,27 +1,190 @@
 @page "/finance"
+@inject ITransactionRepository TransactionRepository
+@inject ICommandRegistry CommandRegistry
 
-<div class="space-y-8">
-    <!-- Header -->
-    <div class="space-y-1.5">
-        <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <span class="inline-block w-2.5 h-2.5 rounded-full bg-rose-400"></span>
-            Finanzas
+<div class="space-y-6 max-w-3xl pb-16">
+    
+    <!-- Page Header -->
+    <div class="space-y-1 border-b border-white/[0.06] pb-4">
+        <h1 class="text-base font-semibold tracking-tight text-white">
+            Finanzas & Movimientos
         </h1>
-        <p class="text-sm text-slate-400">
-            Control de movimientos, registro de gastos y sincronización con Mercado Pago.
+        <p class="text-xs text-slate-400">
+            Control de ingresos, egresos y sincronización con Mercado Pago.
         </p>
     </div>
 
-    <!-- Placeholder Section Card -->
-    <div class="p-8 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-4">
-        <div class="flex items-center gap-3 text-rose-400">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h2 class="text-base font-semibold text-slate-200">Panel Financiero</h2>
+    <!-- Feedback Banner -->
+    @if (!string.IsNullOrWhiteSpace(actionFeedback))
+    {
+        <div class="px-4 py-2.5 rounded-lg border text-xs flex items-center justify-between @(isFeedbackSuccess ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-rose-500/10 border-rose-500/20 text-rose-300")">
+            <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @actionFeedback</span>
+            <button @onclick="() => actionFeedback = null" class="text-slate-400 hover:text-white text-xs">✕</button>
         </div>
-        <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
-            Próximamente acá vas a poder ver métricas de balance mensual, gráfico de tendencias, alta rápida de gastos (<code class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">finance.add_transaction</code>) y sincronización a demanda de Mercado Pago (<code class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">finance.sync_mercadopago</code>).
-        </p>
+    }
+
+    <!-- Top Balance Row -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Balance Neto</span>
+            <div class="text-lg font-semibold font-mono text-white">
+                $@((totalIncome - totalExpense).ToString("N0", new CultureInfo("es-AR")))
+            </div>
+        </div>
+
+        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Ingresos</span>
+            <div class="text-lg font-semibold font-mono text-emerald-400">
+                +$@totalIncome.ToString("N0", new CultureInfo("es-AR"))
+            </div>
+        </div>
+
+        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-1">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-slate-400">Gastos</span>
+            <div class="text-lg font-semibold font-mono text-slate-200">
+                -$@totalExpense.ToString("N0", new CultureInfo("es-AR"))
+            </div>
+        </div>
     </div>
+
+    <!-- Quick Add Transaction Bar -->
+    <div class="p-3.5 rounded-lg bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row items-center gap-2.5">
+        <input 
+            type="number" 
+            @bind="newAmount" 
+            placeholder="Monto ($)..." 
+            class="w-full sm:w-32 px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-mono" />
+
+        <input 
+            type="text" 
+            @bind="newDescription" 
+            placeholder="Descripción (ej: Supermercado, Alquiler)..." 
+            class="flex-1 w-full px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
+        
+        <button 
+            type="button"
+            @onclick="AddExpenseAsync"
+            disabled="@(newAmount <= 0 || string.IsNullOrWhiteSpace(newDescription))"
+            class="w-full sm:w-auto px-3.5 py-1.5 rounded-md bg-white/[0.08] hover:bg-white/[0.14] disabled:opacity-50 text-white font-medium text-xs border border-white/[0.1] transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed">
+            + Registrar Gasto
+        </button>
+    </div>
+
+    <!-- Transactions List -->
+    <div class="space-y-3">
+        <div class="flex items-center justify-between">
+            <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-400 font-semibold">
+                Historial de Transacciones
+            </h2>
+            <span class="text-[11px] font-mono text-slate-400">@transactions.Count movimientos</span>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="p-6 text-center text-xs font-mono text-slate-600">Cargando movimientos...</div>
+        }
+        else if (transactions.Count == 0)
+        {
+            <div class="p-6 text-center rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-500">
+                No hay transacciones registradas. Registrá la primera arriba o vía <kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-slate-400">Ctrl+Space</kbd>.
+            </div>
+        }
+        else
+        {
+            <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden">
+                @foreach (var tx in transactions)
+                {
+                    <div class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.02] transition-colors text-xs gap-3">
+                        <div class="space-y-0.5 min-w-0">
+                            <div class="text-slate-200 font-medium truncate">@tx.Descripcion</div>
+                            <div class="text-[10px] font-mono text-slate-400">
+                                @tx.Fecha.ToLocalTime().ToString("dd MMM yyyy HH:mm") • @tx.Origen
+                            </div>
+                        </div>
+
+                        <div class="font-mono text-xs text-right shrink-0">
+                            <span class="@(tx.Tipo == "income" ? "text-emerald-400 font-semibold" : "text-slate-200")">
+                                @(tx.Tipo == "income" ? "+" : "-")$@tx.Monto.ToString("N0", new CultureInfo("es-AR"))
+                            </span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
 </div>
+
+@code {
+    private List<Transaction> transactions = [];
+    private bool isLoading = true;
+    private decimal totalIncome;
+    private decimal totalExpense;
+
+    private decimal newAmount;
+    private string newDescription = string.Empty;
+    private string? actionFeedback;
+    private bool isFeedbackSuccess;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTransactionsAsync();
+    }
+
+    private async Task LoadTransactionsAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var txs = await TransactionRepository.GetRecentAsync(50);
+            transactions = txs.ToList();
+
+            totalIncome = transactions.Where(t => t.Tipo == "income").Sum(t => t.Monto);
+            totalExpense = transactions.Where(t => t.Tipo == "expense").Sum(t => t.Monto);
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = $"Error: {ex.Message}";
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AddExpenseAsync()
+    {
+        if (newAmount <= 0 || string.IsNullOrWhiteSpace(newDescription)) return;
+
+        try
+        {
+            var res = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["monto"] = newAmount,
+                ["descripcion"] = newDescription.Trim(),
+                ["tipo"] = "expense",
+                ["origen"] = "manual"
+            });
+
+            if (res.IsSuccess)
+            {
+                newAmount = 0;
+                newDescription = string.Empty;
+                actionFeedback = "Gasto registrado exitosamente.";
+                isFeedbackSuccess = true;
+                await LoadTransactionsAsync();
+            }
+            else
+            {
+                actionFeedback = res.ErrorMessage ?? "Error al registrar gasto.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = ex.Message;
+            isFeedbackSuccess = false;
+        }
+    }
+}

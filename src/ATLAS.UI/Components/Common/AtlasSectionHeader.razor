@@ -1,0 +1,27 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="flex items-center justify-between py-1 @Class">
+    <div class="flex items-center gap-2">
+        <h2 class="text-[10px] font-mono uppercase tracking-widest text-slate-500 font-semibold">
+            @Title
+        </h2>
+        @if (Count.HasValue)
+        {
+            <span class="text-[10px] font-mono text-slate-500">(@Count.Value)</span>
+        }
+    </div>
+
+    @if (ActionContent != null)
+    {
+        <div class="text-[11px] text-slate-400">
+            @ActionContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public int? Count { get; set; }
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

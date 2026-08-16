@@ -1,0 +1,33 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="p-8 rounded-lg bg-white/[0.02] border border-white/[0.04] text-center space-y-2.5 select-none @Class">
+    @if (IconContent != null)
+    {
+        <div class="flex justify-center text-slate-500">
+            @IconContent
+        </div>
+    }
+
+    <div class="space-y-0.5 max-w-sm mx-auto">
+        <p class="text-xs text-slate-400 font-medium">@Title</p>
+        @if (!string.IsNullOrWhiteSpace(Description))
+        {
+            <p class="text-[11px] text-slate-500">@Description</p>
+        }
+    </div>
+
+    @if (ActionContent != null)
+    {
+        <div class="pt-1 flex justify-center">
+            @ActionContent
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Sin elementos";
+    [Parameter] public string? Description { get; set; }
+    [Parameter] public RenderFragment? IconContent { get; set; }
+    [Parameter] public RenderFragment? ActionContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

@@ -1,0 +1,352 @@
+@inject ICommandRegistry CommandRegistry
+@inject NavigationManager NavigationManager
+
+@if (IsOpen)
+{
+    <!-- Backdrop Blur & Overlay -->
+    <div class="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/60 backdrop-blur-sm animate-fadeIn" @onclick="Close">
+        
+        <!-- Modal Card (Raycast Style) -->
+        <div class="w-full max-w-xl bg-[#141923] border border-white/10 rounded-xl shadow-2xl overflow-hidden flex flex-col select-none" @onclick:stopPropagation="true">
+            
+            <!-- Top Search Input Bar -->
+            <div class="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.08] bg-[#10141d]">
+                <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                
+                <input 
+                    @ref="inputElement"
+                    type="text" 
+                    @bind="query"
+                    @bind:event="oninput"
+                    @onkeydown="HandleKeyDown"
+                    placeholder="Escribí un comando, nota rápida, o '?' para consultar con IA..." 
+                    class="w-full bg-transparent border-0 text-slate-100 text-sm placeholder-slate-500 focus:outline-none focus:ring-0 font-sans" />
+
+                @if (isRunning)
+                {
+                    <svg class="animate-spin w-4 h-4 text-sky-400 shrink-0" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                }
+            </div>
+
+            <!-- Result Feedback Banner (if executed) -->
+            @if (!string.IsNullOrWhiteSpace(executionFeedback))
+            {
+                <div class="px-4 py-3 border-b border-white/[0.08] flex items-center justify-between text-xs font-medium @(isFeedbackSuccess ? "bg-emerald-500/10 text-emerald-300" : "bg-rose-500/10 text-rose-300")">
+                    <span>@(isFeedbackSuccess ? "✓ " : "✕ ") @executionFeedback</span>
+                    <button @onclick="() => executionFeedback = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+                </div>
+            }
+
+            <!-- AI Response Box (if query was '?') -->
+            @if (!string.IsNullOrWhiteSpace(aiResponse))
+            {
+                <div class="p-4 border-b border-white/[0.08] bg-[#0c1017] text-xs text-slate-200 leading-relaxed max-h-60 overflow-y-auto space-y-2">
+                    <div class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-semibold">Respuesta ATLAS AI:</div>
+                    <div class="whitespace-pre-wrap">@aiResponse</div>
+                </div>
+            }
+
+            <!-- Command & Suggestion List -->
+            <div class="max-h-72 overflow-y-auto p-1.5 space-y-0.5">
+                @if (FilteredCommands.Count == 0 && string.IsNullOrWhiteSpace(query))
+                {
+                    <div class="p-4 text-center text-xs text-slate-500 font-mono">
+                        Comandos disponibles
+                    </div>
+                }
+                else if (FilteredCommands.Count == 0 && !string.IsNullOrWhiteSpace(query))
+                {
+                    <div class="px-3 py-2.5 rounded-lg bg-white/[0.04] text-xs flex items-center justify-between text-slate-300">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sky-400 font-mono">↵</span>
+                            <span>Capturar nota: <strong class="text-white font-medium truncate">"@query"</strong></span>
+                        </div>
+                        <kbd class="px-1.5 py-0.5 rounded bg-white/[0.06] text-[10px] font-mono text-slate-400">Enter</kbd>
+                    </div>
+                }
+                else
+                {
+                    @for (int i = 0; i < FilteredCommands.Count; i++)
+                    {
+                        var index = i;
+                        var cmd = FilteredCommands[i];
+                        var isSelected = index == selectedIndex;
+
+                        <div 
+                            @onclick="() => ExecuteSelectedCommand(cmd)"
+                            class="px-3 py-2 rounded-lg text-xs flex items-center justify-between cursor-pointer transition-colors @(isSelected ? "bg-sky-500/15 text-white font-medium" : "text-slate-300 hover:bg-white/[0.04]")">
+                            
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <span class="font-mono text-[11px] text-slate-400 @(isSelected ? "text-sky-300" : "")">@cmd.Id</span>
+                                <span class="text-slate-400 font-normal truncate">• @cmd.Description</span>
+                            </div>
+
+                            <div class="flex items-center gap-1.5 shrink-0 pl-2">
+                                @if (isSelected)
+                                {
+                                    <kbd class="px-1.5 py-0.5 rounded bg-sky-500/20 text-[10px] font-mono text-sky-200">Enter</kbd>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+
+            <!-- Footer Bar with Keyboard Cheatsheet -->
+            <div class="px-4 py-2 border-t border-white/[0.06] bg-[#0d1117] flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                <div class="flex items-center gap-3">
+                    <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↑</kbd> <kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↓</kbd> Navegar</span>
+                    <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">↵</kbd> Ejecutar</span>
+                    <span><kbd class="px-1 py-0.5 rounded bg-white/[0.06] text-slate-400 text-[10px]">?</kbd> Preguntar IA</span>
+                </div>
+                <span class="text-slate-400">Ctrl+Space</span>
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    private ElementReference inputElement;
+    private string query = string.Empty;
+    private int selectedIndex;
+    private bool isRunning;
+    private string? executionFeedback;
+    private bool isFeedbackSuccess;
+    private string? aiResponse;
+
+    private List<ICommand> allCommands = [];
+
+    protected override void OnInitialized()
+    {
+        allCommands = CommandRegistry.GetAllCommands().ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen)
+        {
+            try
+            {
+                await inputElement.FocusAsync();
+            }
+            catch { }
+        }
+    }
+
+    private List<ICommand> FilteredCommands
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return allCommands.Take(6).ToList();
+
+            var trimmed = query.Trim();
+            if (trimmed.StartsWith("?") || trimmed.StartsWith("/"))
+                return [];
+
+            return allCommands
+                .Where(c => c.Id.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                            c.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                            c.Description.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+                .Take(6)
+                .ToList();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await Close();
+            return;
+        }
+
+        if (e.Key == "ArrowDown")
+        {
+            if (FilteredCommands.Count > 0)
+            {
+                selectedIndex = (selectedIndex + 1) % FilteredCommands.Count;
+            }
+            return;
+        }
+
+        if (e.Key == "ArrowUp")
+        {
+            if (FilteredCommands.Count > 0)
+            {
+                selectedIndex = (selectedIndex - 1 + FilteredCommands.Count) % FilteredCommands.Count;
+            }
+            return;
+        }
+
+        if (e.Key == "Enter")
+        {
+            await ProcessEnterActionAsync();
+        }
+    }
+
+    private async Task ProcessEnterActionAsync()
+    {
+        if (isRunning || string.IsNullOrWhiteSpace(query)) return;
+
+        var trimmed = query.Trim();
+
+        // 1. Direct AI Query
+        if (trimmed.StartsWith("?"))
+        {
+            var prompt = trimmed[1..].Trim();
+            if (string.IsNullOrWhiteSpace(prompt)) return;
+
+            isRunning = true;
+            aiResponse = null;
+            executionFeedback = null;
+
+            try
+            {
+                var res = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?> { ["query"] = prompt });
+                if (res.IsSuccess)
+                {
+                    aiResponse = res.Data?.ToString();
+                }
+                else
+                {
+                    executionFeedback = res.ErrorMessage ?? "Error al consultar Gemini.";
+                    isFeedbackSuccess = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                executionFeedback = ex.Message;
+                isFeedbackSuccess = false;
+            }
+            finally
+            {
+                isRunning = false;
+            }
+            return;
+        }
+
+        // 2. Selected Command Match
+        if (FilteredCommands.Count > 0 && selectedIndex >= 0 && selectedIndex < FilteredCommands.Count)
+        {
+            await ExecuteSelectedCommand(FilteredCommands[selectedIndex]);
+            return;
+        }
+
+        // 3. Fallback: Quick Note Capture
+        isRunning = true;
+        executionFeedback = null;
+        try
+        {
+            var res = await CommandRegistry.ExecuteAsync(CaptureNoteCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["content"] = trimmed,
+                ["source"] = "launcher"
+            });
+
+            if (res.IsSuccess)
+            {
+                executionFeedback = "Nota capturada exitosamente.";
+                isFeedbackSuccess = true;
+                query = string.Empty;
+                await Task.Delay(600);
+                await Close();
+            }
+            else
+            {
+                executionFeedback = res.ErrorMessage ?? "Error al capturar nota.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            executionFeedback = ex.Message;
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private async Task ExecuteSelectedCommand(ICommand cmd)
+    {
+        if (cmd.Id == "capture.note")
+        {
+            NavigationManager.NavigateTo("capture");
+            await Close();
+            return;
+        }
+        if (cmd.Id == "knowledge.search")
+        {
+            NavigationManager.NavigateTo("search");
+            await Close();
+            return;
+        }
+        if (cmd.Id.StartsWith("habit") || cmd.Id.StartsWith("goal") || cmd.Id.StartsWith("roadmap"))
+        {
+            NavigationManager.NavigateTo("habits-goals");
+            await Close();
+            return;
+        }
+        if (cmd.Id.StartsWith("finance"))
+        {
+            NavigationManager.NavigateTo("finance");
+            await Close();
+            return;
+        }
+        if (cmd.Id.StartsWith("gmail"))
+        {
+            NavigationManager.NavigateTo("search");
+            await Close();
+            return;
+        }
+
+        // Default: execute without params if parameterless
+        isRunning = true;
+        try
+        {
+            var res = await CommandRegistry.ExecuteAsync(cmd.Id);
+            if (res.IsSuccess)
+            {
+                executionFeedback = $"Comando '{cmd.Name}' ejecutado con éxito.";
+                isFeedbackSuccess = true;
+                await Task.Delay(600);
+                await Close();
+            }
+            else
+            {
+                executionFeedback = res.ErrorMessage ?? "Error al ejecutar el comando.";
+                isFeedbackSuccess = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            executionFeedback = ex.Message;
+            isFeedbackSuccess = false;
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    public async Task Close()
+    {
+        IsOpen = false;
+        query = string.Empty;
+        aiResponse = null;
+        executionFeedback = null;
+        await IsOpenChanged.InvokeAsync(false);
+    }
+}

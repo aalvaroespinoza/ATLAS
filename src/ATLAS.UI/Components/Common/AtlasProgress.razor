@@ -1,0 +1,43 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="space-y-1 @Class">
+    @if (ShowLabel || !string.IsNullOrWhiteSpace(Label))
+    {
+        <div class="flex items-center justify-between text-[11px] font-mono">
+            <span class="text-slate-400">@Label</span>
+            <span class="text-slate-300 font-semibold">@ClampedValue%</span>
+        </div>
+    }
+
+    <!-- Progress Track (Hairline) -->
+    <div class="w-full @GetHeightClass() rounded-full bg-white/[0.06] overflow-hidden">
+        <div 
+            class="@GetFillClasses() rounded-full transition-all duration-300 ease-out" 
+            style="width: @(ClampedValue)%; height: 100%;">
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Value { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public bool ShowLabel { get; set; }
+    [Parameter] public string Variant { get; set; } = "accent"; // accent, neutral, success
+    [Parameter] public string Size { get; set; } = "sm"; // sm (2px), md (4px)
+    [Parameter] public string? Class { get; set; }
+
+    private int ClampedValue => Math.Clamp(Value, 0, 100);
+
+    private string GetHeightClass() => Size.ToLowerInvariant() switch
+    {
+        "md" => "h-1.5",
+        _ => "h-1"
+    };
+
+    private string GetFillClasses() => Variant.ToLowerInvariant() switch
+    {
+        "neutral" => "bg-slate-300",
+        "success" => "bg-emerald-400",
+        _ => "bg-sky-400"
+    };
+}

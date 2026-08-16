@@ -1,0 +1,64 @@
+@namespace ATLAS.UI.Components.Common
+
+<div 
+    @onclick="HandleClick"
+    class="px-3.5 py-2.5 flex items-center justify-between gap-3 text-xs select-none transition-colors @(IsClickable ? "cursor-pointer" : "") @(IsSelected ? "bg-white/[0.06] text-white" : "hover:bg-white/[0.02] text-slate-200") @Class">
+    
+    <!-- Left: Prefix Slot + Main Content -->
+    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        @if (PrefixContent != null)
+        {
+            <div class="shrink-0 flex items-center">
+                @PrefixContent
+            </div>
+        }
+
+        <div class="space-y-0.5 min-w-0 flex-1">
+            <div class="font-medium truncate @(IsCompleted ? "line-through text-slate-500" : "")">
+                @Title
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <div class="text-[11px] text-slate-400 truncate">
+                    @Subtitle
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right: Meta Slot + Action Slot -->
+    <div class="flex items-center gap-3 shrink-0">
+        @if (!string.IsNullOrWhiteSpace(MetaText))
+        {
+            <span class="text-[10px] font-mono text-slate-500">
+                @MetaText
+            </span>
+        }
+        @if (SuffixContent != null)
+        {
+            @SuffixContent
+        }
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string? MetaText { get; set; }
+    [Parameter] public bool IsClickable { get; set; } = true;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public bool IsCompleted { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public RenderFragment? PrefixContent { get; set; }
+    [Parameter] public RenderFragment? SuffixContent { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    private async Task HandleClick(MouseEventArgs e)
+    {
+        if (IsClickable && OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(e);
+        }
+    }
+}

@@ -4,13 +4,12 @@
 @inject IRoadmapRepository RoadmapRepository
 @inject ICommandRegistry CommandRegistry
 
-<div class="space-y-6 max-w-5xl pb-12">
+<div class="space-y-6 max-w-4xl pb-16">
     
     <!-- Page Header & Tab Navigation -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.06] pb-4">
         <div class="space-y-1">
-            <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span>
+            <h1 class="text-base font-semibold tracking-tight text-white">
                 Hábitos, Metas & Roadmaps
             </h1>
             <p class="text-xs text-slate-400">
@@ -19,17 +18,17 @@
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="flex items-center p-1 rounded-xl bg-slate-950/60 border border-slate-800">
+        <div class="flex items-center p-1 rounded-lg bg-white/[0.03] border border-white/[0.06]">
             <button 
                 type="button"
                 @onclick="@(() => activeTab = "habits")"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer @(activeTab == "habits" ? "bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30" : "text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer @(activeTab == "habits" ? "bg-white/[0.08] text-white font-semibold" : "text-slate-400 hover:text-slate-200")">
                 Hábitos Diarios
             </button>
             <button 
                 type="button"
                 @onclick="@(() => activeTab = "roadmaps")"
-                class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer @(activeTab == "roadmaps" ? "bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30" : "text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1 rounded-md text-xs font-medium transition-all cursor-pointer @(activeTab == "roadmaps" ? "bg-white/[0.08] text-white font-semibold" : "text-slate-400 hover:text-slate-200")">
                 Metas & Roadmaps
             </button>
         </div>
@@ -38,12 +37,9 @@
     <!-- Notification / Status Banner -->
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
-        <div class="p-3.5 rounded-xl border flex items-center justify-between transition-all duration-300 @(isSuccess ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-rose-500/10 border-rose-500/30 text-rose-300")">
-            <div class="flex items-center gap-2.5 text-xs font-medium">
-                <span>@(isSuccess ? "✓" : "✕")</span>
-                <span>@statusMessage</span>
-            </div>
-            <button @onclick="() => statusMessage = null" class="text-slate-400 hover:text-slate-200 text-xs p-1">✕</button>
+        <div class="px-4 py-2.5 rounded-lg border flex items-center justify-between transition-all text-xs @(isSuccess ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-300" : "bg-rose-500/10 border-rose-500/20 text-rose-300")">
+            <span>@(isSuccess ? "✓ " : "✕ ") @statusMessage</span>
+            <button @onclick="() => statusMessage = null" class="text-slate-400 hover:text-white text-xs">✕</button>
         </div>
     }
 
@@ -52,21 +48,21 @@
     <!-- ======================================================================= -->
     @if (activeTab == "habits")
     {
-        <div class="space-y-6">
+        <div class="space-y-4">
             
             <!-- Quick New Habit Form Bar -->
-            <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl flex flex-col sm:flex-row items-center gap-3">
+            <div class="p-3.5 rounded-lg bg-white/[0.02] border border-white/[0.06] flex flex-col sm:flex-row items-center gap-2.5">
                 <input 
                     type="text" 
                     @bind="newHabitName" 
                     placeholder="Nuevo hábito (ej: Leer 20 min, Meditar, Ejercicio)..." 
-                    class="w-full px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-amber-500/50" />
+                    class="w-full px-3.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
                 
                 <button 
                     type="button"
                     @onclick="CreateHabitAsync"
                     disabled="@string.IsNullOrWhiteSpace(newHabitName)"
-                    class="w-full sm:w-auto px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-medium text-xs shadow-md transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed">
+                    class="w-full sm:w-auto px-4 py-1.5 rounded-md bg-white/[0.08] hover:bg-white/[0.14] disabled:opacity-50 text-white font-medium text-xs border border-white/[0.1] transition-all shrink-0 cursor-pointer disabled:cursor-not-allowed">
                     + Crear Hábito
                 </button>
             </div>
@@ -74,36 +70,32 @@
             <!-- Habits Checklist Grid -->
             @if (isLoading)
             {
-                <div class="p-8 text-center text-xs text-slate-500">Cargando hábitos...</div>
+                <div class="p-6 text-center text-xs font-mono text-slate-600">Cargando hábitos...</div>
             }
             else if (habits.Count == 0)
             {
-                <div class="p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-xs text-slate-500">
-                    No tenés hábitos registrados todavía. Creá el primero arriba para empezar a construir tu racha.
+                <div class="p-6 text-center rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-500">
+                    No tenés hábitos registrados todavía. Creá el primero arriba para empezar.
                 </div>
             }
             else
             {
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="divide-y divide-white/[0.04] rounded-lg bg-white/[0.02] border border-white/[0.06] overflow-hidden">
                     @foreach (var habit in habits)
                     {
                         var isDoneToday = completedHabitIds.Contains(habit.Id);
-                        <div class="p-4 rounded-2xl bg-slate-900/60 border @(isDoneToday ? "border-emerald-500/30 bg-emerald-950/10" : "border-slate-800/80") backdrop-blur-xl flex items-center justify-between gap-4 transition-all">
-                            <div class="space-y-1 min-w-0">
-                                <h3 class="text-sm font-semibold @(isDoneToday ? "text-emerald-300 line-through opacity-80" : "text-slate-200") truncate">
+                        <div class="px-4 py-3 flex items-center justify-between gap-4 hover:bg-white/[0.02] transition-colors">
+                            <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
+                                <input 
+                                    type="checkbox" 
+                                    checked="@isDoneToday"
+                                    @onchange="() => ToggleHabitTodayAsync(habit)"
+                                    class="w-3.5 h-3.5 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500/30 cursor-pointer" />
+                                <span class="text-xs @(isDoneToday ? "line-through text-slate-400" : "text-slate-200 font-medium") truncate">
                                     @habit.Name
-                                </h3>
-                                <p class="text-[11px] text-slate-400 capitalize">
-                                    Frecuencia: @habit.Frequency
-                                </p>
-                            </div>
-
-                            <button 
-                                type="button"
-                                @onclick="() => ToggleHabitTodayAsync(habit)"
-                                class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer @(isDoneToday ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" : "bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-700")">
-                                <span>@(isDoneToday ? "✓ Hecho" : "Marcar")</span>
-                            </button>
+                                </span>
+                            </label>
+                            <span class="text-[10px] font-mono text-slate-400 shrink-0">@habit.Frequency</span>
                         </div>
                     }
                 </div>
@@ -118,27 +110,24 @@
     {
         <div class="space-y-6">
             
-            <!-- Quick New Roadmap / Goal Bar -->
-            <div class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl space-y-3">
-                <div class="text-xs font-semibold uppercase tracking-wider text-sky-400 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span>Nuevo Roadmap Estratégico</span>
+            <!-- Quick New Roadmap Bar -->
+            <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-2.5">
+                <div class="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-semibold">
+                    Nuevo Roadmap Estratégico
                 </div>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     <input 
                         type="text" 
                         @bind="newRoadmapTitle" 
                         placeholder="Título del Roadmap (ej: Aprender Rust, Lanzar MVP)..." 
-                        class="sm:col-span-2 px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+                        class="sm:col-span-2 px-3.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
                     
                     <button 
                         type="button"
                         @onclick="CreateRoadmapAsync"
                         disabled="@string.IsNullOrWhiteSpace(newRoadmapTitle)"
-                        class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white font-medium text-xs shadow-md transition-all cursor-pointer disabled:cursor-not-allowed">
+                        class="px-4 py-1.5 rounded-md bg-white/[0.08] hover:bg-white/[0.14] disabled:opacity-50 text-white font-medium text-xs border border-white/[0.1] transition-all cursor-pointer disabled:cursor-not-allowed">
                         + Crear Roadmap
                     </button>
                 </div>
@@ -146,20 +135,19 @@
                 <input 
                     type="text" 
                     @bind="newRoadmapSteps" 
-                    placeholder="Hitos iniciales opcionales separados por coma (ej: Fundamentos, Proyecto Básico, Despliegue)..." 
-                    class="w-full px-3.5 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+                    placeholder="Hitos iniciales separados por coma (ej: Fundamentos, Proyecto Básico, Despliegue)..." 
+                    class="w-full px-3.5 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
             </div>
 
             <!-- Roadmaps List -->
             @if (isLoading)
             {
-                <div class="p-8 text-center text-xs text-slate-500">Cargando roadmaps y metas...</div>
+                <div class="p-6 text-center text-xs font-mono text-slate-600">Cargando roadmaps...</div>
             }
             else if (roadmaps.Count == 0)
             {
-                <div class="p-8 text-center rounded-2xl bg-slate-900/40 border border-slate-800 text-xs text-slate-500 space-y-2">
-                    <p>No tenés roadmaps registrados todavía.</p>
-                    <p class="text-slate-400">Creá un roadmap arriba para descomponer cualquier objetivo en etapas accionables.</p>
+                <div class="p-6 text-center rounded-lg bg-white/[0.02] border border-white/[0.04] text-xs text-slate-500">
+                    No tenés roadmaps registrados todavía. Creá un roadmap arriba para descomponer cualquier objetivo.
                 </div>
             }
             else
@@ -168,62 +156,60 @@
                     @foreach (var roadmap in roadmaps)
                     {
                         var isCompleted = roadmap.ProgressPercentage >= 100;
-                        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl shadow-xl space-y-4">
+                        <div class="p-4 rounded-lg bg-white/[0.02] border border-white/[0.06] space-y-3">
                             
-                            <!-- Roadmap Header & Progress Bar -->
-                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div class="space-y-1">
+                            <!-- Header & Progress -->
+                            <div class="flex items-center justify-between text-xs gap-3">
+                                <div class="space-y-0.5 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <h3 class="text-base font-bold text-white">@roadmap.Title</h3>
-                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider @(isCompleted ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30" : "bg-sky-500/15 text-sky-400 border border-sky-500/30")">
+                                        <h3 class="font-medium text-white truncate">@roadmap.Title</h3>
+                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-mono uppercase @(isCompleted ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.06] text-slate-400")">
                                             @(isCompleted ? "Completado" : "En Curso")
                                         </span>
                                     </div>
                                     @if (!string.IsNullOrWhiteSpace(roadmap.Description))
                                     {
-                                        <p class="text-xs text-slate-400">@roadmap.Description</p>
+                                        <p class="text-[11px] text-slate-400 truncate">@roadmap.Description</p>
                                     }
                                 </div>
 
-                                <div class="text-right shrink-0">
-                                    <span class="text-lg font-bold text-sky-400">@roadmap.ProgressPercentage%</span>
-                                    <span class="text-[11px] text-slate-500 block">@roadmap.Milestones.Count(m => m.Status == "completed") de @roadmap.Milestones.Count hitos</span>
+                                <div class="text-right shrink-0 font-mono text-[11px]">
+                                    <span class="text-white font-semibold">@roadmap.ProgressPercentage%</span>
+                                    <span class="text-slate-400 block text-[10px]">@roadmap.Milestones.Count(m => m.Status == "completed")/@roadmap.Milestones.Count hitos</span>
                                 </div>
                             </div>
 
-                            <!-- Progress Track -->
-                            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-sky-500 to-indigo-500 rounded-full transition-all duration-500" style="width: @(roadmap.ProgressPercentage)%"></div>
+                            <!-- Slim Hairline Progress Track -->
+                            <div class="w-full h-1 rounded-full bg-white/[0.06] overflow-hidden">
+                                <div class="h-full bg-sky-400 rounded-full transition-all duration-300" style="width: @(roadmap.ProgressPercentage)%"></div>
                             </div>
 
                             <!-- Milestones Stepper Checklist -->
-                            <div class="pt-2 space-y-2 border-t border-slate-800/60">
-                                <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Hitos y Etapas:</h4>
-                                
+                            <div class="pt-2 space-y-1.5 border-t border-white/[0.04]">
                                 @if (roadmap.Milestones.Count == 0)
                                 {
-                                    <p class="text-xs text-slate-500 italic">No hay hitos en esta ruta. Agregá el primer paso abajo.</p>
+                                    <p class="text-[11px] text-slate-500 italic">No hay hitos en esta ruta.</p>
                                 }
                                 else
                                 {
-                                    <div class="space-y-2">
+                                    <div class="divide-y divide-white/[0.03]">
                                         @foreach (var milestone in roadmap.Milestones.OrderBy(m => m.OrderIndex))
                                         {
                                             var mDone = milestone.Status.Equals("completed", StringComparison.OrdinalIgnoreCase);
-                                            <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/50 border @(mDone ? "border-emerald-500/20 bg-emerald-950/10 text-emerald-300" : "border-slate-800/60 text-slate-200") text-xs gap-3">
-                                                <label class="flex items-center gap-3 cursor-pointer select-none flex-1 min-w-0">
+                                            <div class="py-1.5 flex items-center justify-between text-xs gap-3">
+                                                <label class="flex items-center gap-2.5 cursor-pointer select-none flex-1 min-w-0">
                                                     <input 
                                                         type="checkbox" 
                                                         checked="@mDone"
                                                         @onchange="(e) => ToggleMilestoneAsync(milestone, e)"
-                                                        class="w-4 h-4 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500/30 cursor-pointer" />
-                                                    <span class="@(mDone ? "line-through opacity-70" : "font-medium") truncate">
+                                                        class="w-3.5 h-3.5 rounded text-sky-500 bg-slate-900 border-slate-700 focus:ring-sky-500/30 cursor-pointer" />
+                                                    <span class="@(mDone ? "line-through text-slate-400" : "text-slate-200") truncate">
                                                         @milestone.Title
                                                     </span>
                                                 </label>
                                                 @if (milestone.CompletedAt.HasValue)
                                                 {
-                                                    <span class="text-[10px] text-slate-500 shrink-0">@milestone.CompletedAt.Value.ToLocalTime().ToString("dd MMM")</span>
+                                                    <span class="text-[10px] font-mono text-slate-400 shrink-0">@milestone.CompletedAt.Value.ToLocalTime().ToString("dd MMM")</span>
                                                 }
                                             </div>
                                         }
@@ -231,18 +217,18 @@
                                 }
 
                                 <!-- Fast Add Milestone Row -->
-                                <div class="flex items-center gap-2 pt-2">
+                                <div class="flex items-center gap-2 pt-1.5">
                                     <input 
                                         type="text" 
                                         @bind="newMilestoneTitles[roadmap.Id]" 
-                                        placeholder="Agregar siguiente hito o etapa..." 
-                                        class="flex-1 px-3 py-1.5 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-sky-500/50" />
+                                        placeholder="Agregar siguiente hito..." 
+                                        class="flex-1 px-3 py-1 rounded-md bg-white/[0.03] border border-white/[0.06] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/20 font-sans" />
                                     
                                     <button 
                                         type="button"
                                         @onclick="() => AddMilestoneToRoadmapAsync(roadmap.Id)"
-                                        class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-sky-600 hover:text-white text-slate-300 text-xs font-medium transition-all cursor-pointer">
-                                        + Agregar Paso
+                                        class="px-2.5 py-1 rounded-md bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white text-xs transition-all cursor-pointer">
+                                        + Paso
                                     </button>
                                 </div>
 

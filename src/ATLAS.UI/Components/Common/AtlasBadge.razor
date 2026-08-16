@@ -1,0 +1,21 @@
+@namespace ATLAS.UI.Components.Common
+
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none select-none @GetVariantClasses() @Class">
+    @ChildContent
+</span>
+
+@code {
+    [Parameter] public string Variant { get; set; } = "neutral"; // neutral, accent, success, warning, danger, mono
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private string GetVariantClasses() => Variant.ToLowerInvariant() switch
+    {
+        "accent" => "bg-sky-500/10 text-sky-300 border border-sky-500/20 font-mono uppercase tracking-wide",
+        "success" => "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20",
+        "warning" => "bg-amber-500/10 text-amber-300 border border-amber-500/20",
+        "danger" => "bg-rose-500/10 text-rose-300 border border-rose-500/20",
+        "mono" => "bg-white/[0.04] text-slate-400 border border-white/[0.06] font-mono text-[9px] uppercase",
+        _ => "bg-white/[0.06] text-slate-300 border border-white/[0.08]"
+    };
+}

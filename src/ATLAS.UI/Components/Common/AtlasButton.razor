@@ -1,0 +1,52 @@
+@namespace ATLAS.UI.Components.Common
+
+<button 
+    type="@Type"
+    @onclick="HandleClick"
+    disabled="@(IsDisabled || IsLoading)"
+    class="inline-flex items-center justify-center gap-1.5 font-medium transition-all duration-150 select-none cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 @GetVariantClasses() @GetSizeClasses() @Class">
+    
+    @if (IsLoading)
+    {
+        <svg class="animate-spin w-3.5 h-3.5 shrink-0 text-current" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+        </svg>
+    }
+    
+    @ChildContent
+</button>
+
+@code {
+    [Parameter] public string Variant { get; set; } = "secondary"; // primary, secondary, ghost, danger
+    [Parameter] public string Size { get; set; } = "sm"; // sm (28px), md (32px)
+    [Parameter] public string Type { get; set; } = "button";
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private async Task HandleClick(MouseEventArgs e)
+    {
+        if (!IsDisabled && !IsLoading && OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync(e);
+        }
+    }
+
+    private string GetVariantClasses() => Variant.ToLowerInvariant() switch
+    {
+        "primary" => "bg-white text-slate-900 hover:bg-slate-200 active:bg-slate-300 font-semibold shadow-sm",
+        "secondary" => "bg-white/[0.06] hover:bg-white/[0.12] active:bg-white/[0.16] text-slate-200 hover:text-white border border-white/[0.08]",
+        "ghost" => "bg-transparent hover:bg-white/[0.05] active:bg-white/[0.08] text-slate-400 hover:text-slate-200",
+        "danger" => "bg-rose-500/10 hover:bg-rose-500/20 active:bg-rose-500/30 text-rose-300 border border-rose-500/20",
+        _ => "bg-white/[0.06] hover:bg-white/[0.12] text-slate-200 border border-white/[0.08]"
+    };
+
+    private string GetSizeClasses() => Size.ToLowerInvariant() switch
+    {
+        "md" => "h-8 px-3.5 text-xs rounded-md",
+        _ => "h-7 px-2.5 text-xs rounded-md"
+    };
+}

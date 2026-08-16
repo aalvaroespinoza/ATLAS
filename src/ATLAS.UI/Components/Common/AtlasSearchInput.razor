@@ -1,0 +1,44 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="relative flex items-center @ContainerClass">
+    <svg class="absolute left-3 w-3.5 h-3.5 text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+
+    <input 
+        type="text" 
+        value="@Value"
+        @oninput="HandleInput"
+        placeholder="@Placeholder"
+        class="w-full pl-9 pr-8 py-2 rounded-lg bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-all font-sans @Class" />
+
+    @if (!string.IsNullOrWhiteSpace(Value))
+    {
+        <button 
+            type="button" 
+            @onclick="Clear" 
+            class="absolute right-2.5 p-0.5 rounded text-slate-500 hover:text-slate-200 transition-colors text-xs">
+            ✕
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Buscar...";
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ContainerClass { get; set; }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    private async Task Clear()
+    {
+        Value = string.Empty;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

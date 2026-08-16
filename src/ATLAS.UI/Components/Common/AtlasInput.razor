@@ -1,0 +1,62 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="space-y-1 @ContainerClass">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <div class="flex items-center justify-between">
+            <label class="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                @Label
+                @if (IsRequired)
+                {
+                    <span class="text-sky-400 ml-0.5">*</span>
+                }
+            </label>
+            @if (!string.IsNullOrWhiteSpace(RightLabel))
+            {
+                <span class="text-[10px] font-mono text-slate-500">@RightLabel</span>
+            }
+        </div>
+    }
+
+    <div class="relative">
+        <input 
+            type="@Type"
+            value="@Value"
+            @oninput="HandleInput"
+            placeholder="@Placeholder"
+            disabled="@IsDisabled"
+            class="w-full px-3 py-1.5 rounded-md bg-white/[0.03] border border-white/[0.08] text-slate-100 text-xs placeholder-slate-500 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed @(IsMono ? "font-mono" : "font-sans") @(HasError ? "border-rose-500/50 focus:border-rose-500" : "") @Class" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <p class="text-[11px] text-rose-400 font-mono">@ErrorMessage</p>
+    }
+    else if (!string.IsNullOrWhiteSpace(HelperText))
+    {
+        <p class="text-[11px] text-slate-500 font-sans">@HelperText</p>
+    }
+</div>
+
+@code {
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? RightLabel { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public bool IsRequired { get; set; }
+    [Parameter] public bool IsDisabled { get; set; }
+    [Parameter] public bool IsMono { get; set; }
+    [Parameter] public bool HasError { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public string? HelperText { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? ContainerClass { get; set; }
+
+    private async Task HandleInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

@@ -6,10 +6,10 @@
     <title>ATLAS</title>
     <base href="/" />
     
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,14 +20,24 @@
                 extend: {
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace']
                     },
                     colors: {
                         atlas: {
-                            bg: '#090d16',
-                            card: 'rgba(17, 24, 39, 0.75)',
-                            cardhover: 'rgba(31, 41, 55, 0.85)',
-                            border: 'rgba(51, 65, 85, 0.5)',
-                            accent: '#38bdf8'
+                            canvas: '#0a0d14',
+                            sidebar: '#0d111a',
+                            surface: '#121722',
+                            surfaceHover: '#181f2e',
+                            elevated: '#151b27',
+                            border: 'rgba(255, 255, 255, 0.06)',
+                            borderSubtle: 'rgba(255, 255, 255, 0.12)',
+                            borderFocus: 'rgba(56, 189, 248, 0.50)',
+                            accent: '#38bdf8',
+                            accentSubtle: 'rgba(56, 189, 248, 0.12)',
+                            success: '#22c55e',
+                            warning: '#eab308',
+                            danger: '#ef4444',
+                            muted: '#64748b'
                         }
                     }
                 }
@@ -38,11 +48,11 @@
     <link rel="icon" href="data:,">
 </head>
 
-<body class="bg-[#090d16] text-slate-100 font-sans antialiased select-none overflow-hidden">
+<body class="bg-[#0a0d14] text-slate-100 font-sans antialiased select-none overflow-hidden">
 
     <div id="app" class="h-screen w-screen flex">
-        <div class="flex items-center justify-center w-full h-full text-slate-400 text-sm">
-            Iniciando ATLAS...
+        <div class="flex items-center justify-center w-full h-full text-slate-500 text-xs font-mono">
+            ATLAS OS
         </div>
     </div>
 

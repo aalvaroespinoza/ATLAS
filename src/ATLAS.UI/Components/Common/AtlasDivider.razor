@@ -1,0 +1,15 @@
+@namespace ATLAS.UI.Components.Common
+
+@if (IsVertical)
+{
+    <div class="inline-block w-px h-full bg-white/[0.06] shrink-0 @Class"></div>
+}
+else
+{
+    <div class="w-full h-px bg-white/[0.06] shrink-0 @Class"></div>
+}
+
+@code {
+    [Parameter] public bool IsVertical { get; set; }
+    [Parameter] public string? Class { get; set; }
+}
