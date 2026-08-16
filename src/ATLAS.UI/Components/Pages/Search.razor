@@ -65,10 +65,9 @@
                 }
                 else if (TotalResultCount == 0)
                 {
-                    <div class="py-16 px-4 text-center space-y-1.5 select-none">
-                        <p class="text-xs font-semibold text-slate-300">Sin coincidencias para "@searchQuery"</p>
-                        <p class="text-[11px] text-slate-500 font-mono">Probá con otra palabra clave o capturá una nueva nota.</p>
-                    </div>
+                    <AtlasEmptyState 
+                        Title="@(!string.IsNullOrWhiteSpace(searchQuery) ? $"Sin coincidencias para \"{searchQuery}\"" : "Sin resultados")" 
+                        Description="Probá con otra palabra clave o capturá una nueva nota con Ctrl+N." />
                 }
                 else
                 {

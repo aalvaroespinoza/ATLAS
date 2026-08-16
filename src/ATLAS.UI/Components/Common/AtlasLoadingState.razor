@@ -1,12 +1,12 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="py-8 flex flex-col items-center justify-center gap-2.5 text-center select-none @Class">
-    <svg class="animate-spin w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-        <path class="opacity-80" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-    </svg>
+<div class="py-10 px-4 flex flex-col items-center justify-center gap-3 text-center select-none animate-atlas-in @Class">
+    <div class="relative flex items-center justify-center">
+        <div class="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-400 animate-spin"></div>
+        <div class="w-2 h-2 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/80 absolute"></div>
+    </div>
     
-    <span class="text-xs font-mono text-slate-400">@Message</span>
+    <span class="text-xs font-mono text-slate-400 tracking-wide">@Message</span>
 </div>
 
 @code {
