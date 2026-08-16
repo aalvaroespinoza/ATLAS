@@ -25,6 +25,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseAuthService, ATLAS.Core.Integrations.Supabase.SupabaseAuthService>();
         services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseSyncService, ATLAS.Core.Integrations.Supabase.SupabaseSyncService>();
 
+        // Context Services
+        services.AddTransient<ATLAS.Core.Context.IHomeContextService, ATLAS.Core.Context.HomeContextService>();
+
         // Commands
         services.AddTransient<CaptureNoteCommand>();
         services.AddTransient<KnowledgeSearchCommand>();

@@ -1,353 +1,485 @@
 @page "/"
-@inject IHabitRepository HabitRepository
-@inject IGoalRepository GoalRepository
-@inject INoteRepository NoteRepository
-@inject ITransactionRepository TransactionRepository
-@inject IRoadmapRepository RoadmapRepository
+@using System.Globalization
+@using ATLAS.Core.Commands
+@using ATLAS.Core.Context
+@using ATLAS.UI.Components.Common
+@inject IHomeContextService HomeContextService
 @inject ICommandRegistry CommandRegistry
 @inject NavigationManager NavigationManager
 
-<div class="space-y-8 max-w-3xl pb-16 animate-atlas-in">
-    
-    <!-- 1. NOW: Header con Saludo Personal y Fecha -->
-    <div class="space-y-1 border-b border-white/[0.08] pb-4">
-        <div class="flex items-center justify-between">
-            <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                <span>@greeting, Álvaro</span>
+<div class="space-y-6 max-w-6xl mx-auto pb-24 animate-atlas-in">
+
+    <!-- 1. TOP HERO HEADER -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
+        <div class="space-y-1 select-none">
+            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                <span>@GetGreeting(), Álvaro!</span>
+                <span class="text-lg">@GetGreetingEmoji()</span>
             </h1>
-            <span class="text-[11px] font-mono text-slate-400 capitalize">
-                @DateTime.Now.ToString("dddd, dd 'de' MMMM", new CultureInfo("es-AR"))
-            </span>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span>Esto es lo que importa hoy.</span>
+                <span class="text-slate-600">•</span>
+                <span class="font-mono text-[11px] text-slate-400 capitalize">
+                    @DateTime.Now.ToString("dddd, dd 'de' MMMM", new CultureInfo("es-AR"))
+                </span>
+            </div>
         </div>
-        <p class="text-xs text-slate-400">
-            Superficie de enfoque diario. Escribí directamente abajo o ejecutá comandos.
-        </p>
-    </div>
+
+        <!-- Header Controls (Search + Quick Actions) -->
+        <div class="flex items-center gap-3">
+            <div class="w-72 hidden lg:block">
+                <AtlasSearch 
+                    @bind-Value="searchQuery" 
+                    OnSearch="HandleSearchSubmit" 
+                    Placeholder="Buscar en ATLAS o comando..." />
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                <AtlasTooltip Text="Asistente IA" Shortcut="?" Position="bottom">
+                    <AtlasIconButton 
+                        Variant="accent" 
+                        Shape="circle" 
+                        Size="md" 
+                        Glow="purple"
+                        OnClick="@(() => TriggerAiTool("pregunta"))">
+                        <span class="text-xs">✨</span>
+                    </AtlasIconButton>
+                </AtlasTooltip>
+
+                <AtlasTooltip Text="Metas & Hábitos" Shortcut="Alt+4" Position="bottom">
+                    <AtlasIconButton 
+                        Variant="secondary" 
+                        Shape="circle" 
+                        Size="md"
+                        OnClick="@(() => NavigationManager.NavigateTo("habits-goals"))">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </AtlasIconButton>
+                </AtlasTooltip>
+
+                <AtlasTooltip Text="Álvaro — En línea" Position="bottom">
+                    <AtlasAvatar Name="Álvaro Espinoza" IsOnline="true" Size="md" Class="ml-1" />
+                </AtlasTooltip>
+            </div>
+        </div>
+    </header>
 
     <!-- Feedback Banner -->
     @if (!string.IsNullOrWhiteSpace(actionFeedback))
     {
-        <div class="px-3.5 py-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs flex items-center justify-between text-indigo-200 animate-atlas-in">
+        <div class="px-4 py-2.5 rounded-xl bg-violet-500/15 border border-violet-500/30 text-xs flex items-center justify-between text-violet-200 animate-atlas-in shadow-glow-purple">
             <span class="flex items-center gap-2">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                <span class="w-2 h-2 rounded-full bg-violet-400"></span>
                 <span>@actionFeedback</span>
             </span>
-            <button @onclick="() => actionFeedback = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+            <button type="button" @onclick="() => actionFeedback = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
         </div>
     }
 
-    <!-- 2. QUICK ACTIONS / INPUT BAR HERO -->
-    <div class="space-y-2">
-        <AtlasCommandInput 
-            @bind-Value="quickInputQuery"
-            OnKeyDown="HandleQuickInputKeyDown"
-            IsLoading="isExecutingQuickInput"
-            Placeholder="¿Qué tenés en mente o qué querés hacer?... (Escribí texto, '?' para IA o '/expense')" />
-
-        <!-- AI Inline Answer Box (if user asked a '?' question from home) -->
-        @if (!string.IsNullOrWhiteSpace(aiAnswer))
-        {
-            <div class="atlas-elevated rounded-2xl p-4 space-y-2 animate-atlas-in">
-                <div class="flex items-center justify-between">
-                    <span class="text-[10.5px] font-mono uppercase tracking-wider text-indigo-400 font-semibold flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                        <span>Respuesta ATLAS AI:</span>
-                    </span>
-                    <button @onclick="() => aiAnswer = null" class="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+    <!-- Inline AI Response Container -->
+    @if (!string.IsNullOrWhiteSpace(aiAnswer))
+    {
+        <div class="atlas-panel-ai rounded-2xl p-5 space-y-3 animate-atlas-in shadow-floating">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-[10px] font-bold text-white shadow-glow-purple">
+                        AI
+                    </div>
+                    <span class="text-xs font-semibold text-white">Respuesta de ATLAS Intelligence</span>
                 </div>
-                <div class="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap font-sans">
-                    @aiAnswer
-                </div>
+                <button type="button" @onclick="() => aiAnswer = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
             </div>
-        }
-    </div>
+            <div class="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap font-sans pl-8">
+                @aiAnswer
+            </div>
+        </div>
+    }
 
     @if (isLoading)
     {
-        <AtlasLoadingState Message="Cargando tu día en ATLAS..." />
+        <AtlasLoadingState Message="Cargando tu contexto personal..." />
     }
-    else
+    else if (contextData != null)
     {
-        <!-- 3. NEXT / ATENCIÓN (Hábitos pendientes de hoy) -->
-        @if (pendingHabits.Count > 0)
-        {
-            <section class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <AtlasSectionHeader 
-                        Title="Atención de Hoy" 
-                        Count="@pendingHabits.Count" />
-                    
-                    <button 
-                        type="button" 
-                        @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-                        class="text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors">
-                        Ver todos →
-                    </button>
+        <!-- 2. TOP METRICS ROW (3 Cards with Real Data & Sparklines) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            <!-- Card 1: Racha de hábitos -->
+            <AtlasSurface Elevation="base" Glow="orange" Class="p-5 flex flex-col justify-between select-none">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🔥</span>
+                        <span class="font-medium text-slate-200">Racha de hábitos</span>
+                    </div>
                 </div>
+                
+                <div class="flex items-baseline justify-between mt-3">
+                    <div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-3xl font-extrabold text-white tracking-tight">@contextData.Metrics.MaxHabitStreak</span>
+                            <span class="text-xs font-medium text-slate-400">días</span>
+                        </div>
+                        <p class="text-[11px] text-orange-400 font-medium mt-0.5 truncate max-w-[140px]">
+                            @(contextData.Metrics.MaxHabitStreak > 0 ? (string.IsNullOrEmpty(contextData.Metrics.MaxStreakHabitName) ? "¡Vamos así!" : contextData.Metrics.MaxStreakHabitName) : "Iniciá una racha hoy")
+                        </p>
+                    </div>
 
-                <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden">
-                    @foreach (var habit in pendingHabits.Take(4))
-                    {
-                        <AtlasListItem 
-                            Title="@habit.Name" 
-                            Subtitle="@($"Frecuencia: {habit.Frequency}")" 
-                            MetaText="HOY">
-                            <PrefixContent>
-                                <input 
-                                    type="checkbox" 
-                                    @onchange="() => CompleteHabitAsync(habit)"
-                                    class="w-4 h-4 rounded text-indigo-500 bg-slate-900 border-slate-700 focus:ring-indigo-500/30 cursor-pointer" />
-                            </PrefixContent>
-                            <SuffixContent>
-                                <AtlasBadge Variant="accent">Pendiente</AtlasBadge>
-                            </SuffixContent>
-                        </AtlasListItem>
-                    }
+                    <!-- Sparkline Trend SVG -->
+                    <div class="w-24 h-9 flex items-center">
+                        <svg class="w-full h-full text-orange-400 overflow-visible" viewBox="0 0 100 30" fill="none">
+                            <path d="@GenerateSparklinePath(contextData.Metrics.HabitStreakTrend, 100, 30)" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="96" cy="@GetSparklineLastY(contextData.Metrics.HabitStreakTrend, 30)" r="3.5" fill="currentColor" class="animate-pulse" />
+                        </svg>
+                    </div>
                 </div>
-            </section>
-        }
-        else if (allHabitsCount > 0)
-        {
-            <!-- Tranquil 1-line State when all habits are completed -->
-            <div class="px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 flex items-center justify-between">
-                <span class="flex items-center gap-2">
-                    <span>✓</span>
-                    <span>Todo al día por hoy. Excelente constancia en tus hábitos (@allHabitsCount/@allHabitsCount).</span>
-                </span>
-                <button 
-                    type="button" 
-                    @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-                    class="text-[11px] font-mono text-emerald-400 hover:underline">
-                    Ver Hábitos →
-                </button>
-            </div>
-        }
+            </AtlasSurface>
 
-        <!-- 4. IN PROGRESS: SIGUIENTE HITO ACTIVO EN ROADMAP O META -->
-        @if (activeRoadmaps.Count > 0 || activeGoals.Count > 0)
-        {
-            <section class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <AtlasSectionHeader Title="En Progreso — Hitos Activos" />
-                    
-                    <button 
-                        type="button" 
-                        @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-                        class="text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors">
-                        Metas & Roadmaps →
-                    </button>
+            <!-- Card 2: Enfoque de hoy -->
+            <AtlasSurface Elevation="base" Glow="emerald" Class="p-5 flex flex-col justify-between select-none">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🎯</span>
+                        <span class="font-medium text-slate-200">Enfoque de hoy</span>
+                    </div>
                 </div>
+                
+                <div class="flex items-baseline justify-between mt-3">
+                    <div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-3xl font-extrabold text-white tracking-tight">@contextData.Metrics.FocusPercentage%</span>
+                            <span class="text-xs font-medium text-slate-400">de foco</span>
+                        </div>
+                        <p class="text-[11px] text-emerald-400 font-medium mt-0.5">
+                            @contextData.Metrics.CompletedHabitsToday de @contextData.Metrics.TotalHabitsCount hábitos listos
+                        </p>
+                    </div>
 
-                <div class="space-y-2.5">
-                    @foreach (var roadmap in activeRoadmaps)
-                    {
-                        var nextMilestone = roadmap.Milestones?.FirstOrDefault(m => m.Status == "pending");
-                        
-                        <div class="atlas-surface rounded-2xl p-4 space-y-3">
-                            <div class="flex items-center justify-between text-xs">
-                                <div class="flex items-center gap-2 min-w-0">
-                                    <AtlasBadge Variant="accent">Roadmap</AtlasBadge>
-                                    <span class="font-semibold text-slate-200 truncate">@roadmap.Title</span>
-                                </div>
-                                <span class="text-[11px] font-mono text-indigo-300 font-semibold">@roadmap.ProgressPercentage%</span>
-                            </div>
+                    <!-- Curve Focus SVG -->
+                    <div class="w-24 h-9 flex items-center">
+                        <svg class="w-full h-full text-emerald-400 overflow-visible" viewBox="0 0 100 30" fill="none">
+                            <path d="@GenerateSparklinePath(contextData.Metrics.FocusTrend, 100, 30)" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <circle cx="96" cy="@GetSparklineLastY(contextData.Metrics.FocusTrend, 30)" r="3.5" fill="currentColor" class="animate-pulse" />
+                        </svg>
+                    </div>
+                </div>
+            </AtlasSurface>
 
-                            @if (nextMilestone != null)
+            <!-- Card 3: Balance del mes -->
+            <AtlasSurface Elevation="base" Glow="cyan" Class="p-5 flex flex-col justify-between select-none">
+                <div class="flex items-center justify-between text-xs text-slate-400">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">💳</span>
+                        <span class="font-medium text-slate-200">Balance del mes</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-baseline justify-between mt-3">
+                    <div>
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-2xl font-extrabold text-white tracking-tight font-mono">
+                                $@contextData.Metrics.NetBalanceThisMonth.ToString("N0", new CultureInfo("es-AR"))
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-cyan-400 font-medium mt-0.5">
+                            @contextData.Metrics.MonthlyTransactionCount movimientos
+                        </p>
+                    </div>
+
+                    <!-- Mini Bars SVG -->
+                    <div class="w-24 h-8 flex items-end gap-1.5 justify-end">
+                        @for (int i = 0; i < 6; i++)
+                        {
+                            var heightPct = GetBarHeightPct(contextData.Metrics.MonthlyExpenseTrend, i);
+                            <div class="w-2 rounded-t bg-cyan-400/80 transition-all duration-300" style="height: @(Math.Max(15, heightPct))%;"></div>
+                        }
+                    </div>
+                </div>
+            </AtlasSurface>
+
+        </div>
+
+        <!-- 3. MAIN 3-COLUMN STRUCTURED GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            
+            <!-- COLUMN 1: Agenda de hoy + Hábitos -->
+            <div class="space-y-5">
+                
+                <!-- Agenda de hoy -->
+                <AtlasPanel Title="Agenda de hoy" ActionText="Ver calendario" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
+                    <Icon>
+                        <span class="text-sm">📅</span>
+                    </Icon>
+                    <ChildContent>
+                        <AtlasList IsEmpty="@(contextData.AgendaItems.Count == 0)" EmptyTitle="Todo al día" EmptyDescription="No tenés acciones ni hábitos pendientes para hoy.">
+                            @foreach (var item in contextData.AgendaItems.Take(4))
                             {
-                                <div class="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-between gap-3 text-xs">
-                                    <label class="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0">
-                                        <input 
-                                            type="checkbox" 
-                                            @onchange="() => CompleteMilestoneAsync(roadmap.Id, nextMilestone.Id)"
-                                            class="w-3.5 h-3.5 rounded text-indigo-500 bg-slate-900 border-slate-700 cursor-pointer" />
-                                        <span class="text-slate-300 font-medium truncate">
-                                            Siguiente: @nextMilestone.Title
-                                        </span>
-                                    </label>
-                                    <span class="text-[10px] font-mono text-slate-500">Paso @(nextMilestone.OrderIndex + 1)</span>
-                                </div>
+                                <AtlasListItem 
+                                    Title="@item.Title" 
+                                    Subtitle="@item.Subtitle" 
+                                    MetaText="@item.Meta">
+                                    <PrefixContent>
+                                        <button 
+                                            type="button" 
+                                            @onclick="() => CompleteAgendaItemAsync(item)"
+                                            class="w-4 h-4 rounded-full border border-slate-600 hover:border-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-emerald-400 text-[10px]"
+                                            title="Marcar como completado">
+                                            ✓
+                                        </button>
+                                    </PrefixContent>
+                                </AtlasListItem>
+                            }
+                        </AtlasList>
+                    </ChildContent>
+                </AtlasPanel>
+
+                <!-- Badges de Hábitos -->
+                <AtlasPanel Title="Hábitos" ActionText="Ver todos" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
+                    <Icon>
+                        <span class="text-sm">🎯</span>
+                    </Icon>
+                    <ChildContent>
+                        <div class="flex items-center gap-3 overflow-x-auto py-1.5 scrollbar-none">
+                            @foreach (var habit in contextData.Habits.Take(4))
+                            {
+                                <AtlasHabitBadge 
+                                    Name="@habit.Name" 
+                                    StreakDays="@habit.StreakDays" 
+                                    IsCompleted="@habit.IsCompletedToday" 
+                                    IconType="@habit.IconType" 
+                                    ColorVariant="@habit.ColorVariant"
+                                    OnClick="() => CompleteHabitBadgeAsync(habit)" />
                             }
 
-                            <!-- Hairline Progress Bar -->
-                            <AtlasProgress Value="@roadmap.ProgressPercentage" Variant="accent" />
-                        </div>
-                    }
-
-                    @foreach (var goal in activeGoals)
-                    {
-                        <div class="atlas-surface rounded-2xl p-3.5 space-y-2">
-                            <div class="flex items-center justify-between text-xs">
-                                <span class="font-medium text-slate-200 truncate">@goal.Title</span>
-                                <span class="text-[11px] font-mono text-slate-400 font-semibold">@goal.Progress%</span>
-                            </div>
-                            <AtlasProgress Value="@goal.Progress" Variant="neutral" />
-                        </div>
-                    }
-                </div>
-            </section>
-        }
-
-        <!-- 5. RECENT: TIMELINE UNIFICADO DE ACTIVIDAD (Últimas 48h) -->
-        @if (unifiedFeed.Count > 0)
-        {
-            <section class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <AtlasSectionHeader Title="Actividad Reciente" />
-                    
-                    <button 
-                        type="button" 
-                        @onclick="@(() => NavigationManager.NavigateTo("search"))"
-                        class="text-[11px] font-mono text-slate-400 hover:text-indigo-300 transition-colors">
-                        Explorar archivo →
-                    </button>
-                </div>
-
-                <div class="atlas-surface rounded-2xl divide-y divide-white/[0.04] overflow-hidden text-xs">
-                    @foreach (var item in unifiedFeed.Take(5))
-                    {
-                        <div 
-                            @onclick="() => NavigateToItem(item)"
-                            class="px-4 py-2.5 flex items-center justify-between hover:bg-white/[0.03] cursor-pointer transition-colors gap-3">
-                            
-                            <div class="flex items-center gap-2.5 min-w-0">
-                                <AtlasBadge Variant="@item.BadgeVariant">@item.TypeLabel</AtlasBadge>
-                                <span class="text-slate-200 font-medium truncate">
-                                    @item.Title
-                                </span>
-                            </div>
-
-                            <div class="flex items-center gap-3 shrink-0 font-mono text-[10.5px]">
-                                @if (!string.IsNullOrWhiteSpace(item.AmountText))
-                                {
-                                    <span class="@item.AmountClass font-semibold">@item.AmountText</span>
-                                }
-                                <span class="text-slate-500">@FormatRelative(item.Timestamp)</span>
+                            <!-- Botón circular punteado + Agregar hábito -->
+                            <div class="flex flex-col items-center gap-1.5 select-none shrink-0">
+                                <button 
+                                    type="button" 
+                                    @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
+                                    class="w-13 h-13 rounded-full border-2 border-dashed border-white/[0.18] hover:border-violet-400/60 hover:bg-white/[0.04] active:scale-95 transition-all flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                                    title="Agregar nuevo hábito">
+                                    <span class="text-lg font-light">+</span>
+                                </button>
+                                <span class="text-[11px] font-medium text-slate-400">Agregar</span>
                             </div>
                         </div>
-                    }
-                </div>
-            </section>
-        }
+                    </ChildContent>
+                </AtlasPanel>
+
+            </div>
+
+            <!-- COLUMN 2: En progreso + Actividad reciente -->
+            <div class="space-y-5">
+                
+                <!-- En progreso (Metas & Roadmaps) -->
+                <AtlasPanel Title="En progreso" ActionText="Ver todo" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
+                    <Icon>
+                        <span class="text-sm">🚀</span>
+                    </Icon>
+                    <ChildContent>
+                        <AtlasList IsEmpty="@(contextData.Roadmaps.Count == 0)" EmptyTitle="Sin roadmaps activos" EmptyDescription="Creá un roadmap para rastrear hitos hacia tus metas.">
+                            @foreach (var rm in contextData.Roadmaps.Take(3))
+                            {
+                                <div class="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] space-y-2 select-none">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <div class="w-6 h-6 rounded-lg bg-white/[0.06] flex items-center justify-center text-xs shrink-0">
+                                                @(rm.Color == "indigo" ? "🛡️" : rm.Color == "cyan" ? "🇬🇧" : "⚡")
+                                            </div>
+                                            <span class="text-xs font-semibold text-white truncate">@rm.Title</span>
+                                        </div>
+                                        <span class="text-xs font-mono font-bold text-slate-300">@rm.ProgressPercentage%</span>
+                                    </div>
+                                    <AtlasProgress Value="@rm.ProgressPercentage" Color="@rm.Color" Height="sm" />
+                                </div>
+                            }
+                        </AtlasList>
+                    </ChildContent>
+                </AtlasPanel>
+
+                <!-- Actividad reciente -->
+                <AtlasPanel Title="Actividad reciente" ActionText="Ver todos" OnAction="@(() => NavigationManager.NavigateTo("capture"))">
+                    <Icon>
+                        <span class="text-sm">⚡</span>
+                    </Icon>
+                    <ChildContent>
+                        <AtlasList IsEmpty="@(contextData.RecentActivity.Count == 0)" EmptyTitle="Sin actividad registrada" EmptyDescription="Tus capturas, hábitos y gastos aparecerán acá.">
+                            @foreach (var act in contextData.RecentActivity.Take(4))
+                            {
+                                <AtlasListItem 
+                                    Title="@act.Title" 
+                                    Subtitle="@act.Subtitle" 
+                                    MetaText="@act.RelativeTime">
+                                    <PrefixContent>
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center text-xs @GetActivityIconClass(act.ColorVariant)">
+                                            @act.Icon
+                                        </div>
+                                    </PrefixContent>
+                                </AtlasListItem>
+                            }
+                        </AtlasList>
+                    </ChildContent>
+                </AtlasPanel>
+
+            </div>
+
+            <!-- COLUMN 3: AI Toolbox + Integraciones activas -->
+            <div class="space-y-5">
+                
+                <!-- AI Toolbox (Orbe 3D) -->
+                <AtlasPanel Title="AI Toolbox" Variant="ai">
+                    <Icon>
+                        <span class="text-sm">✨</span>
+                    </Icon>
+                    <ChildContent>
+                        <div class="flex items-center justify-between gap-3 pb-1">
+                            <div class="space-y-0.5">
+                                <span class="text-xs font-semibold text-white">Haz más con inteligencia.</span>
+                                <p class="text-[11px] text-slate-300">Asistencia transversal con Gemini.</p>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-violet-600 via-purple-500 to-cyan-400 p-0.5 shadow-glow-purple animate-atlas-orb flex items-center justify-center shrink-0">
+                                <div class="w-full h-full rounded-full bg-[#0e101f] flex items-center justify-center text-white text-xs font-mono font-bold">
+                                    ✦
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4 Grid Tool Buttons -->
+                        <div class="grid grid-cols-2 gap-2 pt-2">
+                            <button 
+                                type="button" 
+                                @onclick="@(() => TriggerAiTool("resumen"))"
+                                class="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] active:scale-95 border border-white/[0.08] text-left transition-all cursor-pointer group atlas-clickable">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs text-violet-300">📄</span>
+                                    <span class="text-xs font-semibold text-slate-100 group-hover:text-white">Resumen</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block truncate">De textos largos</span>
+                            </button>
+
+                            <button 
+                                type="button" 
+                                @onclick="@(() => TriggerAiTool("explicar"))"
+                                class="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] active:scale-95 border border-white/[0.08] text-left transition-all cursor-pointer group atlas-clickable">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs text-cyan-300">🧠</span>
+                                    <span class="text-xs font-semibold text-slate-100 group-hover:text-white">Explicar</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block truncate">Conceptos clave</span>
+                            </button>
+
+                            <button 
+                                type="button" 
+                                @onclick="@(() => TriggerAiTool("reescribir"))"
+                                class="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] active:scale-95 border border-white/[0.08] text-left transition-all cursor-pointer group atlas-clickable">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs text-emerald-300">✏️</span>
+                                    <span class="text-xs font-semibold text-slate-100 group-hover:text-white">Reescribir</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block truncate">Mejorar redacción</span>
+                            </button>
+
+                            <button 
+                                type="button" 
+                                @onclick="@(() => TriggerAiTool("traducir"))"
+                                class="p-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.10] active:scale-95 border border-white/[0.08] text-left transition-all cursor-pointer group atlas-clickable">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs text-orange-300">🌐</span>
+                                    <span class="text-xs font-semibold text-slate-100 group-hover:text-white">Traducir</span>
+                                </div>
+                                <span class="text-[10px] text-slate-400 block truncate">Cualquier idioma</span>
+                            </button>
+                        </div>
+
+                        <!-- Full Width Action: Preguntar a ATLAS -->
+                        <button 
+                            type="button" 
+                            @onclick="@(() => TriggerAiTool("pregunta"))"
+                            class="w-full mt-2 p-2.5 rounded-xl bg-violet-500/15 hover:bg-violet-500/25 active:scale-[0.98] border border-violet-500/30 text-left transition-all cursor-pointer flex items-center justify-between group atlas-clickable">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-violet-300">💬</span>
+                                <span class="text-xs font-semibold text-violet-200 group-hover:text-white">Preguntar a ATLAS</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-violet-300 opacity-75">Obtén respuestas →</span>
+                        </button>
+                    </ChildContent>
+                </AtlasPanel>
+
+                <!-- Integraciones activas -->
+                <AtlasPanel Title="Integraciones activas" ActionText="Ver todas" OnAction="@(() => NavigationManager.NavigateTo("settings"))">
+                    <Icon>
+                        <span class="text-sm">📦</span>
+                    </Icon>
+                    <ChildContent>
+                        <div class="flex items-center gap-2.5 py-1">
+                            <!-- Telegram -->
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextData.Integrations.IsTelegramConfigured ? "bg-[#229ED9]/20 border border-[#229ED9]/50 text-[#229ED9]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Telegram Bot">
+                                <span class="text-xs font-bold">✈️</span>
+                            </div>
+
+                            <!-- Gmail -->
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextData.Integrations.IsGmailConfigured ? "bg-[#EA4335]/20 border border-[#EA4335]/50 text-[#EA4335]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Gmail OAuth">
+                                <span class="text-xs font-bold">✉️</span>
+                            </div>
+
+                            <!-- WhatsApp -->
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.05] border border-white/[0.08] text-slate-500 transition-all cursor-pointer" title="WhatsApp (Próximamente)">
+                                <span class="text-xs font-bold">💬</span>
+                            </div>
+
+                            <!-- Mercado Pago -->
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextData.Integrations.IsMercadoPagoConfigured ? "bg-[#009EE3]/20 border border-[#009EE3]/50 text-[#009EE3]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Mercado Pago Sync">
+                                <span class="text-xs font-bold">💳</span>
+                            </div>
+
+                            <!-- Add Button -->
+                            <button 
+                                type="button" 
+                                @onclick="@(() => NavigationManager.NavigateTo("settings"))"
+                                class="w-9 h-9 rounded-full border border-dashed border-white/[0.20] hover:border-violet-400/60 hover:bg-white/[0.05] flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer"
+                                title="Configurar integraciones">
+                                <span class="text-sm font-light">+</span>
+                            </button>
+                        </div>
+                    </ChildContent>
+                </AtlasPanel>
+
+            </div>
+
+        </div>
     }
+
+    <!-- 4. BOTTOM FLOATING PROMPT HERO -->
+    <div class="pt-4">
+        <AtlasCommandInput 
+            @bind-Value="quickPromptText" 
+            Placeholder="Pregúntale algo a ATLAS... (o escribí /expense, /note)" 
+            IsExecuting="isExecutingPrompt"
+            OnExecute="HandlePromptExecute" />
+    </div>
 
 </div>
 
 @code {
+    private HomeContextData? contextData;
     private bool isLoading = true;
-    private string greeting = "Hola";
+    private string searchQuery = string.Empty;
+    private string quickPromptText = string.Empty;
+    private bool isExecutingPrompt;
     private string? actionFeedback;
-
-    // Quick Input State
-    private string? quickInputQuery;
-    private bool isExecutingQuickInput;
     private string? aiAnswer;
-
-    // Habits State
-    private List<Habit> pendingHabits = [];
-    private int allHabitsCount;
-
-    // Goals & Roadmaps State
-    private List<Roadmap> activeRoadmaps = [];
-    private List<Goal> activeGoals = [];
-
-    // Unified Activity Feed Item Model
-    private record FeedItem(
-        string TypeLabel, 
-        string BadgeVariant, 
-        string Title, 
-        DateTimeOffset Timestamp, 
-        string? AmountText = null, 
-        string? AmountClass = null, 
-        string TargetUrl = "search"
-    );
-
-    private List<FeedItem> unifiedFeed = [];
 
     protected override async Task OnInitializedAsync()
     {
-        UpdateGreeting();
-        await LoadHomeDataAsync();
+        await ReloadContextAsync();
     }
 
-    private void UpdateGreeting()
-    {
-        var hour = DateTime.Now.Hour;
-        greeting = hour switch
-        {
-            < 12 => "Buenos días",
-            < 20 => "Buenas tardes",
-            _ => "Buenas noches"
-        };
-    }
-
-    private async Task LoadHomeDataAsync()
+    private async Task ReloadContextAsync()
     {
         isLoading = true;
-
         try
         {
-            // Concurrent parallel fetching across all independent repositories
-            var habitsTask = HabitRepository.GetAllAsync();
-            var todayEventsTask = HabitRepository.GetEventsAsync(since: DateTimeOffset.UtcNow.Date);
-            var roadmapsTask = RoadmapRepository.GetAllAsync(status: "active");
-            var goalsTask = GoalRepository.GetAllAsync(status: "active");
-            var notesTask = NoteRepository.GetRecentAsync(5);
-            var txsTask = TransactionRepository.GetRecentAsync(3);
-
-            await Task.WhenAll(habitsTask, todayEventsTask, roadmapsTask, goalsTask, notesTask, txsTask);
-
-            // 1. Habits Data
-            var allHabits = (await habitsTask).ToList();
-            allHabitsCount = allHabits.Count;
-            var todayEvents = await todayEventsTask;
-            var completedIds = todayEvents.Select(e => e.HabitId).ToHashSet();
-            pendingHabits = allHabits.Where(h => !completedIds.Contains(h.Id)).ToList();
-
-            // 2. Roadmaps & Goals
-            var roadmaps = (await roadmapsTask).ToList();
-            activeRoadmaps = roadmaps.Where(r => r.ProgressPercentage < 100).Take(2).ToList();
-
-            var goals = (await goalsTask).ToList();
-            // If roadmaps exist, show fewer standalone goals to avoid clutter
-            activeGoals = goals.Where(g => g.Progress < 100).Take(activeRoadmaps.Count > 0 ? 1 : 2).ToList();
-
-            // 3. Unified Activity Feed (Notes + Transactions)
-            var feed = new List<FeedItem>();
-
-            var notes = await notesTask;
-            foreach (var note in notes)
-            {
-                var displayTitle = !string.IsNullOrWhiteSpace(note.Title) 
-                    ? note.Title 
-                    : (note.Content.Length > 45 ? note.Content[..45] + "..." : note.Content);
-
-                feed.Add(new FeedItem(
-                    TypeLabel: "Nota",
-                    BadgeVariant: "accent",
-                    Title: displayTitle,
-                    Timestamp: note.CreatedAt,
-                    TargetUrl: "search"
-                ));
-            }
-
-            var txs = await txsTask;
-            foreach (var tx in txs)
-            {
-                var isIncome = tx.Tipo == "income";
-                var amountStr = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))}";
-
-                feed.Add(new FeedItem(
-                    TypeLabel: "Finanza",
-                    BadgeVariant: isIncome ? "success" : "neutral",
-                    Title: tx.Descripcion,
-                    Timestamp: tx.Fecha,
-                    AmountText: amountStr,
-                    AmountClass: isIncome ? "text-emerald-400" : "text-slate-300",
-                    TargetUrl: "finance"
-                ));
-            }
-
-            unifiedFeed = feed.OrderByDescending(f => f.Timestamp).ToList();
+            contextData = await HomeContextService.LoadHomeContextAsync();
         }
         catch (Exception ex)
         {
@@ -359,150 +491,179 @@
         }
     }
 
-    private async Task HandleQuickInputKeyDown(KeyboardEventArgs e)
+    private string GetGreeting()
     {
-        if (e.Key != "Enter" || isExecutingQuickInput || string.IsNullOrWhiteSpace(quickInputQuery)) return;
+        int hour = DateTime.Now.Hour;
+        if (hour < 12) return "¡Buenos días";
+        if (hour < 20) return "¡Buenas tardes";
+        return "¡Buenas noches";
+    }
 
-        var query = quickInputQuery.Trim();
-        isExecutingQuickInput = true;
-        aiAnswer = null;
+    private string GetGreetingEmoji()
+    {
+        int hour = DateTime.Now.Hour;
+        if (hour < 12) return "☀️";
+        if (hour < 20) return "👋";
+        return "🌙";
+    }
 
+    private async Task CompleteAgendaItemAsync(HomeAgendaItem item)
+    {
+        if (item.Type == "habit" && !string.IsNullOrEmpty(item.HabitId))
+        {
+            await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["id"] = item.HabitId
+            });
+            actionFeedback = $"✓ Hábito '{item.Title}' completado.";
+            await ReloadContextAsync();
+        }
+        else if (item.Type == "milestone" && !string.IsNullOrEmpty(item.MilestoneId))
+        {
+            await CommandRegistry.ExecuteAsync(RoadmapCompleteMilestoneCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["milestoneId"] = item.MilestoneId
+            });
+            actionFeedback = $"✓ Hito '{item.Title}' completado.";
+            await ReloadContextAsync();
+        }
+    }
+
+    private async Task CompleteHabitBadgeAsync(HomeHabitBadge badge)
+    {
+        await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
+        {
+            ["id"] = badge.Id
+        });
+        actionFeedback = $"✓ Hábito '{badge.Name}' completado.";
+        await ReloadContextAsync();
+    }
+
+    private void HandleSearchSubmit(string? query)
+    {
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            NavigationManager.NavigateTo($"search?q={Uri.EscapeDataString(query.Trim())}");
+        }
+    }
+
+    private async Task HandlePromptExecute(string? input)
+    {
+        if (string.IsNullOrWhiteSpace(input) || isExecutingPrompt) return;
+
+        isExecutingPrompt = true;
         try
         {
-            // 1. Direct AI Query ('?')
-            if (query.StartsWith("?"))
-            {
-                var prompt = query[1..].Trim();
-                if (!string.IsNullOrWhiteSpace(prompt))
-                {
-                    var res = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?> { ["query"] = prompt });
-                    if (res.IsSuccess)
-                    {
-                        aiAnswer = res.Data?.ToString();
-                        quickInputQuery = string.Empty;
-                    }
-                    else
-                    {
-                        actionFeedback = res.ErrorMessage ?? "Error al consultar con Gemini.";
-                    }
-                }
-            }
-            // 2. Direct Expense ('/expense')
-            else if (query.StartsWith("/expense", StringComparison.OrdinalIgnoreCase))
-            {
-                var parts = query.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 3 && decimal.TryParse(parts[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var amount))
-                {
-                    var desc = parts[2];
-                    var res = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
-                    {
-                        ["amount"] = amount,
-                        ["type"] = "expense",
-                        ["description"] = desc
-                    });
+            string trimmed = input.Trim();
 
-                    if (res.IsSuccess)
-                    {
-                        actionFeedback = $"✓ Gasto de ${amount:N0} registrado: '{desc}'";
-                        quickInputQuery = string.Empty;
-                        await LoadHomeDataAsync();
-                    }
-                }
-                else
+            // 1. Expense Command Shortcut: /expense or /gasto
+            if (trimmed.StartsWith("/expense", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("/gasto", StringComparison.OrdinalIgnoreCase))
+            {
+                var result = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
                 {
-                    actionFeedback = "Formato de gasto: /expense <monto> <descripción>";
-                }
+                    ["text"] = trimmed
+                });
+                actionFeedback = result.IsSuccess ? $"✓ Gasto registrado: {result.Data ?? "Correcto"}" : $"⚠️ {result.ErrorMessage}";
+                quickPromptText = string.Empty;
+                await ReloadContextAsync();
+                return;
             }
-            // 3. Fallback: Quick Note Capture
+
+            // 2. Note Command Shortcut: /note or /nota
+            if (trimmed.StartsWith("/note", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("/nota", StringComparison.OrdinalIgnoreCase))
+            {
+                var content = trimmed.Contains(' ') ? trimmed[(trimmed.IndexOf(' ') + 1)..] : trimmed;
+                var result = await CommandRegistry.ExecuteAsync(CaptureNoteCommand.CommandId, new Dictionary<string, object?>
+                {
+                    ["content"] = content,
+                    ["source"] = "home_prompt"
+                });
+                actionFeedback = result.IsSuccess ? "✓ Nota capturada en Segundo Cerebro." : $"⚠️ {result.ErrorMessage}";
+                quickPromptText = string.Empty;
+                await ReloadContextAsync();
+                return;
+            }
+
+            // 3. AI Question Dispatch
+            var aiResult = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?>
+            {
+                ["question"] = trimmed.StartsWith('?') ? trimmed[1..].Trim() : trimmed
+            });
+
+            if (aiResult.IsSuccess && aiResult.Data is string answer)
+            {
+                aiAnswer = answer;
+                quickPromptText = string.Empty;
+            }
             else
             {
-                var res = await CommandRegistry.ExecuteAsync(CaptureNoteCommand.CommandId, new Dictionary<string, object?>
-                {
-                    ["content"] = query,
-                    ["source"] = "home_input"
-                });
-
-                if (res.IsSuccess)
-                {
-                    actionFeedback = "✓ Nota guardada correctamente.";
-                    quickInputQuery = string.Empty;
-                    await LoadHomeDataAsync();
-                }
-                else
-                {
-                    actionFeedback = res.ErrorMessage ?? "Error al capturar nota.";
-                }
+                actionFeedback = $"⚠️ {aiResult.ErrorMessage ?? "No se obtuvo respuesta de IA."}";
             }
         }
         catch (Exception ex)
         {
-            actionFeedback = ex.Message;
+            actionFeedback = $"Error: {ex.Message}";
         }
         finally
         {
-            isExecutingQuickInput = false;
+            isExecutingPrompt = false;
         }
     }
 
-    private async Task CompleteHabitAsync(Habit habit)
+    private async Task TriggerAiTool(string toolType)
     {
-        try
+        switch (toolType)
         {
-            var res = await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?>
-            {
-                ["habit_id"] = habit.Id
-            });
-
-            if (res.IsSuccess)
-            {
-                actionFeedback = $"✓ Hábito '{habit.Name}' registrado hoy.";
-                await LoadHomeDataAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            actionFeedback = ex.Message;
-        }
-    }
-
-    private async Task CompleteMilestoneAsync(string roadmapId, string milestoneId)
-    {
-        try
-        {
-            var res = await CommandRegistry.ExecuteAsync(RoadmapCompleteMilestoneCommand.CommandId, new Dictionary<string, object?>
-            {
-                ["roadmap_id"] = roadmapId,
-                ["milestone_id"] = milestoneId
-            });
-
-            if (res.IsSuccess)
-            {
-                actionFeedback = "✓ Hito del roadmap completado.";
-                await LoadHomeDataAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            actionFeedback = ex.Message;
+            case "resumen":
+                var summaryResult = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?>
+                {
+                    ["text"] = "Por favor genera un resumen ejecutivo del estado actual de mis tareas, hábitos y gastos registrados en ATLAS."
+                });
+                if (summaryResult.IsSuccess && summaryResult.Data is string sumText) aiAnswer = sumText;
+                break;
+            case "explicar":
+                quickPromptText = "¿Podrías explicarme con claridad cómo estructurar...?";
+                break;
+            case "reescribir":
+                quickPromptText = "Reescribir para mayor impacto: ";
+                break;
+            case "traducir":
+                quickPromptText = "Traducir al inglés: ";
+                break;
+            default:
+                quickPromptText = "¿Qué tengo pendiente para hoy?";
+                break;
         }
     }
 
-    private void NavigateToItem(FeedItem item)
+    private static string GetActivityIconClass(string colorVariant) => colorVariant.ToLowerInvariant() switch
     {
-        NavigationManager.NavigateTo(item.TargetUrl);
+        "purple" => "bg-violet-500/15 text-violet-300 border border-violet-500/30",
+        "emerald" => "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+        "rose" => "bg-rose-500/15 text-rose-300 border border-rose-500/30",
+        _ => "bg-white/[0.06] text-slate-300"
+    };
+
+    private static string GenerateSparklinePath(IReadOnlyList<int> points, double width, double height)
+    {
+        if (points == null || points.Count < 2) return $"M 0 {height/2} L {width} {height/2}";
+        int max = Math.Max(1, points.Max());
+        var stepX = width / (points.Count - 1);
+        var coords = points.Select((p, i) => $"{i * stepX:F1} {height - ((double)p / max * (height - 8) + 4):F1}").ToList();
+        return "M " + string.Join(" L ", coords);
     }
 
-    private static string FormatRelative(DateTimeOffset dto)
+    private static double GetSparklineLastY(IReadOnlyList<int> points, double height)
     {
-        var dt = dto.ToLocalTime();
-        var now = DateTimeOffset.Now;
-        var diff = now - dt;
+        if (points == null || points.Count == 0) return height / 2;
+        int max = Math.Max(1, points.Max());
+        return height - ((double)points[^1] / max * (height - 8) + 4);
+    }
 
-        if (diff.TotalMinutes < 1) return "ahora";
-        if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m";
-        if (diff.TotalHours < 24 && dt.Date == now.Date) return $"{dt:HH:mm}";
-        if (diff.TotalDays < 2 && dt.Date == now.Date.AddDays(-1)) return "ayer";
-
-        return dt.ToString("dd MMM", new CultureInfo("es-AR"));
+    private static double GetBarHeightPct(IReadOnlyList<decimal> values, int index)
+    {
+        if (values == null || values.Count <= index) return 20;
+        decimal max = Math.Max(1, values.Max());
+        return (double)(values[index] / max * 100);
     }
 }

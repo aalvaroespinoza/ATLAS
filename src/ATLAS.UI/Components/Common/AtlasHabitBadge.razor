@@ -1,0 +1,78 @@
+@namespace ATLAS.UI.Components.Common
+
+<div class="flex flex-col items-center gap-1.5 select-none @Class">
+    <button 
+        type="button" 
+        @onclick="HandleClick"
+        disabled="@IsCompleted"
+        title="@(IsCompleted ? $"{Name} (Completado hoy)" : $"Marcar {Name} como completado")"
+        class="w-13 h-13 rounded-full flex items-center justify-center p-0.5 transition-all duration-150 cursor-pointer atlas-clickable @GetBorderClasses() @(IsCompleted ? "opacity-75" : "hover:scale-105")">
+        
+        <div class="w-full h-full rounded-full bg-[#121828] flex items-center justify-center text-slate-200">
+            @if (IsCompleted)
+            {
+                <span class="text-emerald-400 font-bold text-sm">✓</span>
+            }
+            else
+            {
+                @GetIconFragment()
+            }
+        </div>
+    </button>
+
+    <div class="flex flex-col items-center text-center max-w-[70px]">
+        <span class="text-[11px] font-medium text-slate-200 truncate w-full">
+            @Name
+        </span>
+        @if (StreakDays > 0)
+        {
+            <span class="text-[9.5px] font-mono text-slate-400">
+                @StreakDays días
+            </span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Name { get; set; } = string.Empty;
+    [Parameter] public int StreakDays { get; set; }
+    [Parameter] public bool IsCompleted { get; set; }
+    [Parameter] public string IconType { get; set; } = "target"; // shield, book, meditation, clock, target
+    [Parameter] public string ColorVariant { get; set; } = "purple"; // purple, emerald, cyan, orange
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private async Task HandleClick()
+    {
+        if (!IsCompleted && OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+
+    private string GetBorderClasses()
+    {
+        if (IsCompleted)
+        {
+            return "bg-emerald-500/20 border-2 border-emerald-400/80 shadow-glow-emerald";
+        }
+
+        return ColorVariant.ToLowerInvariant() switch
+        {
+            "purple" => "bg-violet-500/20 border-2 border-violet-400/60 hover:border-violet-300 shadow-glow-purple",
+            "emerald" => "bg-emerald-500/20 border-2 border-emerald-400/60 hover:border-emerald-300 shadow-glow-emerald",
+            "cyan" => "bg-cyan-500/20 border-2 border-cyan-400/60 hover:border-cyan-300 shadow-glow-cyan",
+            "orange" => "bg-orange-500/20 border-2 border-orange-400/60 hover:border-orange-300 shadow-glow-orange",
+            _ => "bg-white/[0.08] border-2 border-white/[0.15]"
+        };
+    }
+
+    private RenderFragment GetIconFragment() => IconType.ToLowerInvariant() switch
+    {
+        "shield" => @<svg class="w-5 h-5 text-violet-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>,
+        "book" => @<svg class="w-5 h-5 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+        "meditation" => @<svg class="w-5 h-5 text-cyan-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+        "clock" => @<svg class="w-5 h-5 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+        _ => @<svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+    };
+}
