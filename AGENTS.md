@@ -63,10 +63,34 @@ la velocidad de Raycast y la pureza de lectura de Craft, pero con alma personal:
    reutilizan UI, launcher, Telegram y automatizaciones.
 5. **UI en .NET MAUI Blazor Hybrid (Razor + HTML/CSS/Tailwind sobre WebView2).** Windows target únicamente.
 6. **SQLite local desde el día 1.** No se introduce ninguna dependencia sin justificarla en el plan.
+   **Cualquier dependencia cloud (Supabase incluido) es una excepción explícita, no la norma — ver sección "Sync cloud" abajo.**
 7. **Nunca exponer credenciales, tokens o secretos en el cliente.** (Windows Credential Locker / DPAPI).
 8. **El repo debe compilar y quedar funcional después de cada bloque de trabajo.**
 9. **Aislamiento de Superficies de Interacción:** Cada bloque de trabajo modifica como máximo una experiencia principal (Dock ≠ Home, Home ≠ Launcher, Launcher ≠ Search, Search ≠ Context Actions).
 10. **Personalidad y Calidez:** La interfaz debe sentirse moderna, personal, expresiva y fluida ("una herramienta hecha para mí").
+11. **Un pedido abierto no es luz verde para alcance abierto.** Si Álvaro pide algo amplio y sin acotar ("mejorá el diseño", "hacé que se vea mejor", "lo que haga falta"), el primer paso es SIEMPRE proponer un plan concreto y acotado (qué se toca, qué no) y esperar confirmación — nunca interpretarlo como autorización para rediseñar módulos enteros, agregar integraciones nuevas (cloud, terceros) o inventar una numeración de etapas propia. Esto es lo que falló entre la Etapa 6 y la 13: un pedido abierto de diseño terminó en 7 etapas no confirmadas y una integración cloud no pedida (Supabase). No se repite.
+
+## Sync cloud — Supabase (formalizado)
+
+**Propósito real, confirmado con el usuario:** poder ver los datos de ATLAS
+desde el celular/navegador en el futuro (no hay companion app todavía,
+pero se diseña la base de datos pensando en eso desde ahora).
+
+**Estado de seguridad: en hardening (ver Etapa 14 abajo).** El esquema
+original (`docs/supabase_schema.sql`) usaba políticas RLS
+`USING (true) WITH CHECK (true)` — es decir, RLS activado pero sin
+restricción real: cualquiera con la anon key lee y escribe todo. Esto
+se está corrigiendo a Supabase Auth real (un solo usuario) + RLS scoped
+a `auth.uid()`, ver Etapa 14.
+
+Reglas específicas para este módulo:
+- La anon key y las credenciales de sesión van al mismo `ISecretVault`
+  que todo lo demás. Nunca en `wwwroot`, nunca en un `.razor` como
+  string literal, nunca commiteadas.
+- Ninguna tabla se expone sin políticas RLS scoped a `auth.uid()`.
+  "Allow all" no es una política válida en este proyecto.
+- El sync sigue siendo a demanda (o disparado por el usuario), no un
+  polling constante en background salvo que se decida explícitamente.
 
 ## Stack técnico
 
@@ -113,14 +137,44 @@ ATLAS.sln
 - **Etapa 4b:** Módulo de Finanzas y Transacciones (Completada en Core y UI).
 - **Etapa 5:** UI MAUI Blazor Hybrid + WebView2 (Completada).
 - **Etapa 6:** Integración Gmail OAuth + Roadmaps Secuenciales (Completada).
-- **Etapas 7 a 12 (Reset Visual & Funcional):**
-  - Design System unificado (Índigo/Obsidiana, suite de 17 componentes `Atlas*`).
-  - Personal Dock flotante en isla (56px compacto / 208px expandido).
-  - Shell de doble isla con Header minimalista.
-  - Home Contextual (Now / Quick Input / Atención de Hábitos / Hitos en Progreso / Feed).
-  - Command Launcher Raycast-style (`Ctrl+Space`, sub-menús contextuales con `Tab`).
-  - Universal Search Split-View (40/60) con supresión de categorías vacías.
-  - Sistema Universal de Context Actions (`IContextActionService` / `AtlasContextActionBar`).
-  - Pulido de Microinteracciones y tactilidad (120ms-140ms snappy easing).
-  - Auditoría y refactorización final Anti-Dashboard (Finanzas en mono, Captura draft limpio, Hábitos segmentados, Configuración silenciosa).
-- **Etapa 13:** Blindaje del Lenguaje Visual & Filosofía de Producto (Completada).
+- **Etapas 7 a 12 (Reset Visual & Funcional, no planeado con el usuario
+  de antemano — pedido abierto de diseño que se expandió sin control):**
+  Design System Índigo/Obsidiana, Personal Dock, Command Launcher,
+  Universal Search, Context Actions, microinteracciones. Completado a
+  nivel código, **adoptado retroactivamente como lenguaje visual
+  oficial del proyecto** tras revisión.
+- **Etapa 13:** Blindaje del Lenguaje Visual (Completada).
+- **Sync cloud (Supabase):** implementado con seguridad insuficiente
+  (RLS abierto). **Pendiente de hardening — ver Etapa 14.**
+- **Pendiente sin hacer:** limpieza de código muerto (`NavMenu.razor`,
+  `DesignSystemDemo.razor`, `DockPrototype.razor`), y
+  `finance.categorize` (categorización automática de gastos con IA,
+  planeada originalmente para el bloque 7b y nunca implementada porque
+  el número de etapa se usó para otra cosa).
+
+## Alcance actual — Etapa 14: Hardening de Supabase + limpieza (no avanzar sin confirmación)
+
+**14a — Seguridad de Supabase:**
+- Agregar Supabase Auth (email/password, un solo usuario: Álvaro).
+- Agregar columna `user_id` a las 7 tablas sincronizadas, poblada con
+  el `auth.uid()` del usuario autenticado.
+- Reemplazar las políticas `USING (true)` por políticas scoped:
+  `USING (auth.uid() = user_id)` en cada tabla, para SELECT/INSERT/
+  UPDATE/DELETE.
+- El login se hace una sola vez desde Configuración; el refresh token
+  de la sesión va a `ISecretVault`, igual que el resto de credenciales.
+- Rotar la anon key actual del proyecto de Supabase (buena práctica
+  dado que el schema estuvo público con políticas abiertas, aunque la
+  key en sí nunca se filtró).
+
+**14b — Limpieza de código muerto (después de 14a):**
+- Eliminar `NavMenu.razor` (reemplazado por `AtlasPersonalDock`, sin
+  referencias activas).
+- Eliminar o mover fuera de `Components/Pages` los prototipos
+  `DesignSystemDemo.razor` y `DockPrototype.razor` si no se usan en
+  producción.
+
+**14c — Retomar 7b: categorización automática de gastos con IA:**
+- Command `finance.categorize` (transaction_id → sugiere categoría vía
+  `ai.ask`/Gemini sobre la descripción, sugerencia editable, nunca
+  sobreescribe una categoría cargada a mano sin confirmación).
