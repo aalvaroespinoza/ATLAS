@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>ATLAS</title>
+    <base href="/" />
+    
+    <!-- Tailwind Play CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        atlas: {
+                            bg: '#0f172a',
+                            surface: '#1e293b',
+                            border: '#334155',
+                            accent: '#38bdf8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="app.css" />
+    <link rel="icon" href="data:,">
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans antialiased select-none overflow-hidden">
+
+    <div id="app" class="h-screen w-screen">
+        <div class="flex items-center justify-center h-full text-slate-400 text-sm">
+            Iniciando ATLAS...
+        </div>
+    </div>
+
+    <div id="blazor-error-ui" class="hidden" data-nosnippet>
+        Ocurrió un error no controlado.
+        <a href="." class="reload text-sky-400 underline">Recargar</a>
+        <span class="dismiss cursor-pointer">🗙</span>
+    </div>
+
+    <script src="_framework/blazor.webview.js" autostart="false"></script>
+</body>
+</html>

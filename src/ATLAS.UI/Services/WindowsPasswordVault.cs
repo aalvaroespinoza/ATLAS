@@ -4,20 +4,22 @@ using Windows.Security.Credentials;
 namespace ATLAS.UI.Services;
 
 /// <summary>
-/// Implements ISecretVault using Windows Credential Locker (Windows.Security.Credentials.PasswordVault).
+/// Implementation of ISecretVault using the Windows Credential Locker (PasswordVault).
 /// </summary>
-public class WindowsPasswordVault : ISecretVault
+public sealed class WindowsPasswordVault : ISecretVault
 {
     private const string ResourceName = "ATLAS.PersonalOS";
     private readonly PasswordVault _vault = new();
 
     public void SetSecret(string key, string secret)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        ArgumentNullException.ThrowIfNull(secret);
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 
-        // Remove existing credential if already stored to avoid duplicates
-        DeleteSecret(key);
+        if (secret == null)
+            throw new ArgumentNullException(nameof(secret));
+
+        RemoveExisting(key);
 
         var credential = new PasswordCredential(ResourceName, key, secret);
         _vault.Add(credential);
@@ -25,7 +27,8 @@ public class WindowsPasswordVault : ISecretVault
 
     public string? GetSecret(string key)
     {
-        if (string.IsNullOrWhiteSpace(key)) return null;
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 
         try
         {
@@ -35,28 +38,44 @@ public class WindowsPasswordVault : ISecretVault
         }
         catch
         {
-            // Windows throws exception when credential is not found in vault
             return null;
         }
     }
 
     public void DeleteSecret(string key)
     {
-        if (string.IsNullOrWhiteSpace(key)) return;
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
 
-        try
-        {
-            var credential = _vault.Retrieve(ResourceName, key);
-            _vault.Remove(credential);
-        }
-        catch
-        {
-            // Not found
-        }
+        RemoveExisting(key);
     }
 
     public bool HasSecret(string key)
     {
-        return !string.IsNullOrWhiteSpace(GetSecret(key));
+        if (string.IsNullOrWhiteSpace(key))
+            throw new ArgumentException("Key cannot be null or whitespace.", nameof(key));
+
+        try
+        {
+            _vault.Retrieve(ResourceName, key);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void RemoveExisting(string key)
+    {
+        try
+        {
+            var existing = _vault.Retrieve(ResourceName, key);
+            _vault.Remove(existing);
+        }
+        catch
+        {
+            // Ignore if doesn't exist
+        }
     }
 }

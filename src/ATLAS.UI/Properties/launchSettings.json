@@ -1,10 +1,8 @@
 {
   "profiles": {
-    "ATLAS.UI (Package)": {
-      "commandName": "MsixPackage"
-    },
-    "ATLAS.UI (Unpackaged)": {
-      "commandName": "Project"
+    "Windows Machine": {
+      "commandName": "Project",
+      "nativeDebugging": false
     }
   }
 }

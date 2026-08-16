@@ -1,183 +1,21 @@
-using ATLAS.Core.Ai;
-using ATLAS.Core.Commands;
-using ATLAS.Core.Extensions;
-using ATLAS.Core.Integrations.Telegram;
-using ATLAS.Core.Security;
-using ATLAS.Storage.Database;
-using ATLAS.Storage.Extensions;
-using ATLAS.UI.Interop;
-using ATLAS.UI.Services;
-using ATLAS.UI.ViewModels;
-using ATLAS.UI.Views;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.UI.Xaml;
-using WinRT.Interop;
+namespace ATLAS.UI;
 
-namespace ATLAS_UI;
-
-/// <summary>
-/// Main Application entry point for ATLAS Personal OS.
-/// </summary>
 public partial class App : Application
 {
-    private MainWindow? _mainWindow;
-    private LauncherWindow? _launcherWindow;
-    private ActivityWindow? _activityWindow;
-    private SettingsWindow? _settingsWindow;
-    private HotKeyService? _hotKeyService;
-    private ITelegramListenerService? _telegramListener;
-
-    /// <summary>
-    /// Gets the current App instance.
-    /// </summary>
-    public static new App Current => (App)Application.Current;
-
-    /// <summary>
-    /// Gets the application service provider.
-    /// </summary>
-    public IServiceProvider Services { get; }
-
-    /// <summary>
-    /// Gets the primary shell window.
-    /// </summary>
-    public MainWindow? MainWindow => _mainWindow;
-
-    /// <summary>
-    /// Initializes the singleton application object.
-    /// </summary>
     public App()
     {
         InitializeComponent();
-        Services = ConfigureServices();
-        InitializeSystem();
     }
 
-    private static IServiceProvider ConfigureServices()
+    protected override Window CreateWindow(IActivationState? activationState)
     {
-        var services = new ServiceCollection();
-
-        // Security and AI services
-        services.AddSingleton<ISecretVault, WindowsPasswordVault>();
-        services.AddSingleton<HttpClient>();
-        services.AddSingleton<IAiProvider, GeminiProvider>();
-
-        // Core and Storage services
-        services.AddAtlasCore();
-        services.AddAtlasStorage();
-
-        // UI ViewModels and Views
-        services.AddSingleton<MainWindow>();
-        services.AddTransient<HomeViewModel>();
-        services.AddSingleton<HomeWindow>();
-        services.AddTransient<LauncherViewModel>();
-        services.AddSingleton<LauncherWindow>();
-        services.AddTransient<ActivityViewModel>();
-        services.AddSingleton<ActivityWindow>();
-        services.AddTransient<SettingsViewModel>();
-        services.AddSingleton<SettingsWindow>();
-        services.AddTransient<CaptureViewModel>();
-        services.AddTransient<SearchViewModel>();
-        services.AddTransient<HabitsGoalsViewModel>();
-        services.AddTransient<FinanceViewModel>();
-
-        return services.BuildServiceProvider();
-    }
-
-    private void InitializeSystem()
-    {
-        // 1. Initialize SQLite database schema
-        var dbInitializer = Services.GetRequiredService<DatabaseInitializer>();
-        dbInitializer.InitializeAsync().GetAwaiter().GetResult();
-
-        // 2. Register startup commands into CommandRegistry
-        var commandRegistry = Services.GetRequiredService<ICommandRegistry>();
-        commandRegistry.Register(Services.GetRequiredService<CaptureNoteCommand>());
-        commandRegistry.Register(Services.GetRequiredService<KnowledgeSearchCommand>());
-        commandRegistry.Register(Services.GetRequiredService<AiSummarizeCommand>());
-        commandRegistry.Register(Services.GetRequiredService<AiAskCommand>());
-        commandRegistry.Register(Services.GetRequiredService<GoalCreateCommand>());
-        commandRegistry.Register(Services.GetRequiredService<GoalUpdateProgressCommand>());
-        commandRegistry.Register(Services.GetRequiredService<HabitCreateCommand>());
-        commandRegistry.Register(Services.GetRequiredService<HabitCompleteCommand>());
-        commandRegistry.Register(Services.GetRequiredService<FinanceAddTransactionCommand>());
-        commandRegistry.Register(Services.GetRequiredService<FinanceSyncMercadoPagoCommand>());
-    }
-
-    /// <summary>
-    /// Invoked when the application is launched.
-    /// </summary>
-    protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
-    {
-        // 1. Instantiate Windows
-        _mainWindow = Services.GetRequiredService<MainWindow>();
-        _launcherWindow = Services.GetRequiredService<LauncherWindow>();
-        _activityWindow = Services.GetRequiredService<ActivityWindow>();
-        _settingsWindow = Services.GetRequiredService<SettingsWindow>();
-
-        // 2. Setup Global Hotkeys on the Launcher Window handle
-        var hwnd = WindowNative.GetWindowHandle(_launcherWindow);
-        _hotKeyService = new HotKeyService(hwnd);
-
-        // ID 1001: Ctrl + Space -> Launcher
-        _hotKeyService.Register(
-            1001,
-            NativeMethods.MOD_CONTROL,
-            NativeMethods.VK_SPACE,
-            OnLauncherHotKeyPressed);
-
-        // ID 1002: Ctrl + Shift + Space -> Actividad
-        _hotKeyService.Register(
-            1002,
-            NativeMethods.MOD_CONTROL | NativeMethods.MOD_SHIFT,
-            NativeMethods.VK_SPACE,
-            OnActivityHotKeyPressed);
-
-        // Connect launcher action to open activity window
-        _launcherWindow.ViewModel.OpenActivityRequested += () =>
+        return new Window(new MainPage())
         {
-            _launcherWindow.DispatcherQueue.TryEnqueue(() =>
-            {
-                _activityWindow?.ShowAndActivate();
-            });
+            Title = "ATLAS",
+            Width = 1100,
+            Height = 720,
+            MinimumWidth = 800,
+            MinimumHeight = 550
         };
-
-        // Connect activity action to open settings window
-        _activityWindow.ViewModel.OpenSettingsRequested += () =>
-        {
-            _activityWindow.DispatcherQueue.TryEnqueue(() =>
-            {
-                _settingsWindow?.ShowAndActivate();
-            });
-        };
-
-        // 3. Keep launcher hidden in background initially (ready for hotkeys)
-        _launcherWindow.HideLauncher();
-
-        // 4. Start Telegram background long-polling service
-        _telegramListener = Services.GetRequiredService<ITelegramListenerService>();
-        _ = _telegramListener.StartAsync();
-
-        // 5. Show Main Shell Window on launch
-        _mainWindow.ShowAndActivate();
-    }
-
-    private void OnLauncherHotKeyPressed()
-    {
-        if (_launcherWindow == null) return;
-
-        _launcherWindow.DispatcherQueue.TryEnqueue(() =>
-        {
-            _launcherWindow.ToggleLauncher();
-        });
-    }
-
-    private void OnActivityHotKeyPressed()
-    {
-        if (_activityWindow == null) return;
-
-        _activityWindow.DispatcherQueue.TryEnqueue(() =>
-        {
-            _activityWindow.ShowAndActivate();
-        });
     }
 }
