@@ -1,91 +1,148 @@
 @page "/search"
+@using System.Globalization
+@using ATLAS.Core.Commands
+@using ATLAS.Core.Entities
+@using ATLAS.Core.Repositories
+@using ATLAS.Core.Security
+@using ATLAS.UI.Components.Common
 @inject INoteRepository NoteRepository
 @inject IGoalRepository GoalRepository
 @inject IHabitRepository HabitRepository
 @inject IRoadmapRepository RoadmapRepository
 @inject ITransactionRepository TransactionRepository
 @inject ICommandRegistry CommandRegistry
+@inject ISecretVault SecretVault
 @inject NavigationManager NavigationManager
 
-<div class="h-[calc(100vh-6.5rem)] flex flex-col space-y-3 animate-atlas-in">
+<div class="h-[calc(100vh-5.5rem)] flex flex-col space-y-3 animate-atlas-in select-none">
     
-    <!-- Top Search Header & Category Filter Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="flex-1 max-w-lg">
+    <!-- Top Search Header & Dynamic Category Filter Chips -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+        <div class="flex-1 max-w-md">
             <AtlasSearchInput 
-                @bind-Value="searchQuery" 
-                Placeholder="Buscar notas, roadmaps, hábitos, finanzas..." />
+                Value="@searchQuery" 
+                ValueChanged="HandleSearchInput"
+                Placeholder="Buscar notas, metas, roadmaps, hábitos, finanzas, comandos..." />
         </div>
 
-        <!-- Filter Chips with Rich Depth & Elastic Interaction -->
-        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono select-none p-1 rounded-2xl bg-[#090b10]/80 border border-white/[0.08] shadow-inner backdrop-blur-md">
+        <!-- Dynamic Filter Chips (Suppresses 0-count categories) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono select-none p-1 rounded-2xl bg-[#090b10]/90 border border-white/[0.08] shadow-inner backdrop-blur-md">
             <button 
                 type="button" 
                 @onclick="@(() => SetFilter("all"))"
-                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "all" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
+                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "all" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
                 Todos (@TotalResultCount)
             </button>
-            <button 
-                type="button" 
-                @onclick="@(() => SetFilter("notes"))"
-                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "notes" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
-                Notas (@filteredNotes.Count)
-            </button>
-            <button 
-                type="button" 
-                @onclick="@(() => SetFilter("roadmaps"))"
-                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "roadmaps" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
-                Roadmaps (@filteredRoadmaps.Count)
-            </button>
-            <button 
-                type="button" 
-                @onclick="@(() => SetFilter("habits"))"
-                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "habits" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
-                Hábitos (@filteredHabits.Count)
-            </button>
-            <button 
-                type="button" 
-                @onclick="@(() => SetFilter("finance"))"
-                class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "finance" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-md shadow-indigo-500/25 border border-indigo-400/30" : "text-slate-400 hover:text-slate-200")">
-                Finanzas (@filteredTransactions.Count)
-            </button>
+
+            @if (filteredNotes.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("notes"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "notes" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Notas (@filteredNotes.Count)
+                </button>
+            }
+
+            @if (filteredGoals.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("goals"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "goals" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Metas (@filteredGoals.Count)
+                </button>
+            }
+
+            @if (filteredRoadmaps.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("roadmaps"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "roadmaps" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Roadmaps (@filteredRoadmaps.Count)
+                </button>
+            }
+
+            @if (filteredHabits.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("habits"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "habits" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Hábitos (@filteredHabits.Count)
+                </button>
+            }
+
+            @if (filteredTransactions.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("finance"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "finance" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Finanzas (@filteredTransactions.Count)
+                </button>
+            }
+
+            @if (filteredCommands.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("commands"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "commands" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Comandos (@filteredCommands.Count)
+                </button>
+            }
+
+            @if (filteredGmailMessages.Count > 0)
+            {
+                <button 
+                    type="button" 
+                    @onclick="@(() => SetFilter("gmail"))"
+                    class="px-3 py-1.5 rounded-xl transition-all duration-150 cursor-pointer atlas-clickable @(selectedFilter == "gmail" ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-md shadow-violet-500/25 border border-violet-400/30" : "text-slate-400 hover:text-slate-200")">
+                    Gmail (@filteredGmailMessages.Count)
+                </button>
+            }
         </div>
     </div>
 
-    <!-- Master-Detail Split View (Craft & Linear Spatial Layout with Rich Shadows) -->
-    <div class="flex-1 flex min-h-0 rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/50 overflow-hidden backdrop-blur-md">
+    <!-- Master-Detail Split View (40% List / 60% Inspector) -->
+    <div class="flex-1 flex min-h-0 rounded-2xl border border-white/[0.08] shadow-2xl shadow-black/60 overflow-hidden backdrop-blur-md bg-[#090d16]/90">
         
-        <!-- Left Panel: Grouped Search Results (38%) -->
-        <div class="w-full md:w-[38%] border-r border-white/[0.08] flex flex-col overflow-hidden bg-gradient-to-b from-[#0d111a]/95 to-[#090c14]/95">
+        <!-- Left Panel: Grouped Results (40%) -->
+        <div class="w-full md:w-[40%] border-r border-white/[0.08] flex flex-col overflow-hidden bg-gradient-to-b from-[#0d111c]/95 to-[#080b12]/95">
             
-            <div class="flex-1 overflow-y-auto p-2.5 space-y-4">
+            <div class="flex-1 overflow-y-auto p-2.5 space-y-4 scrollbar-none">
                 @if (isLoading)
                 {
-                    <AtlasLoadingState Message="Buscando en SQLite..." />
+                    <AtlasLoadingState Message="Buscando en todos los dominios de SQLite..." />
                 }
                 else if (TotalResultCount == 0)
                 {
                     <AtlasEmptyState 
                         Title="@(!string.IsNullOrWhiteSpace(searchQuery) ? $"Sin coincidencias para \"{searchQuery}\"" : "Sin resultados")" 
-                        Description="Probá con otra palabra clave o capturá una nueva nota con Ctrl+N." />
+                        Description="Probá con otra palabra clave o ejecutá un comando desde el launcher con Ctrl+Space." />
                 }
                 else
                 {
-                    <!-- 1. GROUP: KNOWLEDGE / NOTAS -->
+                    <!-- 1. GROUP: NOTAS / KNOWLEDGE -->
                     @if (ShouldShow("notes") && filteredNotes.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
-                                <span>📝</span>
-                                <span>Knowledge / Notas (@filteredNotes.Count)</span>
-                            </span>
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>📝</span>
+                                    <span>Notas / Knowledge</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredNotes.Count</span>
+                            </div>
                             <div class="space-y-1">
                                 @foreach (var note in filteredNotes)
                                 {
                                     var isSel = selectedItem?.Id == note.Id;
                                     <div 
                                         @onclick="() => SelectNote(note)"
-                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-indigo-950/80 to-violet-950/50 border border-indigo-500/40 text-white shadow-md shadow-indigo-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-violet-500/15 border border-violet-500/35 text-white shadow-sm shadow-violet-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs truncate font-semibold">@GetNoteTitle(note)</span>
                                             <span class="text-[10px] font-mono text-slate-500 shrink-0">@note.CreatedAt.ToLocalTime().ToString("dd MMM")</span>
@@ -99,24 +156,56 @@
                         </div>
                     }
 
-                    <!-- 2. GROUP: ROADMAPS -->
+                    <!-- 2. GROUP: METAS (GOALS) -->
+                    @if (ShouldShow("goals") && filteredGoals.Count > 0)
+                    {
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>🎯</span>
+                                    <span>Metas Principales</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredGoals.Count</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach (var goal in filteredGoals)
+                                {
+                                    var isSel = selectedItem?.Id == goal.Id;
+                                    <div 
+                                        @onclick="() => SelectGoal(goal)"
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-violet-500/15 border border-violet-500/35 text-white shadow-sm shadow-violet-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs truncate font-semibold">@goal.Title</span>
+                                            <span class="text-[10.5px] font-mono text-violet-300 font-bold">@goal.Progress%</span>
+                                        </div>
+                                        <span class="text-[10px] font-mono text-slate-500 pt-0.5 block capitalize">Estado: @goal.Status</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- 3. GROUP: ROADMAPS -->
                     @if (ShouldShow("roadmaps") && filteredRoadmaps.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
-                                <span>🎯</span>
-                                <span>Roadmaps & Metas (@filteredRoadmaps.Count)</span>
-                            </span>
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>🗺️</span>
+                                    <span>Roadmaps & Hitos</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredRoadmaps.Count</span>
+                            </div>
                             <div class="space-y-1">
                                 @foreach (var r in filteredRoadmaps)
                                 {
                                     var isSel = selectedItem?.Id == r.Id;
                                     <div 
                                         @onclick="() => SelectRoadmap(r)"
-                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-indigo-950/80 to-violet-950/50 border border-indigo-500/40 text-white shadow-md shadow-indigo-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-violet-500/15 border border-violet-500/35 text-white shadow-sm shadow-violet-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs truncate font-semibold">@r.Title</span>
-                                            <span class="text-[10.5px] font-mono text-indigo-300 font-bold">@r.ProgressPercentage%</span>
+                                            <span class="text-[10.5px] font-mono text-cyan-300 font-bold">@r.ProgressPercentage%</span>
                                         </div>
                                         <span class="text-[10px] font-mono text-slate-500 pt-0.5 block">@(r.Milestones?.Count ?? 0) hitos configurados</span>
                                     </div>
@@ -125,21 +214,24 @@
                         </div>
                     }
 
-                    <!-- 3. GROUP: HABITS -->
+                    <!-- 4. GROUP: HABITS -->
                     @if (ShouldShow("habits") && filteredHabits.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
-                                <span>🌿</span>
-                                <span>Hábitos (@filteredHabits.Count)</span>
-                            </span>
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>🔥</span>
+                                    <span>Hábitos</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredHabits.Count</span>
+                            </div>
                             <div class="space-y-1">
                                 @foreach (var h in filteredHabits)
                                 {
                                     var isSel = selectedItem?.Id == h.Id;
                                     <div 
                                         @onclick="() => SelectHabit(h)"
-                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? "bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/40 text-white shadow-md shadow-emerald-950/30" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-emerald-500/15 border border-emerald-500/35 text-white shadow-sm shadow-emerald-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs truncate font-semibold">@h.Name</span>
                                             <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/25">@h.Frequency</span>
@@ -150,22 +242,25 @@
                         </div>
                     }
 
-                    <!-- 4. GROUP: FINANCES -->
+                    <!-- 5. GROUP: FINANCES -->
                     @if (ShouldShow("finance") && filteredTransactions.Count > 0)
                     {
                         <div class="space-y-1">
-                            <span class="text-[10px] font-mono text-slate-400 uppercase tracking-wider px-2 font-semibold flex items-center gap-1.5">
-                                <span>💳</span>
-                                <span>Finanzas (@filteredTransactions.Count)</span>
-                            </span>
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>💳</span>
+                                    <span>Finanzas</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredTransactions.Count</span>
+                            </div>
                             <div class="space-y-1">
                                 @foreach (var tx in filteredTransactions)
                                 {
                                     var isSel = selectedItem?.Id == tx.Id;
-                                    var isIncome = tx.Tipo == "income";
+                                    var isIncome = tx.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase);
                                     <div 
                                         @onclick="() => SelectTransaction(tx)"
-                                        class="p-3 rounded-xl cursor-pointer transition-all duration-150 atlas-clickable @(isSel ? (isIncome ? "bg-gradient-to-r from-emerald-950/60 to-teal-950/40 border border-emerald-500/40 text-white shadow-md shadow-emerald-950/30" : "bg-gradient-to-r from-rose-950/60 to-red-950/40 border border-rose-500/40 text-white shadow-md shadow-rose-950/30") : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? (isIncome ? "bg-emerald-500/15 border border-emerald-500/35 text-white shadow-sm shadow-emerald-500/20" : "bg-rose-500/15 border border-rose-500/35 text-white shadow-sm shadow-rose-500/20") : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
                                         <div class="flex items-center justify-between gap-2">
                                             <span class="text-xs truncate font-semibold">@tx.Descripcion</span>
                                             <span class="text-[10.5px] font-mono font-bold @(isIncome ? "text-emerald-300" : "text-rose-300")">
@@ -178,13 +273,71 @@
                             </div>
                         </div>
                     }
+
+                    <!-- 6. GROUP: COMANDOS -->
+                    @if (ShouldShow("commands") && filteredCommands.Count > 0)
+                    {
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>⌘</span>
+                                    <span>Comandos de Sistema</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredCommands.Count</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach (var cmd in filteredCommands)
+                                {
+                                    var isSel = selectedItem?.Id == cmd.Id;
+                                    <div 
+                                        @onclick="() => SelectCommand(cmd)"
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-orange-500/15 border border-orange-500/35 text-white shadow-sm shadow-orange-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs truncate font-semibold">@cmd.Name</span>
+                                            <span class="text-[10px] font-mono text-orange-300">/@cmd.Id</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400 line-clamp-1 pt-1 font-normal">@cmd.Description</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- 7. GROUP: GMAIL -->
+                    @if (ShouldShow("gmail") && filteredGmailMessages.Count > 0)
+                    {
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-between px-2 py-1">
+                                <span class="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1.5">
+                                    <span>✉️</span>
+                                    <span>Correos de Gmail</span>
+                                </span>
+                                <span class="text-[10px] font-mono text-slate-500">@filteredGmailMessages.Count</span>
+                            </div>
+                            <div class="space-y-1">
+                                @foreach (var mail in filteredGmailMessages)
+                                {
+                                    var isSel = selectedItem?.Id == mail.Id;
+                                    <div 
+                                        @onclick="() => SelectGmail(mail)"
+                                        class="p-3 rounded-xl cursor-pointer transition-all duration-120 atlas-clickable @(isSel ? "bg-cyan-500/15 border border-cyan-500/35 text-white shadow-sm shadow-cyan-500/20" : "bg-white/[0.02] hover:bg-white/[0.05] border border-white/[0.04] text-slate-300")">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs truncate font-semibold">@mail.Subject</span>
+                                            <span class="text-[10px] font-mono text-slate-500 shrink-0">@mail.Date.ToLocalTime().ToString("dd MMM")</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400 line-clamp-1 pt-1 font-normal">@mail.Snippet</p>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 }
             </div>
 
         </div>
 
-        <!-- Right Panel: Live Contextual Preview (62%) -->
-        <div class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#101524]/95 to-[#0b0e18]/95">
+        <!-- Right Panel: Live Contextual Inspector Preview (60%) -->
+        <div class="flex-1 flex flex-col overflow-hidden bg-gradient-to-b from-[#0f1422]/95 to-[#090d16]/95">
             
             @if (selectedItem == null)
             {
@@ -195,15 +348,18 @@
             else
             {
                 <!-- Reader Preview Area -->
-                <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-5">
+                <div class="flex-1 overflow-y-auto p-6 md:p-8 space-y-5 scrollbar-none">
                     
                     <!-- Title & Header Meta -->
                     <div class="space-y-2 border-b border-white/[0.08] pb-4">
-                        <div class="flex items-center gap-2">
-                            <AtlasBadge Variant="@selectedItem.BadgeVariant">@selectedItem.Category</AtlasBadge>
-                            <span class="text-[10.5px] font-mono text-slate-400">@selectedItem.MetaInfo</span>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2">
+                                <AtlasBadge Variant="@selectedItem.BadgeVariant" Dot="true">@selectedItem.Category</AtlasBadge>
+                                <span class="text-[10.5px] font-mono text-slate-400">@selectedItem.MetaInfo</span>
+                            </div>
+                            <span class="text-[10px] font-mono text-slate-500">ID: @selectedItem.Id[..Math.Min(8, selectedItem.Id.Length)]</span>
                         </div>
-                        <h2 class="text-lg font-bold text-white tracking-tight">
+                        <h2 class="text-lg md:text-xl font-bold text-white tracking-tight">
                             @selectedItem.Title
                         </h2>
                     </div>
@@ -211,11 +367,11 @@
                     <!-- AI Summary / Action Result Banner (if generated) -->
                     @if (!string.IsNullOrWhiteSpace(aiOutput))
                     {
-                        <div class="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/70 to-violet-950/70 border border-indigo-500/40 shadow-lg shadow-indigo-950/40 space-y-2 animate-atlas-in">
-                            <div class="flex items-center justify-between text-[10.5px] font-mono font-semibold text-indigo-300 uppercase">
+                        <div class="p-4 rounded-2xl bg-gradient-to-r from-violet-950/70 to-indigo-950/70 border border-violet-500/40 shadow-lg shadow-violet-950/40 space-y-2 animate-atlas-in">
+                            <div class="flex items-center justify-between text-[10.5px] font-mono font-semibold text-violet-300 uppercase">
                                 <span class="flex items-center gap-1.5">
-                                    <span class="w-2 h-2 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/80"></span>
-                                    <span>Respuesta Gemini AI:</span>
+                                    <span class="w-2 h-2 rounded-full bg-violet-400 shadow-sm shadow-violet-400/80"></span>
+                                    <span>Respuesta ATLAS AI (Gemini):</span>
                                 </span>
                                 <button type="button" @onclick="() => aiOutput = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
                             </div>
@@ -228,8 +384,41 @@
                     <!-- Rich Body Detail by Category -->
                     @if (selectedItem.Category == "Nota")
                     {
-                        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap font-sans selection:bg-indigo-500/30">
-                            @selectedItem.BodyContent
+                        <div class="space-y-4">
+                            <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-[13px] text-slate-200 leading-relaxed whitespace-pre-wrap font-sans selection:bg-violet-500/30">
+                                @selectedItem.BodyContent
+                            </div>
+
+                            @if (selectedDomainObject is Note currentNote && !string.IsNullOrWhiteSpace(currentNote.Tags))
+                            {
+                                <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                                    <span class="text-[11px] font-mono text-slate-500">Tags:</span>
+                                    @foreach (var tag in currentNote.Tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                                    {
+                                        <AtlasBadge Variant="purple">@tag</AtlasBadge>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (selectedItem.Category == "Meta" && selectedDomainObject is Goal currentGoal)
+                    {
+                        <div class="space-y-4">
+                            <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-3">
+                                <div class="flex items-center justify-between text-xs font-mono">
+                                    <span class="text-slate-300 font-semibold">Progreso del Objetivo</span>
+                                    <span class="text-violet-300 font-bold">@currentGoal.Progress%</span>
+                                </div>
+                                <AtlasProgress Value="@currentGoal.Progress" Color="purple" Height="md" />
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(currentGoal.Description))
+                            {
+                                <div class="p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-xs text-slate-300">
+                                    <span class="text-[10px] font-mono text-slate-500 uppercase block mb-1">Descripción:</span>
+                                    @currentGoal.Description
+                                </div>
+                            }
                         </div>
                     }
                     else if (selectedItem.Category == "Roadmap" && selectedRoadmapDetail != null)
@@ -238,14 +427,9 @@
                             <div class="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] space-y-2">
                                 <div class="flex items-center justify-between text-xs font-mono">
                                     <span class="text-slate-300 font-semibold">Avance del Roadmap</span>
-                                    <span class="text-indigo-300 font-bold">@selectedRoadmapDetail.ProgressPercentage%</span>
+                                    <span class="text-cyan-300 font-bold">@selectedRoadmapDetail.ProgressPercentage%</span>
                                 </div>
-                                <div class="w-full bg-slate-900/80 rounded-full h-2 overflow-hidden border border-white/[0.06] p-0.5">
-                                    <div 
-                                        class="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500 shadow-sm shadow-indigo-500/50 transition-all duration-300"
-                                        style="width: @(Math.Clamp(selectedRoadmapDetail.ProgressPercentage, 0, 100))%">
-                                    </div>
-                                </div>
+                                <AtlasProgress Value="@selectedRoadmapDetail.ProgressPercentage" Color="cyan" Height="md" />
                             </div>
 
                             <div class="space-y-2 pt-2">
@@ -265,7 +449,7 @@
                                                         Paso @(m.OrderIndex + 1): @m.Title
                                                     </span>
                                                 </div>
-                                                <span class="text-[10.5px] font-mono text-slate-400 uppercase">@m.Status</span>
+                                                <AtlasBadge Variant="@(isCompleted ? "emerald" : "neutral")">@m.Status</AtlasBadge>
                                             </div>
                                         }
                                     }
@@ -273,36 +457,102 @@
                             </div>
                         </div>
                     }
-                    else if (selectedItem.Category == "Finanza")
+                    else if (selectedItem.Category == "Hábito" && selectedDomainObject is Habit currentHabit)
                     {
-                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3.5">
+                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-4">
                             <div class="flex items-center justify-between">
-                                <span class="text-xs text-slate-400 font-mono">Monto registrado:</span>
-                                <span class="text-base font-bold font-mono text-white">@selectedItem.BodyContent</span>
+                                <span class="text-xs text-slate-400 font-mono">Frecuencia configurada:</span>
+                                <span class="text-sm font-semibold text-white">@currentHabit.Frequency</span>
                             </div>
                             <div class="h-px bg-white/[0.06]"></div>
-                            <div class="flex items-center justify-between text-xs font-mono text-slate-400">
-                                <span>Estado: Confirmado en SQLite</span>
-                                <span>Moneda: ARS</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-400 font-mono">Acción directa:</span>
+                                <AtlasButton 
+                                    Variant="primary" 
+                                    Size="sm" 
+                                    OnClick="@(() => QuickCompleteHabit(currentHabit.Id, currentHabit.Name))">
+                                    ✓ Marcar completado hoy
+                                </AtlasButton>
                             </div>
                         </div>
                     }
-                    else
+                    else if (selectedItem.Category == "Finanza" && selectedDomainObject is Transaction currentTx)
                     {
-                        <div class="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-slate-300 leading-relaxed">
-                            @selectedItem.BodyContent
+                        var isIncome = currentTx.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase);
+                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3.5">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-400 font-mono">Monto registrado:</span>
+                                <span class="text-lg font-bold font-mono @(isIncome ? "text-emerald-400" : "text-rose-400")">
+                                    @(isIncome ? "+" : "-")$@currentTx.Monto.ToString("N0", new CultureInfo("es-AR")) @currentTx.Moneda
+                                </span>
+                            </div>
+                            <div class="h-px bg-white/[0.06]"></div>
+                            <div class="grid grid-cols-2 gap-3 text-xs font-mono text-slate-400">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 block">Categoría:</span>
+                                    <span class="text-slate-200">@(currentTx.Categoria ?? "Sin categorizar")</span>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 block">Origen:</span>
+                                    <span class="text-slate-200 capitalize">@currentTx.Origen</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (selectedItem.Category == "Comando" && selectedDomainObject is ICommand currentCmd)
+                    {
+                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-4">
+                            <div class="space-y-1">
+                                <span class="text-[10px] font-mono text-slate-500 uppercase block">Identificador:</span>
+                                <code class="text-xs text-orange-300 font-mono bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20 block">@currentCmd.Id</code>
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed font-sans">@currentCmd.Description</p>
+                            @if (currentCmd.InputSchema.Count > 0)
+                            {
+                                <div class="space-y-1 pt-1">
+                                    <span class="text-[10px] font-mono text-slate-500 uppercase block">Parámetros soportados:</span>
+                                    <div class="space-y-1">
+                                        @foreach (var param in currentCmd.InputSchema)
+                                        {
+                                            <div class="text-[11px] font-mono text-slate-400 flex items-center gap-2">
+                                                <span class="text-slate-200">--@param.Name</span>
+                                                <span class="text-slate-500">(@param.ParameterType.Name)</span>
+                                                <span class="text-slate-400 font-sans">• @param.Description</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else if (selectedItem.Category == "Gmail" && selectedDomainObject is GmailMessageSummary currentMail)
+                    {
+                        <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] space-y-3.5">
+                            <div class="space-y-1 text-xs">
+                                <div class="flex items-center justify-between text-slate-400 font-mono text-[11px]">
+                                    <span>De: <strong class="text-slate-200 font-sans">@currentMail.From</strong></span>
+                                    <span>@currentMail.Date.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                                </div>
+                            </div>
+                            <div class="h-px bg-white/[0.06]"></div>
+                            <div class="text-xs text-slate-200 leading-relaxed font-sans">
+                                @currentMail.Snippet
+                            </div>
                         </div>
                     }
 
                 </div>
 
-                <!-- Floating Bottom Contextual Action Bar -->
-                <div class="h-14 px-6 border-t border-white/[0.08] bg-[#090b10]/90 backdrop-blur-md flex items-center justify-between text-xs">
+                <!-- Bottom Contextual Action Bar -->
+                <div class="h-14 px-6 border-t border-white/[0.08] bg-[#080b12]/95 backdrop-blur-md flex items-center justify-between text-xs shrink-0">
                     <div class="flex items-center gap-2.5">
                         <AtlasContextActionBar Target="@selectedDomainObject" OnActionExecuted="HandleContextActionResult" />
                     </div>
 
-                    <span class="text-[10.5px] font-mono text-slate-500">ID: @selectedItem.Id[..Math.Min(8, selectedItem.Id.Length)]...</span>
+                    @if (!string.IsNullOrWhiteSpace(actionFeedback))
+                    {
+                        <span class="text-[11px] font-mono text-emerald-400 animate-atlas-in">@actionFeedback</span>
+                    }
                 </div>
             }
 
@@ -313,6 +563,9 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? UrlQuery { get; set; }
+
     private string searchQuery = string.Empty;
     private string selectedFilter = "all";
     private bool isLoading = true;
@@ -333,22 +586,41 @@
     private Roadmap? selectedRoadmapDetail;
     private object? selectedDomainObject;
 
-    // Local in-memory caches
+    // In-memory collections
     private List<Note> allNotes = [];
+    private List<Goal> allGoals = [];
     private List<Roadmap> allRoadmaps = [];
     private List<Habit> allHabits = [];
     private List<Transaction> allTransactions = [];
+    private List<ICommand> allCommands = [];
+    private List<GmailMessageSummary> allGmailMessages = [];
 
     // Filtered lists
     private List<Note> filteredNotes = [];
+    private List<Goal> filteredGoals = [];
     private List<Roadmap> filteredRoadmaps = [];
     private List<Habit> filteredHabits = [];
     private List<Transaction> filteredTransactions = [];
+    private List<ICommand> filteredCommands = [];
+    private List<GmailMessageSummary> filteredGmailMessages = [];
 
-    private int TotalResultCount => filteredNotes.Count + filteredRoadmaps.Count + filteredHabits.Count + filteredTransactions.Count;
+    private int TotalResultCount => 
+        filteredNotes.Count + 
+        filteredGoals.Count + 
+        filteredRoadmaps.Count + 
+        filteredHabits.Count + 
+        filteredTransactions.Count + 
+        filteredCommands.Count + 
+        filteredGmailMessages.Count;
 
     protected override async Task OnInitializedAsync()
     {
+        if (!string.IsNullOrWhiteSpace(UrlQuery))
+        {
+            searchQuery = UrlQuery;
+        }
+
+        allCommands = CommandRegistry.GetAllCommands().ToList();
         await LoadAllDataAsync();
     }
 
@@ -358,23 +630,34 @@
         try
         {
             var notesTask = NoteRepository.GetRecentAsync(100);
+            var goalsTask = GoalRepository.GetAllAsync();
             var roadmapsTask = RoadmapRepository.GetAllAsync();
             var habitsTask = HabitRepository.GetAllAsync();
             var txsTask = TransactionRepository.GetRecentAsync(100);
 
-            await Task.WhenAll(notesTask, roadmapsTask, habitsTask, txsTask);
+            await Task.WhenAll(notesTask, goalsTask, roadmapsTask, habitsTask, txsTask);
 
             allNotes = (await notesTask).ToList();
+            allGoals = (await goalsTask).ToList();
             allRoadmaps = (await roadmapsTask).ToList();
             allHabits = (await habitsTask).ToList();
             allTransactions = (await txsTask).ToList();
 
-            ApplyFilters();
-
-            if (filteredNotes.Count > 0 && selectedItem == null)
+            // Load Gmail if configured
+            if (SecretVault.HasSecret(SecretKeys.GmailClientId))
             {
-                SelectNote(filteredNotes[0]);
+                try
+                {
+                    var gmailResult = await CommandRegistry.ExecuteAsync(GmailListRecentCommand.CommandId, new Dictionary<string, object?> { ["limit"] = 15 });
+                    if (gmailResult.IsSuccess && gmailResult.Data is IReadOnlyList<GmailMessageSummary> messages)
+                    {
+                        allGmailMessages = messages.ToList();
+                    }
+                }
+                catch { }
             }
+
+            ApplyFilters();
         }
         catch (Exception ex)
         {
@@ -384,6 +667,12 @@
         {
             isLoading = false;
         }
+    }
+
+    private void HandleSearchInput(string? val)
+    {
+        searchQuery = val ?? string.Empty;
+        ApplyFilters();
     }
 
     private void SetFilter(string filter)
@@ -405,15 +694,24 @@
         if (string.IsNullOrWhiteSpace(q))
         {
             filteredNotes = allNotes;
+            filteredGoals = allGoals;
             filteredRoadmaps = allRoadmaps;
             filteredHabits = allHabits;
             filteredTransactions = allTransactions;
+            filteredCommands = allCommands;
+            filteredGmailMessages = allGmailMessages;
         }
         else
         {
             filteredNotes = allNotes
                 .Where(n => (n.Content != null && n.Content.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                            (n.Title != null && n.Title.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                             (n.Tags != null && n.Tags.Contains(q, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            filteredGoals = allGoals
+                .Where(g => (g.Title != null && g.Title.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                            (g.Description != null && g.Description.Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             filteredRoadmaps = allRoadmaps
@@ -429,15 +727,30 @@
                 .Where(t => (t.Descripcion != null && t.Descripcion.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
                             (t.Categoria != null && t.Categoria.Contains(q, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
+
+            filteredCommands = allCommands
+                .Where(c => c.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                            c.Id.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                            c.Description.Contains(q, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            filteredGmailMessages = allGmailMessages
+                .Where(m => (m.Subject != null && m.Subject.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                            (m.From != null && m.From.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                            (m.Snippet != null && m.Snippet.Contains(q, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
         }
 
-        // Auto-select first item if previous selection vanished
+        // Auto-select first item if current selection is not present
         if (selectedItem != null)
         {
             var exists = filteredNotes.Any(n => n.Id == selectedItem.Id) ||
+                         filteredGoals.Any(g => g.Id == selectedItem.Id) ||
                          filteredRoadmaps.Any(r => r.Id == selectedItem.Id) ||
                          filteredHabits.Any(h => h.Id == selectedItem.Id) ||
-                         filteredTransactions.Any(t => t.Id == selectedItem.Id);
+                         filteredTransactions.Any(t => t.Id == selectedItem.Id) ||
+                         filteredCommands.Any(c => c.Id == selectedItem.Id) ||
+                         filteredGmailMessages.Any(m => m.Id == selectedItem.Id);
 
             if (!exists)
             {
@@ -457,12 +770,18 @@
     {
         if (ShouldShow("notes") && filteredNotes.Count > 0)
             SelectNote(filteredNotes[0]);
+        else if (ShouldShow("goals") && filteredGoals.Count > 0)
+            SelectGoal(filteredGoals[0]);
         else if (ShouldShow("roadmaps") && filteredRoadmaps.Count > 0)
             SelectRoadmap(filteredRoadmaps[0]);
         else if (ShouldShow("habits") && filteredHabits.Count > 0)
             SelectHabit(filteredHabits[0]);
         else if (ShouldShow("finance") && filteredTransactions.Count > 0)
             SelectTransaction(filteredTransactions[0]);
+        else if (ShouldShow("commands") && filteredCommands.Count > 0)
+            SelectCommand(filteredCommands[0]);
+        else if (ShouldShow("gmail") && filteredGmailMessages.Count > 0)
+            SelectGmail(filteredGmailMessages[0]);
     }
 
     private void SelectNote(Note note)
@@ -474,10 +793,26 @@
         selectedItem = new SearchUnifiedItem(
             Id: note.Id,
             Category: "Nota",
-            BadgeVariant: "neutral",
+            BadgeVariant: "purple",
             Title: GetNoteTitle(note),
             MetaInfo: $"{note.CreatedAt.ToLocalTime():dd MMM yyyy HH:mm} • {note.Type}",
             BodyContent: note.Content
+        );
+    }
+
+    private void SelectGoal(Goal goal)
+    {
+        selectedDomainObject = goal;
+        selectedRoadmapDetail = null;
+        aiOutput = null;
+
+        selectedItem = new SearchUnifiedItem(
+            Id: goal.Id,
+            Category: "Meta",
+            BadgeVariant: "purple",
+            Title: goal.Title,
+            MetaInfo: $"Progreso: {goal.Progress}% • Estado: {goal.Status}",
+            BodyContent: goal.Description ?? string.Empty
         );
     }
 
@@ -490,7 +825,7 @@
         selectedItem = new SearchUnifiedItem(
             Id: roadmap.Id,
             Category: "Roadmap",
-            BadgeVariant: "accent",
+            BadgeVariant: "cyan",
             Title: roadmap.Title,
             MetaInfo: $"{roadmap.Milestones?.Count ?? 0} hitos • {roadmap.ProgressPercentage}% avance",
             BodyContent: roadmap.Description ?? string.Empty
@@ -506,10 +841,10 @@
         selectedItem = new SearchUnifiedItem(
             Id: habit.Id,
             Category: "Hábito",
-            BadgeVariant: "success",
+            BadgeVariant: "emerald",
             Title: habit.Name,
             MetaInfo: $"Frecuencia: {habit.Frequency}",
-            BodyContent: $"Hábito configurado con frecuencia {habit.Frequency}."
+            BodyContent: $"Hábito con frecuencia {habit.Frequency}."
         );
     }
 
@@ -519,26 +854,76 @@
         selectedRoadmapDetail = null;
         aiOutput = null;
 
-        var isIncome = tx.Tipo == "income";
+        var isIncome = tx.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase);
         var amountFormatted = $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", new CultureInfo("es-AR"))} ({tx.Tipo})";
 
         selectedItem = new SearchUnifiedItem(
             Id: tx.Id,
             Category: "Finanza",
-            BadgeVariant: isIncome ? "success" : "neutral",
+            BadgeVariant: isIncome ? "emerald" : "rose",
             Title: tx.Descripcion,
             MetaInfo: $"{tx.Fecha.ToLocalTime():dd MMM yyyy HH:mm} • {tx.Origen}",
             BodyContent: amountFormatted
         );
     }
 
+    private void SelectCommand(ICommand cmd)
+    {
+        selectedDomainObject = cmd;
+        selectedRoadmapDetail = null;
+        aiOutput = null;
+
+        selectedItem = new SearchUnifiedItem(
+            Id: cmd.Id,
+            Category: "Comando",
+            BadgeVariant: "orange",
+            Title: cmd.Name,
+            MetaInfo: $"/{cmd.Id}",
+            BodyContent: cmd.Description
+        );
+    }
+
+    private void SelectGmail(GmailMessageSummary mail)
+    {
+        selectedDomainObject = mail;
+        selectedRoadmapDetail = null;
+        aiOutput = null;
+
+        selectedItem = new SearchUnifiedItem(
+            Id: mail.Id,
+            Category: "Gmail",
+            BadgeVariant: "cyan",
+            Title: mail.Subject,
+            MetaInfo: $"De: {mail.From} • {mail.Date.ToLocalTime():dd MMM}",
+            BodyContent: mail.Snippet
+        );
+    }
+
     private static string GetNoteTitle(Note note)
     {
+        if (!string.IsNullOrWhiteSpace(note.Title)) return note.Title;
         if (string.IsNullOrWhiteSpace(note.Content)) return "Nota sin título";
         var lines = note.Content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
         var first = lines.Length > 0 ? lines[0] : note.Content;
         if (first.Length > 45) return first[..45] + "...";
         return first;
+    }
+
+    private async Task QuickCompleteHabit(string habitId, string habitName)
+    {
+        try
+        {
+            var result = await CommandRegistry.ExecuteAsync(HabitCompleteCommand.CommandId, new Dictionary<string, object?> { ["id"] = habitId });
+            if (result.IsSuccess)
+            {
+                actionFeedback = $"✓ Hábito '{habitName}' completado hoy";
+                _ = Task.Delay(2500).ContinueWith(_ => { actionFeedback = null; InvokeAsync(StateHasChanged); });
+            }
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = $"Error: {ex.Message}";
+        }
     }
 
     private void HandleContextActionResult(AtlasContextActionBar.ContextActionResult contextResult)
