@@ -1,5 +1,6 @@
 using System.Globalization;
 using ATLAS.Core.Entities;
+using ATLAS.Core.Events;
 using ATLAS.Core.Repositories;
 
 namespace ATLAS.Core.Commands;
@@ -10,12 +11,14 @@ namespace ATLAS.Core.Commands;
 public class FinanceAddTransactionCommand : ICommand
 {
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAtlasEventBus? _eventBus;
 
     public const string CommandId = "finance.add_transaction";
 
-    public FinanceAddTransactionCommand(ITransactionRepository transactionRepository)
+    public FinanceAddTransactionCommand(ITransactionRepository transactionRepository, IAtlasEventBus? eventBus = null)
     {
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
+        _eventBus = eventBus;
     }
 
     public string Id => CommandId;
@@ -149,6 +152,21 @@ public class FinanceAddTransactionCommand : ICommand
         try
         {
             var created = await _transactionRepository.CreateAsync(transaction, cancellationToken).ConfigureAwait(false);
+
+            if (_eventBus != null)
+            {
+                await _eventBus.PublishAsync(new TransactionCreatedEvent(
+                    TransactionId: created.Id,
+                    Description: created.Descripcion,
+                    Amount: created.Monto,
+                    Type: created.Tipo,
+                    Category: created.Categoria,
+                    Source: created.Origen,
+                    EventId: Guid.NewGuid().ToString("N"),
+                    OccurredAt: created.Fecha
+                ), cancellationToken).ConfigureAwait(false);
+            }
+
             return CommandResult.Success(created);
         }
         catch (Exception ex)

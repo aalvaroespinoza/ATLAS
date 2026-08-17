@@ -1,5 +1,6 @@
 using System.Globalization;
 using ATLAS.Core.Entities;
+using ATLAS.Core.Events;
 using ATLAS.Core.Repositories;
 
 namespace ATLAS.Core.Commands;
@@ -10,12 +11,14 @@ namespace ATLAS.Core.Commands;
 public class HabitCompleteCommand : ICommand
 {
     private readonly IHabitRepository _habitRepository;
+    private readonly IAtlasEventBus? _eventBus;
 
     public const string CommandId = "habit.complete";
 
-    public HabitCompleteCommand(IHabitRepository habitRepository)
+    public HabitCompleteCommand(IHabitRepository habitRepository, IAtlasEventBus? eventBus = null)
     {
         _habitRepository = habitRepository ?? throw new ArgumentNullException(nameof(habitRepository));
+        _eventBus = eventBus;
     }
 
     public string Id => CommandId;
@@ -84,6 +87,24 @@ public class HabitCompleteCommand : ICommand
             };
 
             var saved = await _habitRepository.RecordEventAsync(habitEvent, cancellationToken).ConfigureAwait(false);
+
+            if (_eventBus != null)
+            {
+                var source = parameters.TryGetValue("source", out var rawSource) && rawSource != null
+                    ? rawSource.ToString()!
+                    : "system";
+
+                await _eventBus.PublishAsync(new HabitCompletedEvent(
+                    HabitId: habit.Id,
+                    HabitName: habit.Name,
+                    Note: habitEvent.Note,
+                    CompletedAt: habitEvent.CompletedAt,
+                    Source: source,
+                    EventId: Guid.NewGuid().ToString("N"),
+                    OccurredAt: DateTimeOffset.UtcNow
+                ), cancellationToken).ConfigureAwait(false);
+            }
+
             return CommandResult.Success(saved);
         }
         catch (Exception ex)

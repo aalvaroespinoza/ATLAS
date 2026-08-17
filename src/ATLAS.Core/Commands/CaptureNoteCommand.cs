@@ -1,4 +1,5 @@
 using ATLAS.Core.Entities;
+using ATLAS.Core.Events;
 using ATLAS.Core.Repositories;
 
 namespace ATLAS.Core.Commands;
@@ -9,12 +10,14 @@ namespace ATLAS.Core.Commands;
 public class CaptureNoteCommand : ICommand
 {
     private readonly INoteRepository _noteRepository;
+    private readonly IAtlasEventBus? _eventBus;
 
     public const string CommandId = "capture.note";
 
-    public CaptureNoteCommand(INoteRepository noteRepository)
+    public CaptureNoteCommand(INoteRepository noteRepository, IAtlasEventBus? eventBus = null)
     {
         _noteRepository = noteRepository ?? throw new ArgumentNullException(nameof(noteRepository));
+        _eventBus = eventBus;
     }
 
     public string Id => CommandId;
@@ -87,6 +90,20 @@ public class CaptureNoteCommand : ICommand
         };
 
         var created = await _noteRepository.CreateAsync(note, cancellationToken).ConfigureAwait(false);
+
+        if (_eventBus != null)
+        {
+            await _eventBus.PublishAsync(new NoteCapturedEvent(
+                NoteId: created.Id,
+                Title: created.Title,
+                Content: created.Content,
+                Tags: created.Tags,
+                Source: created.Source,
+                EventId: Guid.NewGuid().ToString("N"),
+                OccurredAt: created.CreatedAt
+            ), cancellationToken).ConfigureAwait(false);
+        }
+
         return CommandResult.Success(created);
     }
 }

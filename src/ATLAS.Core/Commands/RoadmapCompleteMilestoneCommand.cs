@@ -1,4 +1,5 @@
 using ATLAS.Core.Entities;
+using ATLAS.Core.Events;
 using ATLAS.Core.Repositories;
 
 namespace ATLAS.Core.Commands;
@@ -10,13 +11,18 @@ public class RoadmapCompleteMilestoneCommand : ICommand
 {
     private readonly IRoadmapRepository _roadmapRepository;
     private readonly IGoalRepository _goalRepository;
+    private readonly IAtlasEventBus? _eventBus;
 
     public const string CommandId = "roadmap.complete_milestone";
 
-    public RoadmapCompleteMilestoneCommand(IRoadmapRepository roadmapRepository, IGoalRepository goalRepository)
+    public RoadmapCompleteMilestoneCommand(
+        IRoadmapRepository roadmapRepository,
+        IGoalRepository goalRepository,
+        IAtlasEventBus? eventBus = null)
     {
         _roadmapRepository = roadmapRepository ?? throw new ArgumentNullException(nameof(roadmapRepository));
         _goalRepository = goalRepository ?? throw new ArgumentNullException(nameof(goalRepository));
+        _eventBus = eventBus;
     }
 
     public string Id => CommandId;
@@ -92,6 +98,25 @@ public class RoadmapCompleteMilestoneCommand : ICommand
 
                     updatedGoal = await _goalRepository.UpdateAsync(goalToSave, cancellationToken).ConfigureAwait(false);
                 }
+            }
+
+            if (_eventBus != null)
+            {
+                var source = parameters.TryGetValue("source", out var rawSource) && rawSource != null
+                    ? rawSource.ToString()!
+                    : "system";
+
+                await _eventBus.PublishAsync(new RoadmapMilestoneCompletedEvent(
+                    RoadmapId: milestone.RoadmapId,
+                    RoadmapTitle: parentRoadmap?.Title,
+                    MilestoneId: milestoneId,
+                    MilestoneTitle: milestone.Title,
+                    Completed: completed,
+                    NewRoadmapProgress: updatedProgress,
+                    Source: source,
+                    EventId: Guid.NewGuid().ToString("N"),
+                    OccurredAt: DateTimeOffset.UtcNow
+                ), cancellationToken).ConfigureAwait(false);
             }
 
             return CommandResult.Success(new

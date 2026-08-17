@@ -13,6 +13,7 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddAtlasCore(this IServiceCollection services)
     {
+        services.AddSingleton<ATLAS.Core.Events.IAtlasEventBus, ATLAS.Core.Events.AtlasEventBus>();
         services.AddSingleton<ICommandRegistry, CommandRegistry>();
         services.AddSingleton<TelegramMessageProcessor>();
         services.AddSingleton<ITelegramListenerService, TelegramListenerService>();
