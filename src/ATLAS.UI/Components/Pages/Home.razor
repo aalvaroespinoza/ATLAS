@@ -2,10 +2,15 @@
 @using System.Globalization
 @using ATLAS.Core.Commands
 @using ATLAS.Core.Context
+@using ATLAS.Core.Events
 @using ATLAS.UI.Components.Common
+@using ATLAS.UI.Services
+
 @inject IAtlasContextService AtlasContextService
 @inject ICommandRegistry CommandRegistry
 @inject NavigationManager NavigationManager
+@inject IAtlasEventBus EventBus
+@implements IDisposable
 
 <div class="space-y-6 max-w-6xl mx-auto pb-24 animate-atlas-in">
 
@@ -541,10 +546,28 @@
     private bool isExecutingPrompt;
     private string? actionFeedback;
     private string? aiAnswer;
+    private IDisposable? _eventSubscription;
 
     protected override async Task OnInitializedAsync()
     {
+        _eventSubscription = EventBus.SubscribeAll(async (evt) =>
+        {
+            // Pequeño retardo para asegurar que los BackgroundServices (como ActivityEventSubscriber) 
+            // terminen de guardar en SQLite antes de recargar.
+            await Task.Delay(100); 
+            await InvokeAsync(async () =>
+            {
+                await ReloadContextAsync();
+                StateHasChanged();
+            });
+        });
+        
         await ReloadContextAsync();
+    }
+
+    public void Dispose()
+    {
+        _eventSubscription?.Dispose();
     }
 
     private async Task ReloadContextAsync()

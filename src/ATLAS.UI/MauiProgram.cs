@@ -115,6 +115,14 @@ public static class MauiProgram
             // 3. Start Telegram Listener in background thread pool
             var telegramListener = services.GetRequiredService<ITelegramListenerService>();
             _ = Task.Run(() => telegramListener.StartAsync());
+
+            // 4. Start Activity Event Subscriber
+            var hostedServices = services.GetServices<Microsoft.Extensions.Hosting.IHostedService>();
+            var activitySubscriber = hostedServices.OfType<ATLAS.Core.Services.ActivityEventSubscriber>().FirstOrDefault();
+            if (activitySubscriber != null)
+            {
+                _ = activitySubscriber.StartAsync(CancellationToken.None);
+            }
         }
         catch (Exception ex)
         {
