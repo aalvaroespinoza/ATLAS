@@ -122,45 +122,37 @@ No crear un módulo nuevo si una función puede vivir razonablemente dentro de u
 
 # 4. Arquitectura conceptual
 
-ATLAS debe estar dividido en cuatro niveles.
+ATLAS se estructura formalmente en las siguientes capas desacopladas, asegurando un diseño mantenible y local-first:
 
-```text
-┌───────────────────────────────────────────────┐
-│                 EXPERIENCIA                   │
-│   UI Windows / comandos / atajos / tray      │
-└──────────────────────┬────────────────────────┘
-                       │
-┌──────────────────────▼────────────────────────┐
-│                 ATLAS CORE                    │
-│ identidad · contexto · búsqueda · eventos   │
-└──────────────────────┬────────────────────────┘
-                       │
-        ┌──────────────┼──────────────┐
-        ▼              ▼              ▼
-   KNOWLEDGE      PRODUCTIVITY      FINANCE
-        │              │              │
-        └──────────────┼──────────────┘
-                       ▼
-┌───────────────────────────────────────────────┐
-│                 AI / AGENTS                   │
-│ local AI + APIs externas + automatizaciones   │
-└──────────────────────┬────────────────────────┘
-                       │
-┌──────────────────────▼────────────────────────┐
-│               INTEGRATION HUB                 │
-│ Gmail · Telegram · WhatsApp · Files · etc.   │
-└───────────────────────────────────────────────┘
-```
+**EXPERIENCIA**
+↓
+Dock / Home / Command Center / Search / Context
 
-La clave es que los módulos no dependan de la interfaz.
+**INPUT**
+↓
+Windows / Telegram / Gmail / Mercado Pago / archivos
 
-La UI consume servicios del Core.
+**CORE**
+↓
+Commands / Context / Events / AI orchestration
 
-La IA consume servicios del Core.
+**MODULES**
+↓
+Knowledge / Habits / Goals / Roadmaps / Finance
 
-Las integraciones consumen servicios del Core.
+**STORAGE**
+↓
+SQLite / Secure Store / Supabase Sync
 
-Esto permite cambiar UI, modelo de IA o proveedor sin reescribir todo.
+**AI**
+↓
+Gemini / Local provider preparado
+
+**INTEGRATIONS**
+↓
+Gmail / Telegram / Mercado Pago / Supabase / Windows
+
+La clave es que los módulos no dependan de la interfaz. La UI, la IA y las integraciones consumen exclusivamente servicios del Core (`ICommandRegistry`, `IContextActionService`). Esto permite cambiar UI, modelo de IA o proveedor sin reescribir la lógica subyacente. Módulos complejos no implementados explícitamente se consideran capacidades **futuras**.
 
 ---
 

@@ -11,7 +11,37 @@
 - **Seguridad:** Windows Credential Locker (DPAPI) + Bóveda PIN de 4 dígitos (SHA-256)
 - **IA:** Google Gemini API (`gemini-1.5-flash-latest`, `IAiProvider`)
 
-## 3. Reglas Arquitectónicas Fundamentales
+## 3. Arquitectura y Flujo (Personal OS)
+
+**EXPERIENCIA**
+↓
+Dock / Home / Command Center / Search / Context
+
+**INPUT**
+↓
+Windows / Telegram / Gmail / Mercado Pago / archivos
+
+**CORE**
+↓
+Commands / Context / Events / AI orchestration
+
+**MODULES**
+↓
+Knowledge / Habits / Goals / Roadmaps / Finance
+
+**STORAGE**
+↓
+SQLite / Secure Store / Supabase Sync
+
+**AI**
+↓
+Gemini / Local provider preparado
+
+**INTEGRATIONS**
+↓
+Gmail / Telegram / Mercado Pago / Supabase / Windows
+
+*Reglas Fundamentales:*
 - **Core desacoplado de UI:** `ATLAS.Core` y `ATLAS.Storage` no conocen a `ATLAS.UI` ni a Blazor.
 - **Commands como punto de entrada:** Toda acción de negocio se ejecuta mediante `ICommand` registrado en `ICommandRegistry`.
 - **SQLite local-first:** Todas las operaciones primarias funcionan 100% offline.
