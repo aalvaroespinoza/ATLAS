@@ -628,18 +628,25 @@
             }
             else
             {
-                supabaseUrlInput = hasSupabaseConfigured ? "••••••••••••••••••••••••" : string.Empty;
-                supabaseKeyInput = hasSupabaseConfigured ? "••••••••••••••••••••••••" : string.Empty;
-                geminiKeyInput = hasGeminiKey ? "••••••••••••••••••••••••" : string.Empty;
-                telegramTokenInput = hasTelegramToken ? "••••••••••••••••••••••••" : string.Empty;
-                mpTokenInput = hasMpToken ? "••••••••••••••••••••••••" : string.Empty;
-                gmailTokenInput = hasGmailToken ? "••••••••••••••••••••••••" : string.Empty;
+                supabaseUrlInput = hasSupabaseConfigured ? MaskToken(SecretVault.GetSecret(SecretKeys.SupabaseUrl), 12, 0) : string.Empty;
+                supabaseKeyInput = hasSupabaseConfigured ? MaskToken(SecretVault.GetSecret(SecretKeys.SupabaseAnonKey), 6, 4) : string.Empty;
+                geminiKeyInput = hasGeminiKey ? MaskToken(SecretVault.GetSecret(SecretKeys.GeminiApiKey), 6, 4) : string.Empty;
+                telegramTokenInput = hasTelegramToken ? MaskToken(SecretVault.GetSecret(SecretKeys.TelegramBotToken), 10, 4) : string.Empty; // 123456789:
+                mpTokenInput = hasMpToken ? MaskToken(SecretVault.GetSecret(SecretKeys.MercadoPagoAccessToken), 8, 4) : string.Empty; // APP_USR-
+                gmailTokenInput = hasGmailToken ? MaskToken(SecretVault.GetSecret(SecretKeys.GmailRefreshToken), 4, 4) : string.Empty; // 1//0
             }
         }
         catch (Exception ex)
         {
             ShowFeedback($"Error al consultar almacén de secretos: {ex.Message}", false);
         }
+    }
+
+    private string MaskToken(string? token, int showFirst = 4, int showLast = 4)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return string.Empty;
+        if (token.Length <= showFirst + showLast) return "••••••••••••••••";
+        return $"{token[..showFirst]}••••••••••••{token[^showLast..]}";
     }
 
     private void SetInitialPinAsync()

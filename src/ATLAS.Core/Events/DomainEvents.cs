@@ -54,3 +54,13 @@ public record RoadmapMilestoneCompletedEvent(
     string EventId,
     DateTimeOffset OccurredAt
 ) : IAtlasEvent;
+
+/// <summary>
+/// Event emitted when external transactions are synchronized into the system.
+/// </summary>
+public record TransactionsSyncedEvent(
+    string Source,
+    int NewTransactionsCount,
+    string EventId,
+    DateTimeOffset OccurredAt
+) : IAtlasEvent;

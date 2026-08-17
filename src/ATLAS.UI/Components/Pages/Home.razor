@@ -476,8 +476,12 @@
                     <ChildContent>
                         <div class="flex items-center gap-2.5 py-1">
                             <!-- Telegram -->
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextSnapshot.Integrations.HasTelegram ? "bg-[#229ED9]/20 border border-[#229ED9]/50 text-[#229ED9]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Telegram Bot">
+                            <div class="relative w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextSnapshot.Integrations.HasTelegram ? "bg-[#229ED9]/20 border border-[#229ED9]/50 text-[#229ED9]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Telegram Bot">
                                 <span class="text-xs font-bold">✈️</span>
+                                @if(contextSnapshot.Integrations.IsTelegramRunning)
+                                {
+                                    <span class="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0c101a] shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                                }
                             </div>
 
                             <!-- Gmail -->
@@ -491,7 +495,7 @@
                             </div>
 
                             <!-- Mercado Pago -->
-                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextSnapshot.Integrations.HasMercadoPago ? "bg-[#009EE3]/20 border border-[#009EE3]/50 text-[#009EE3]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="Mercado Pago Sync">
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer @(contextSnapshot.Integrations.HasMercadoPago ? "bg-[#009EE3]/20 border border-[#009EE3]/50 text-[#009EE3]" : "bg-white/[0.05] border border-white/[0.08] text-slate-500")" title="@(contextSnapshot.Integrations.LastMercadoPagoSync.HasValue ? $"Mercado Pago (Última sincronización: {contextSnapshot.Integrations.LastMercadoPagoSync.Value.ToLocalTime():dd/MM HH:mm})" : "Mercado Pago Sync")">
                                 <span class="text-xs font-bold">💳</span>
                             </div>
 

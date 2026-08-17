@@ -19,7 +19,8 @@ public class AiAskCommand : ICommand
 
     public IReadOnlyList<CommandParameterDescriptor> InputSchema { get; } =
     [
-        new("prompt", typeof(string), "Pregunta o instrucción para la IA", IsRequired: true)
+        new("prompt", typeof(string), "Pregunta o instrucción para la IA", IsRequired: true),
+        new("stream", typeof(bool), "Si es verdadero, devuelve un IAsyncEnumerable<string>", IsRequired: false)
     ];
 
     public AiAskCommand(IAiProvider aiProvider)
@@ -40,11 +41,20 @@ public class AiAskCommand : ICommand
         }
 
         var prompt = rawPrompt.ToString()!.Trim();
+        var stream = parameters.TryGetValue("stream", out var streamVal) && streamVal is bool b && b;
 
         try
         {
-            var answer = await _aiProvider.AskAsync(prompt, cancellationToken).ConfigureAwait(false);
-            return CommandResult.Success(answer);
+            if (stream)
+            {
+                var enumerable = _aiProvider.AskStreamAsync(prompt, cancellationToken);
+                return CommandResult.Success(enumerable);
+            }
+            else
+            {
+                var answer = await _aiProvider.AskAsync(prompt, cancellationToken).ConfigureAwait(false);
+                return CommandResult.Success(answer);
+            }
         }
         catch (Exception ex)
         {

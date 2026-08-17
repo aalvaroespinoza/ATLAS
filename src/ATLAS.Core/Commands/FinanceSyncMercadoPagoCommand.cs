@@ -1,4 +1,5 @@
 using ATLAS.Core.Entities;
+using ATLAS.Core.Events;
 using ATLAS.Core.Integrations;
 using ATLAS.Core.Integrations.MercadoPago;
 using ATLAS.Core.Repositories;
@@ -13,15 +14,18 @@ public class FinanceSyncMercadoPagoCommand : ICommand
 {
     private readonly IMercadoPagoClient _mercadoPagoClient;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IAtlasEventBus? _eventBus;
 
     public const string CommandId = "finance.sync_mercadopago";
 
     public FinanceSyncMercadoPagoCommand(
         IMercadoPagoClient mercadoPagoClient,
-        ITransactionRepository transactionRepository)
+        ITransactionRepository transactionRepository,
+        IAtlasEventBus? eventBus = null)
     {
         _mercadoPagoClient = mercadoPagoClient ?? throw new ArgumentNullException(nameof(mercadoPagoClient));
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
+        _eventBus = eventBus;
     }
 
     /// <summary>
@@ -30,8 +34,9 @@ public class FinanceSyncMercadoPagoCommand : ICommand
     public FinanceSyncMercadoPagoCommand(
         ISecretVault secretVault,
         ITransactionRepository transactionRepository,
-        HttpClient? httpClient = null)
-        : this(new MercadoPagoClient(httpClient ?? new HttpClient(), secretVault), transactionRepository)
+        HttpClient? httpClient = null,
+        IAtlasEventBus? eventBus = null)
+        : this(new MercadoPagoClient(httpClient ?? new HttpClient(), secretVault), transactionRepository, eventBus)
     {
     }
 
@@ -72,6 +77,16 @@ public class FinanceSyncMercadoPagoCommand : ICommand
             }
 
             var insertedCount = await _transactionRepository.CreateBatchAsync(transactions, cancellationToken).ConfigureAwait(false);
+
+            if (insertedCount > 0 && _eventBus != null)
+            {
+                await _eventBus.PublishAsync(new TransactionsSyncedEvent(
+                    Source: "Mercado Pago",
+                    NewTransactionsCount: insertedCount,
+                    EventId: Guid.NewGuid().ToString("N"),
+                    OccurredAt: DateTimeOffset.UtcNow
+                ), cancellationToken).ConfigureAwait(false);
+            }
 
             return CommandResult.Success(new
             {

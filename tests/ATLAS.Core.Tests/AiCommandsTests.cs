@@ -27,6 +27,11 @@ public class AiCommandsTests
             }
             return Task.FromResult($"Respuesta a: {prompt}");
         }
+
+        public async IAsyncEnumerable<string> AskStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            yield return await AskAsync(prompt, cancellationToken);
+        }
     }
 
     [Fact]

@@ -67,6 +67,7 @@ public static class MauiProgram
             builder.Services.AddAtlasCore();
             builder.Services.AddAtlasStorage();
             builder.Services.AddSingleton<IContextActionService, ContextActionService>();
+            builder.Services.AddHostedService<WindowsNotificationSubscriber>();
 
             var app = builder.Build();
 
@@ -116,12 +117,11 @@ public static class MauiProgram
             var telegramListener = services.GetRequiredService<ITelegramListenerService>();
             _ = Task.Run(() => telegramListener.StartAsync());
 
-            // 4. Start Activity Event Subscriber
+            // 4. Start Background Event Subscribers
             var hostedServices = services.GetServices<Microsoft.Extensions.Hosting.IHostedService>();
-            var activitySubscriber = hostedServices.OfType<ATLAS.Core.Services.ActivityEventSubscriber>().FirstOrDefault();
-            if (activitySubscriber != null)
+            foreach (var hostedService in hostedServices)
             {
-                _ = activitySubscriber.StartAsync(CancellationToken.None);
+                _ = hostedService.StartAsync(CancellationToken.None);
             }
         }
         catch (Exception ex)

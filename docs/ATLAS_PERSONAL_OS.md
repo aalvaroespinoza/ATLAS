@@ -700,6 +700,26 @@ Estas restricciones son obligatorias.
 
 La aplicación debe integrarse con herramientas existentes en lugar de reemplazarlas.
 
+## Regla Anti-Scope-Creep (Evaluación Obligatoria)
+
+ATLAS ha sufrido problemas de scope creep anteriormente. Para proteger el producto, **ANTES** de agregar una feature nueva debe responderse:
+
+1. ¿Resuelve un problema cotidiano real?
+2. ¿Se usa al menos semanalmente?
+3. ¿Puede existir como capability sin una nueva pantalla?
+4. ¿Puede reutilizar un Command existente?
+5. ¿Puede reutilizar el Context system?
+6. ¿Duplica una herramienta existente?
+7. ¿Aumenta la complejidad visual?
+8. ¿Aumenta la complejidad arquitectónica?
+9. ¿Puede esperar dos semanas de uso real?
+
+**Si una feature no pasa esta evaluación:**
+→ Se envía al backlog.
+→ NO se implementa.
+→ NO se crea una nueva etapa automáticamente.
+→ NO se inventa una numeración de etapas.
+
 ---
 
 # 15. Experiencia de usuario

@@ -14,4 +14,9 @@ public interface IAiProvider
     /// Sends a question/prompt to the AI model and returns the response.
     /// </summary>
     Task<string> AskAsync(string prompt, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a question/prompt to the AI model and returns a streaming response.
+    /// </summary>
+    IAsyncEnumerable<string> AskStreamAsync(string prompt, CancellationToken cancellationToken = default);
 }

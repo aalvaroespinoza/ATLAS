@@ -3,6 +3,8 @@ using ATLAS.Core.Commands;
 using ATLAS.Core.Entities;
 using ATLAS.Core.Repositories;
 using ATLAS.Core.Security;
+using Microsoft.Extensions.DependencyInjection;
+using ATLAS.Core.Integrations.Telegram;
 
 namespace ATLAS.Core.Context;
 
@@ -21,6 +23,7 @@ public class AtlasContextService : IAtlasContextService
     private readonly ITransactionRepository _transactionRepository;
     private readonly IActivityRepository _activityRepository;
     private readonly ISecretVault _secretVault;
+    private readonly IServiceProvider _serviceProvider;
 
     public AtlasContextService(
         IHabitRepository habitRepository,
@@ -29,7 +32,8 @@ public class AtlasContextService : IAtlasContextService
         INoteRepository noteRepository,
         ITransactionRepository transactionRepository,
         ISecretVault secretVault,
-        IActivityRepository activityRepository)
+        IActivityRepository activityRepository,
+        IServiceProvider serviceProvider)
     {
         _habitRepository = habitRepository ?? throw new ArgumentNullException(nameof(habitRepository));
         _goalRepository = goalRepository ?? throw new ArgumentNullException(nameof(goalRepository));
@@ -38,6 +42,7 @@ public class AtlasContextService : IAtlasContextService
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         _secretVault = secretVault ?? throw new ArgumentNullException(nameof(secretVault));
         _activityRepository = activityRepository ?? throw new ArgumentNullException(nameof(activityRepository));
+        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     }
 
     public async Task<AtlasContextSnapshot> GetCurrentContextAsync(CancellationToken cancellationToken = default)
@@ -109,12 +114,34 @@ public class AtlasContextService : IAtlasContextService
         var attentionSignals = BuildAttentionSignals(habitsSummary, nextMilestone, activeGoals);
 
         // 7. Check Integrations Status
+        bool isTelegramRunning = false;
+        try
+        {
+            var telegramListener = _serviceProvider.GetService<ITelegramListenerService>();
+            if (telegramListener != null)
+            {
+                isTelegramRunning = telegramListener.IsRunning;
+            }
+        }
+        catch
+        {
+            // Ignore if service is not available or disposed
+        }
+
+        var lastMpSync = transactions
+            .Where(t => t.Origen.Equals("mercadopago", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(t => t.CreatedAt)
+            .Select(t => (DateTimeOffset?)t.CreatedAt)
+            .FirstOrDefault();
+
         var integrations = new AtlasIntegrationsStatus(
             HasAi: _secretVault.HasSecret(SecretKeys.GeminiApiKey),
             HasTelegram: _secretVault.HasSecret(SecretKeys.TelegramBotToken),
             HasMercadoPago: _secretVault.HasSecret(SecretKeys.MercadoPagoAccessToken),
             HasGmail: _secretVault.HasSecret(SecretKeys.GmailClientId),
-            HasSupabase: _secretVault.HasSecret(SecretKeys.SupabaseUrl)
+            HasSupabase: _secretVault.HasSecret(SecretKeys.SupabaseUrl),
+            IsTelegramRunning: isTelegramRunning,
+            LastMercadoPagoSync: lastMpSync
         );
 
         return new AtlasContextSnapshot(

@@ -12,7 +12,9 @@ public record AtlasIntegrationsStatus(
     bool HasTelegram,
     bool HasMercadoPago,
     bool HasGmail,
-    bool HasSupabase
+    bool HasSupabase,
+    bool IsTelegramRunning,
+    DateTimeOffset? LastMercadoPagoSync
 );
 
 public record AtlasHabitItem(

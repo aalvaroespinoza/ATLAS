@@ -25,6 +25,7 @@ public class ActivityEventSubscriber : BackgroundService
         _eventBus.Subscribe<HabitCompletedEvent>(async e => await HandleHabitCompleted(e, stoppingToken));
         _eventBus.Subscribe<TransactionCreatedEvent>(async e => await HandleTransactionCreated(e, stoppingToken));
         _eventBus.Subscribe<RoadmapMilestoneCompletedEvent>(async e => await HandleMilestoneCompleted(e, stoppingToken));
+        _eventBus.Subscribe<TransactionsSyncedEvent>(async e => await HandleTransactionsSynced(e, stoppingToken));
 
         return Task.CompletedTask;
     }
@@ -88,6 +89,22 @@ public class ActivityEventSubscriber : BackgroundService
             Title = $"Hito alcanzado: {e.MilestoneTitle}",
             Summary = $"Roadmap: {e.RoadmapTitle ?? e.RoadmapId}. Progreso total: {e.NewRoadmapProgress}%",
             RelevanceScore = 7, // Hitos siempre son relevantes
+            Timestamp = e.OccurredAt
+        };
+        await _activityRepository.CreateAsync(record, token);
+    }
+
+    private async Task HandleTransactionsSynced(TransactionsSyncedEvent e, CancellationToken token)
+    {
+        if (e.NewTransactionsCount <= 0) return;
+
+        var record = new ActivityRecord
+        {
+            Type = "finance",
+            SourceId = e.EventId,
+            Title = $"Sincronización: {e.Source}",
+            Summary = $"Se sincronizaron {e.NewTransactionsCount} nuevos movimientos.",
+            RelevanceScore = 5,
             Timestamp = e.OccurredAt
         };
         await _activityRepository.CreateAsync(record, token);

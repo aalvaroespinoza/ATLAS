@@ -18,6 +18,17 @@ public class AiOrchestrator : IAiProvider
         return await ExecuteWithFallbackAsync(p => p.AskAsync(prompt, cancellationToken), cancellationToken);
     }
 
+    public async IAsyncEnumerable<string> AskStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var provider = _providers.OrderBy(p => p.Type == AiProviderType.Local ? 1 : 0).FirstOrDefault();
+        if (provider == null) throw new InvalidOperationException("No AI backend available.");
+        
+        await foreach (var token in provider.AskStreamAsync(prompt, cancellationToken).ConfigureAwait(false))
+        {
+            yield return token;
+        }
+    }
+
     public async Task<string> SummarizeAsync(string text, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithFallbackAsync(p => p.SummarizeAsync(text, cancellationToken), cancellationToken);

@@ -236,6 +236,27 @@ public class AtlasContextServiceTests
         public void SetSecret(string key, string secret) => Secrets[key] = secret;
     }
 
+    private class FakeActivityRepository : IActivityRepository
+    {
+        public List<ActivityRecord> Activities { get; } = new();
+
+        public Task<ActivityRecord> CreateAsync(ActivityRecord activity, CancellationToken cancellationToken = default)
+        {
+            Activities.Add(activity);
+            return Task.FromResult(activity);
+        }
+
+        public Task<IReadOnlyList<ActivityRecord>> GetRecentAsync(int minRelevance = 0, int count = 20, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<ActivityRecord>>(Activities.Where(a => a.RelevanceScore >= minRelevance).OrderByDescending(a => a.Timestamp).Take(count).ToList());
+        }
+    }
+
+    private class FakeServiceProvider : IServiceProvider
+    {
+        public object? GetService(Type serviceType) => null;
+    }
+
     [Fact]
     public async Task GetCurrentContextAsync_EmptyData_ReturnsValidSnapshot()
     {
@@ -245,7 +266,9 @@ public class AtlasContextServiceTests
             new FakeRoadmapRepository(),
             new FakeNoteRepository(),
             new FakeTransactionRepository(),
-            new FakeSecretVault()
+            new FakeSecretVault(),
+            new FakeActivityRepository(),
+            new FakeServiceProvider()
         );
 
         var snapshot = await service.GetCurrentContextAsync();
@@ -286,7 +309,12 @@ public class AtlasContextServiceTests
         await noteRepo.CreateAsync(new Note { Id = "n1", Content = "Nota de prueba #rust", Tags = "#rust" });
         await txRepo.CreateAsync(new Transaction { Id = "t1", Descripcion = "Libro", Monto = 5000, Tipo = "expense", Fecha = DateTimeOffset.UtcNow });
 
-        var service = new AtlasContextService(habitRepo, goalRepo, roadmapRepo, noteRepo, txRepo, vault);
+        var activityRepo = new FakeActivityRepository();
+        await activityRepo.CreateAsync(new ActivityRecord { RelevanceScore = 5, Title = "A", Type = "system" });
+        await activityRepo.CreateAsync(new ActivityRecord { RelevanceScore = 5, Title = "B", Type = "system" });
+        await activityRepo.CreateAsync(new ActivityRecord { RelevanceScore = 5, Title = "C", Type = "system" });
+
+        var service = new AtlasContextService(habitRepo, goalRepo, roadmapRepo, noteRepo, txRepo, vault, activityRepo, new FakeServiceProvider());
         var snapshot = await service.GetCurrentContextAsync();
 
         Assert.Equal(1, snapshot.Habits.TotalCount);
@@ -318,7 +346,7 @@ public class AtlasContextServiceTests
         var habit = new Habit { Id = "h1", Name = "Entrenamiento", Frequency = "daily" };
         await habitRepo.CreateAsync(habit); // Pending today
 
-        var service = new AtlasContextService(habitRepo, goalRepo, roadmapRepo, noteRepo, txRepo, vault);
+        var service = new AtlasContextService(habitRepo, goalRepo, roadmapRepo, noteRepo, txRepo, vault, new FakeActivityRepository(), new FakeServiceProvider());
         var reduced = await service.GetReducedContextAsync();
 
         Assert.NotNull(reduced);
@@ -336,7 +364,9 @@ public class AtlasContextServiceTests
             new FakeRoadmapRepository(),
             new FakeNoteRepository(),
             new FakeTransactionRepository(),
-            new FakeSecretVault()
+            new FakeSecretVault(),
+            new FakeActivityRepository(),
+            new FakeServiceProvider()
         );
 
         var note = new Note { Id = "n1", Content = "Contenido de la nota", Tags = "#idea #tech" };
@@ -362,7 +392,9 @@ public class AtlasContextServiceTests
             new FakeRoadmapRepository(),
             new FakeNoteRepository(),
             new FakeTransactionRepository(),
-            new FakeSecretVault()
+            new FakeSecretVault(),
+            new FakeActivityRepository(),
+            new FakeServiceProvider()
         );
 
         var prompt = await service.BuildAiSystemContextPromptAsync();

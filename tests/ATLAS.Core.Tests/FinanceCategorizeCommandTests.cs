@@ -29,6 +29,11 @@ public class FinanceCategorizeCommandTests
         {
             return Task.FromResult(ResponseToReturn);
         }
+
+        public async IAsyncEnumerable<string> AskStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+        {
+            yield return await AskAsync(prompt, cancellationToken);
+        }
     }
 
     private class FakeTransactionRepository : ITransactionRepository

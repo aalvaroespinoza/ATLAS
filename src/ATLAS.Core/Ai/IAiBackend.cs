@@ -11,4 +11,5 @@ public interface IAiBackend
     Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default);
     Task<string> SummarizeAsync(string text, CancellationToken cancellationToken = default);
     Task<string> AskAsync(string prompt, CancellationToken cancellationToken = default);
+    IAsyncEnumerable<string> AskStreamAsync(string prompt, CancellationToken cancellationToken = default);
 }
