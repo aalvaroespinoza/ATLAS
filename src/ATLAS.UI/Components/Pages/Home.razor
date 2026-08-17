@@ -10,58 +10,49 @@
 <div class="space-y-6 max-w-6xl mx-auto pb-24 animate-atlas-in">
 
     <!-- 1. TOP HERO HEADER -->
-    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-        <div class="space-y-1 select-none">
-            <h1 class="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+    <header class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 px-1">
+        <!-- Greeting -->
+        <div class="flex-1 shrink-0 space-y-1 select-none">
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight text-white flex items-center gap-2">
                 <span>@(contextSnapshot?.TimeOfDayGreeting ?? "¡Bienvenido"), Álvaro!</span>
-                <span class="text-lg">@GetGreetingEmoji()</span>
+                <span class="text-xl">@GetGreetingEmoji()</span>
             </h1>
-            <div class="flex items-center gap-2 text-xs text-slate-400">
+            <div class="text-xs text-slate-400">
                 <span>Esto es lo que importa hoy.</span>
-                <span class="text-slate-600">•</span>
-                <span class="font-mono text-[11px] text-slate-400 capitalize">
-                    @DateTime.Now.ToString("dddd, dd 'de' MMMM", new CultureInfo("es-AR"))
-                </span>
             </div>
         </div>
 
-        <!-- Header Controls (Search + Quick Actions) -->
-        <div class="flex items-center gap-3">
-            <div class="w-72 hidden lg:block">
-                <AtlasSearch 
-                    @bind-Value="searchQuery" 
-                    OnSearch="HandleSearchSubmit" 
-                    Placeholder="Buscar en ATLAS o comando..." />
+        <!-- Center Search Bar -->
+        <div class="flex-[2] hidden lg:flex justify-center w-full max-w-xl relative">
+            <AtlasSearch 
+                @bind-Value="searchQuery" 
+                OnSearch="HandleSearchSubmit" 
+                Placeholder="Buscar en ATLAS o escribir un comando..." />
+            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                <kbd class="px-1.5 py-0.5 rounded text-[10px] text-slate-500 bg-white/[0.05] font-mono border border-white/[0.05]">Ctrl + K</kbd>
             </div>
+        </div>
 
-            <div class="flex items-center gap-1.5">
-                <AtlasTooltip Text="Asistente IA" Shortcut="?" Position="bottom">
-                    <AtlasIconButton 
-                        Variant="accent" 
-                        Shape="circle" 
-                        Size="md" 
-                        Glow="purple"
-                        OnClick="@(() => TriggerAiTool("pregunta"))">
-                        <span class="text-xs">✨</span>
-                    </AtlasIconButton>
-                </AtlasTooltip>
-
-                <AtlasTooltip Text="Metas & Hábitos" Shortcut="Alt+4" Position="bottom">
-                    <AtlasIconButton 
-                        Variant="secondary" 
-                        Shape="circle" 
-                        Size="md"
-                        OnClick="@(() => NavigationManager.NavigateTo("habits-goals"))">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </AtlasIconButton>
-                </AtlasTooltip>
-
-                <AtlasTooltip Text="Álvaro — En línea" Position="bottom">
-                    <AtlasAvatar Name="Álvaro Espinoza" IsOnline="true" Size="md" Class="ml-1" />
-                </AtlasTooltip>
-            </div>
+        <!-- Right Utilities -->
+        <div class="flex-1 flex items-center justify-end gap-2">
+            <AtlasTooltip Text="Asistente IA" Position="bottom">
+                <button @onclick="@(() => TriggerAiTool("pregunta"))" class="w-9 h-9 rounded-full hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer">
+                    ✨
+                </button>
+            </AtlasTooltip>
+            <AtlasTooltip Text="Calendario" Position="bottom">
+                <button class="w-9 h-9 rounded-full hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer">
+                    📅
+                </button>
+            </AtlasTooltip>
+            <AtlasTooltip Text="Notificaciones" Position="bottom">
+                <button class="w-9 h-9 rounded-full hover:bg-white/[0.08] flex items-center justify-center text-slate-400 hover:text-white transition-all cursor-pointer">
+                    🔔
+                </button>
+            </AtlasTooltip>
+            <AtlasTooltip Text="Álvaro Espinoza" Position="bottom">
+                <AtlasAvatar Name="Álvaro Espinoza" IsOnline="true" Size="md" Class="ml-2 ring-2 ring-[#0c101a]" />
+            </AtlasTooltip>
         </div>
     </header>
 
@@ -102,8 +93,14 @@
     }
     else if (contextSnapshot != null)
     {
-        <!-- 2. TOP METRICS ROW (3 Cards with Real Data & Sparklines) -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <!-- 2. ASYMMETRICAL MAIN GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT 2/3 COLUMN: Metrics & Main Content -->
+            <div class="lg:col-span-8 space-y-6">
+                
+                <!-- TOP METRICS ROW (3 Cards with Real Data & Sparklines) -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
             <!-- Card 1: Racha de hábitos -->
             <AtlasSurface Elevation="base" Glow="orange" Class="p-5 flex flex-col justify-between select-none">
@@ -197,13 +194,13 @@
                 </div>
             </AtlasSurface>
 
-        </div>
+                </div>
 
-        <!-- 3. MAIN 3-COLUMN STRUCTURED GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            
-            <!-- COLUMN 1: Agenda de hoy (Señales de Atención) + Hábitos -->
-            <div class="space-y-5">
+                <!-- MIDDLE ROW: Agenda & En Progreso -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <!-- COLUMN 1: Agenda de hoy -->
+                    <div class="space-y-5">
                 
                 <!-- Agenda de hoy / Atención prioritaria -->
                 <AtlasPanel Title="Atención de hoy" ActionText="Ver todo" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
@@ -211,73 +208,54 @@
                         <span class="text-sm">📅</span>
                     </Icon>
                     <ChildContent>
-                        <AtlasList IsEmpty="@(contextSnapshot.AttentionSignals.Count == 0)" EmptyTitle="Todo al día" EmptyDescription="No tenés acciones ni hábitos pendientes para hoy.">
-                            @foreach (var signal in contextSnapshot.AttentionSignals.Take(4))
+                        <div class="space-y-1">
+                            @if (contextSnapshot.AttentionSignals.Count == 0)
                             {
-                                <AtlasListItem 
-                                    Title="@signal.Title" 
-                                    Subtitle="@signal.Message" 
-                                    MetaText="@(signal.Priority == AtlasSignalPriority.High ? "Prioritario" : null)">
-                                    <PrefixContent>
-                                        @if (!string.IsNullOrWhiteSpace(signal.AssociatedCommandId))
-                                        {
-                                            <button 
-                                                type="button" 
-                                                @onclick="() => ExecuteSignalActionAsync(signal)"
-                                                class="w-4 h-4 rounded-full border border-slate-600 hover:border-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-emerald-400 text-[10px]"
-                                                title="Completar acción">
-                                                ✓
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <span class="w-2 h-2 rounded-full @(signal.Priority == AtlasSignalPriority.High ? "bg-rose-400 shadow-glow-rose" : "bg-violet-400")"></span>
-                                        }
-                                    </PrefixContent>
-                                </AtlasListItem>
+                                <div class="text-center py-6 text-slate-500 text-xs">Todo al día. No hay pendientes.</div>
                             }
-                        </AtlasList>
-                    </ChildContent>
-                </AtlasPanel>
-
-                <!-- Badges de Hábitos -->
-                <AtlasPanel Title="Hábitos" ActionText="Ver todos" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
-                    <Icon>
-                        <span class="text-sm">🎯</span>
-                    </Icon>
-                    <ChildContent>
-                        <div class="flex items-center gap-3 overflow-x-auto py-1.5 scrollbar-none">
-                            @foreach (var habit in contextSnapshot.Habits.Items.Take(4))
+                            else
                             {
-                                <AtlasHabitBadge 
-                                    Name="@habit.Name" 
-                                    StreakDays="@habit.CurrentStreak" 
-                                    IsCompleted="@habit.IsCompletedToday" 
-                                    IconType="@habit.IconType" 
-                                    ColorVariant="@habit.ColorVariant"
-                                    OnClick="() => CompleteHabitAsync(habit.Id, habit.Name)" />
+                                @foreach (var signal in contextSnapshot.AttentionSignals.Take(4))
+                                {
+                                    <div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.03] transition-colors group">
+                                        <!-- Dot Indicator -->
+                                        <div class="flex-shrink-0 flex items-center justify-center w-5 h-5">
+                                            @if (!string.IsNullOrWhiteSpace(signal.AssociatedCommandId))
+                                            {
+                                                <button 
+                                                    type="button" 
+                                                    @onclick="() => ExecuteSignalActionAsync(signal)"
+                                                    class="w-4 h-4 rounded-full border-2 border-slate-600 hover:border-emerald-400 hover:bg-emerald-500/20 transition-all cursor-pointer flex items-center justify-center text-transparent hover:text-emerald-400 text-[9px]"
+                                                    title="Completar">
+                                                    ✓
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="w-2.5 h-2.5 rounded-full @(signal.Priority == AtlasSignalPriority.High ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]" : "border-2 border-slate-500")"></span>
+                                            }
+                                        </div>
+                                        
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0 flex items-center justify-between gap-3">
+                                            <div class="truncate text-xs font-medium text-slate-200">
+                                                @signal.Title
+                                            </div>
+                                            <div class="text-[10px] text-slate-500 whitespace-nowrap text-right max-w-[120px] truncate">
+                                                @signal.Message
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             }
-
-                            <!-- Botón circular punteado + Agregar hábito -->
-                            <div class="flex flex-col items-center gap-1.5 select-none shrink-0">
-                                <button 
-                                    type="button" 
-                                    @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
-                                    class="w-13 h-13 rounded-full border-2 border-dashed border-white/[0.18] hover:border-violet-400/60 hover:bg-white/[0.04] active:scale-95 transition-all flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
-                                    title="Agregar nuevo hábito">
-                                    <span class="text-lg font-light">+</span>
-                                </button>
-                                <span class="text-[11px] font-medium text-slate-400">Agregar</span>
-                            </div>
                         </div>
                     </ChildContent>
                 </AtlasPanel>
 
-            </div>
+                    </div>
 
-            <!-- COLUMN 2: En progreso (Roadmaps) + Actividad reciente -->
-            <div class="space-y-5">
-                
+                    <!-- COLUMN 2: En progreso -->
+                    <div class="space-y-5">
                 <!-- En progreso (Roadmaps) -->
                 <AtlasPanel Title="En progreso" ActionText="Ver todo" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
                     <Icon>
@@ -310,6 +288,45 @@
                     </ChildContent>
                 </AtlasPanel>
 
+                    </div>
+                </div>
+
+                <!-- BOTTOM ROW: Hábitos & Actividad reciente -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <!-- Hábitos -->
+                    <AtlasPanel Title="Hábitos" ActionText="Ver todos" OnAction="@(() => NavigationManager.NavigateTo("habits-goals"))">
+                        <Icon><span class="text-sm">🎯</span></Icon>
+                        <ChildContent>
+                            <div class="flex items-center gap-4 overflow-x-auto py-2 scrollbar-none px-1">
+                                @foreach (var habit in contextSnapshot.Habits.Items.Take(4))
+                                {
+                                    <AtlasHabitBadge 
+                                        Name="@habit.Name" 
+                                        StreakDays="@habit.CurrentStreak" 
+                                        IsCompleted="@habit.IsCompletedToday" 
+                                        IconType="@habit.IconType" 
+                                        ColorVariant="@habit.ColorVariant"
+                                        OnClick="() => CompleteHabitAsync(habit.Id, habit.Name)" />
+                                }
+
+                                <!-- Botón circular punteado + Agregar hábito -->
+                                <div class="flex flex-col items-center gap-1.5 select-none shrink-0 ml-1">
+                                    <button 
+                                        type="button" 
+                                        @onclick="@(() => NavigationManager.NavigateTo("habits-goals"))"
+                                        class="w-16 h-16 rounded-full border-2 border-dashed border-white/[0.15] hover:border-violet-400/60 hover:bg-white/[0.04] active:scale-95 transition-all flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+                                        title="Agregar nuevo hábito">
+                                        <span class="text-xl font-light">+</span>
+                                    </button>
+                                    <span class="text-[11px] font-medium text-slate-400 w-[70px] text-center truncate">Agregar</span>
+                                </div>
+                            </div>
+                        </ChildContent>
+                    </AtlasPanel>
+                
+
+
                 <!-- Actividad reciente -->
                 <AtlasPanel Title="Actividad reciente" ActionText="Ver todos" OnAction="@(() => NavigationManager.NavigateTo("capture"))">
                     <Icon>
@@ -334,10 +351,11 @@
                     </ChildContent>
                 </AtlasPanel>
 
+                    </div>
             </div>
 
-            <!-- COLUMN 3: AI Toolbox + Integraciones activas -->
-            <div class="space-y-5">
+            <!-- RIGHT 1/3 COLUMN: AI Toolbox & Integrations -->
+            <div class="lg:col-span-4 space-y-6">
                 
                 <!-- AI Toolbox (Orbe 3D) -->
                 <AtlasPanel Title="AI Toolbox" Variant="ai">
@@ -463,17 +481,27 @@
                 </AtlasPanel>
 
             </div>
-
         </div>
     }
 
     <!-- 4. BOTTOM FLOATING PROMPT HERO -->
-    <div class="pt-4">
-        <AtlasCommandInput 
-            @bind-Value="quickPromptText" 
-            Placeholder="Pregúntale algo a ATLAS... (o escribí /expense, /note)" 
-            IsExecuting="isExecutingPrompt"
-            OnExecute="HandlePromptExecute" />
+    <div class="fixed bottom-6 left-[calc(50%+32px)] lg:left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-50 pointer-events-none">
+        <div class="pointer-events-auto rounded-full bg-[#0c101a]/95 border border-white/[0.12] p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl relative flex items-center">
+            <span class="pl-4 pr-2 text-slate-400 font-mono text-[10px]">{"}</span>
+            <div class="flex-1">
+                <AtlasCommandInput 
+                    @bind-Value="quickPromptText" 
+                    Placeholder="Pregúntale algo a ATLAS..." 
+                    IsExecuting="isExecutingPrompt"
+                    OnExecute="HandlePromptExecute" />
+            </div>
+            <div class="absolute right-14 text-[10px] text-slate-500 font-mono hidden sm:block">
+                Ctrl + Space
+            </div>
+            <button class="w-8 h-8 shrink-0 rounded-full bg-violet-600 hover:bg-violet-500 flex items-center justify-center text-white transition-colors cursor-pointer mr-0.5" @onclick="() => HandlePromptExecute(quickPromptText)">
+                ↑
+            </button>
+        </div>
     </div>
 
 </div>

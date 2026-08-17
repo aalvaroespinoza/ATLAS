@@ -6,9 +6,9 @@
         @onclick="HandleClick"
         disabled="@IsCompleted"
         title="@(IsCompleted ? $"{Name} (Completado hoy)" : $"Marcar {Name} como completado")"
-        class="w-13 h-13 rounded-full flex items-center justify-center p-0.5 transition-all duration-150 cursor-pointer atlas-clickable @GetBorderClasses() @(IsCompleted ? "opacity-75" : "hover:scale-105")">
+        class="w-16 h-16 rounded-full flex items-center justify-center p-[2.5px] transition-all duration-150 cursor-pointer atlas-clickable @GetBorderClasses() @(IsCompleted ? "opacity-75" : "hover:scale-105 hover:shadow-lg")">
         
-        <div class="w-full h-full rounded-full bg-[#121828] flex items-center justify-center text-slate-200">
+        <div class="w-full h-full rounded-full bg-[#0c101a] flex items-center justify-center text-slate-200">
             @if (IsCompleted)
             {
                 <span class="text-emerald-400 font-bold text-sm">✓</span>
