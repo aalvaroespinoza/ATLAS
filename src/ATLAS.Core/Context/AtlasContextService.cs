@@ -110,6 +110,25 @@ public class AtlasContextService : IAtlasContextService
             ColorVariant: GetActivityColor(a.Type)
         )).ToList();
 
+        var habitFeedItems = habitEvents.Select(he => 
+        {
+            var habitName = habits.FirstOrDefault(h => h.Id == he.HabitId)?.Name ?? "Hábito";
+            return new AtlasActivityItem(
+                Id: he.Id,
+                Type: "habit_event",
+                Title: $"Hábito completado",
+                Subtitle: $"{habitName}{(string.IsNullOrWhiteSpace(he.Note) ? "" : $" - {he.Note}")}",
+                Timestamp: he.CompletedAt,
+                RelativeTime: FormatRelativeTime(he.CompletedAt, now),
+                Source: "atlas",
+                Icon: GetActivityIcon("habit_event"),
+                ColorVariant: GetActivityColor("habit_event")
+            );
+        });
+
+        activityFeed.AddRange(habitFeedItems);
+        activityFeed = activityFeed.OrderByDescending(a => a.Timestamp).Take(12).ToList();
+
         // 6. Build Attention Signals
         var attentionSignals = BuildAttentionSignals(habitsSummary, nextMilestone, activeGoals);
 
@@ -507,6 +526,7 @@ public class AtlasContextService : IAtlasContextService
         "gaming" => "🎮",
         "education" => "📖",
         "security" => "🛡️",
+        "habit_event" => "🏆",
         _ => "📌"
     };
 
@@ -519,6 +539,7 @@ public class AtlasContextService : IAtlasContextService
         "gaming" => "purple",
         "education" => "cyan",
         "security" => "orange",
+        "habit_event" => "emerald",
         _ => "purple"
     };
 
