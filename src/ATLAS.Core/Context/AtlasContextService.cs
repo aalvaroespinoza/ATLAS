@@ -51,7 +51,7 @@ public class AtlasContextService : IAtlasContextService
         var goalsTask = _goalRepository.GetAllAsync(null, cancellationToken);
         var roadmapsTask = _roadmapRepository.GetAllAsync(null, cancellationToken);
         var notesTask = _noteRepository.GetRecentAsync(20, cancellationToken);
-        var transactionsTask = _transactionRepository.GetRecentAsync(50, cancellationToken);
+        var transactionsTask = _transactionRepository.GetRecentAsync(500, cancellationToken);
         var activitiesTask = _activityRepository.GetRecentAsync(minRelevance: 2, count: 12, cancellationToken);
 
         await Task.WhenAll(habitsTask, habitEventsTask, goalsTask, roadmapsTask, notesTask, transactionsTask, activitiesTask).ConfigureAwait(false);
@@ -294,7 +294,7 @@ public class AtlasContextService : IAtlasContextService
     public async Task<AtlasFinanceSummary> GetFinanceSummaryAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTimeOffset.UtcNow;
-        var transactions = await _transactionRepository.GetRecentAsync(50, cancellationToken).ConfigureAwait(false);
+        var transactions = await _transactionRepository.GetRecentAsync(500, cancellationToken).ConfigureAwait(false);
         return ProcessFinance(transactions, now.Date);
     }
 
