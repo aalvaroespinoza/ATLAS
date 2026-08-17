@@ -27,15 +27,8 @@
             </div>
         </div>
 
-        <!-- Center Search Bar -->
+        <!-- Center Spacer for Balance -->
         <div class="flex-[2] hidden lg:flex justify-center w-full max-w-xl relative">
-            <AtlasSearch 
-                @bind-Value="searchQuery" 
-                OnSearch="HandleSearchSubmit" 
-                Placeholder="Buscar en ATLAS o escribir un comando..." />
-            <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                <kbd class="px-1.5 py-0.5 rounded text-[10px] text-slate-500 bg-white/[0.05] font-mono border border-white/[0.05]">Ctrl + K</kbd>
-            </div>
         </div>
 
         <!-- Right Utilities -->
@@ -521,34 +514,13 @@
         </div>
     }
 
-    <!-- 4. BOTTOM FLOATING PROMPT HERO -->
-    <div class="fixed bottom-6 left-[calc(50%+32px)] lg:left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-50 pointer-events-none">
-        <div class="pointer-events-auto rounded-full bg-[#0c101a]/95 border border-white/[0.12] p-1.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl relative flex items-center">
-            <span class="pl-4 pr-2 text-slate-400 font-mono text-[10px]">{"}</span>
-            <div class="flex-1">
-                <AtlasCommandInput 
-                    @bind-Value="quickPromptText" 
-                    Placeholder="Pregúntale algo a ATLAS..." 
-                    IsExecuting="isExecutingPrompt"
-                    OnExecute="HandlePromptExecute" />
-            </div>
-            <div class="absolute right-14 text-[10px] text-slate-500 font-mono hidden sm:block">
-                Ctrl + Space
-            </div>
-            <button class="w-8 h-8 shrink-0 rounded-full bg-violet-600 hover:bg-violet-500 flex items-center justify-center text-white transition-colors cursor-pointer mr-0.5" @onclick="() => HandlePromptExecute(quickPromptText)">
-                ↑
-            </button>
-        </div>
-    </div>
+
 
 </div>
 
 @code {
     private AtlasContextSnapshot? contextSnapshot;
     private bool isLoading = true;
-    private string searchQuery = string.Empty;
-    private string quickPromptText = string.Empty;
-    private bool isExecutingPrompt;
     private string? actionFeedback;
     private string? aiAnswer;
     private IDisposable? _eventSubscription;
@@ -650,107 +622,25 @@
         }
     }
 
-    private void HandleSearchSubmit(string? query)
-    {
-        if (!string.IsNullOrWhiteSpace(query))
-        {
-            NavigationManager.NavigateTo($"search?q={Uri.EscapeDataString(query.Trim())}");
-        }
-    }
-
-    private async Task HandlePromptExecute(string? input)
-    {
-        if (string.IsNullOrWhiteSpace(input) || isExecutingPrompt) return;
-
-        isExecutingPrompt = true;
-        try
-        {
-            string trimmed = input.Trim();
-
-            // 1. Expense Command Shortcut: /expense or /gasto
-            if (trimmed.StartsWith("/expense", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("/gasto", StringComparison.OrdinalIgnoreCase))
-            {
-                var result = await CommandRegistry.ExecuteAsync(FinanceAddTransactionCommand.CommandId, new Dictionary<string, object?>
-                {
-                    ["text"] = trimmed
-                });
-                actionFeedback = result.IsSuccess ? $"✓ Gasto registrado: {result.Data ?? "Correcto"}" : $"⚠️ {result.ErrorMessage}";
-                quickPromptText = string.Empty;
-                await ReloadContextAsync();
-                return;
-            }
-
-            // 2. Note Command Shortcut: /note or /nota
-            if (trimmed.StartsWith("/note", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("/nota", StringComparison.OrdinalIgnoreCase))
-            {
-                var content = trimmed.Contains(' ') ? trimmed[(trimmed.IndexOf(' ') + 1)..] : trimmed;
-                var result = await CommandRegistry.ExecuteAsync(CaptureNoteCommand.CommandId, new Dictionary<string, object?>
-                {
-                    ["content"] = content,
-                    ["source"] = "home_prompt"
-                });
-                actionFeedback = result.IsSuccess ? "✓ Nota capturada en Segundo Cerebro." : $"⚠️ {result.ErrorMessage}";
-                quickPromptText = string.Empty;
-                await ReloadContextAsync();
-                return;
-            }
-
-            // 3. AI Question Dispatch
-            var aiResult = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?>
-            {
-                ["prompt"] = trimmed.StartsWith('?') ? trimmed[1..].Trim() : trimmed,
-                ["stream"] = true
-            });
-
-            if (aiResult.IsSuccess && aiResult.Data is IAsyncEnumerable<string> stream)
-            {
-                aiAnswer = string.Empty;
-                quickPromptText = string.Empty;
-                StateHasChanged();
-                
-                await foreach (var chunk in stream)
-                {
-                    aiAnswer += chunk;
-                    StateHasChanged();
-                }
-            }
-            else if (aiResult.IsSuccess && aiResult.Data is string answer)
-            {
-                aiAnswer = answer;
-                quickPromptText = string.Empty;
-            }
-            else
-            {
-                actionFeedback = $"⚠️ {aiResult.ErrorMessage ?? "No se obtuvo respuesta de IA."}";
-            }
-        }
-        catch (Exception ex)
-        {
-            actionFeedback = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isExecutingPrompt = false;
-        }
-    }
-
     private async Task TriggerAiTool(string toolType)
     {
-        isExecutingPrompt = true;
         try
         {
             CommandResult? result = null;
-            string targetText = quickPromptText;
+            string targetText = string.Empty;
 
-            if (string.IsNullOrWhiteSpace(targetText) && toolType != "pregunta")
+            if (toolType == "pregunta")
             {
-                // Inyectamos el contexto de ATLAS si no hay prompt del usuario.
-                targetText = await AtlasContextService.BuildAiSystemContextPromptAsync();
-                
-                if (toolType == "resumen")
-                {
-                    targetText = "Por favor genera un resumen ejecutivo del siguiente estado actual de mis tareas, hábitos y gastos registrados en ATLAS:\n" + targetText;
-                }
+                actionFeedback = "⚠️ Presioná Ctrl+K o Ctrl+Space para abrir la consola y hacer tu pregunta.";
+                return;
+            }
+
+            // Inyectamos el contexto de ATLAS ya que no hay barra inferior.
+            targetText = await AtlasContextService.BuildAiSystemContextPromptAsync();
+            
+            if (toolType == "resumen")
+            {
+                targetText = "Por favor genera un resumen ejecutivo del siguiente estado actual de mis tareas, hábitos y gastos registrados en ATLAS:\n" + targetText;
             }
             
             switch (toolType)
@@ -760,7 +650,6 @@
                     if (result.IsSuccess && result.Data is string sumText) 
                     {
                         aiAnswer = sumText;
-                        quickPromptText = string.Empty;
                     }
                     return;
                 case "explicar":
@@ -772,14 +661,7 @@
                 case "traducir":
                     result = await CommandRegistry.ExecuteAsync(AiTranslateCommand.CommandId, new Dictionary<string, object?> { ["text"] = targetText });
                     break;
-                case "pregunta":
-                    if (string.IsNullOrWhiteSpace(targetText))
-                    {
-                        actionFeedback = "⚠️ Escribí una pregunta en la barra inferior primero.";
-                        return;
-                    }
-                    result = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?> { ["prompt"] = targetText, ["stream"] = true });
-                    break;
+
             }
 
             if (result != null)
@@ -787,7 +669,6 @@
                 if (result.IsSuccess && result.Data is IAsyncEnumerable<string> stream)
                 {
                     aiAnswer = string.Empty;
-                    quickPromptText = string.Empty;
                     StateHasChanged();
                     
                     await foreach (var chunk in stream)
@@ -799,7 +680,6 @@
                 else if (result.IsSuccess && result.Data is string answer)
                 {
                     aiAnswer = answer;
-                    quickPromptText = string.Empty;
                 }
                 else
                 {
