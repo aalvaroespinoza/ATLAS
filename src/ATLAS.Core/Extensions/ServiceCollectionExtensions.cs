@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
 
         // Context Services
         services.AddTransient<ATLAS.Core.Context.IHomeContextService, ATLAS.Core.Context.HomeContextService>();
+        services.AddTransient<ATLAS.Core.Context.IAtlasContextService, ATLAS.Core.Context.AtlasContextService>();
 
         // Commands
         services.AddTransient<CaptureNoteCommand>();
