@@ -73,24 +73,7 @@
         </div>
     }
 
-    <!-- Inline AI Response Container -->
-    @if (!string.IsNullOrWhiteSpace(aiAnswer))
-    {
-        <div class="atlas-panel-ai rounded-2xl p-5 space-y-3 animate-atlas-in shadow-floating">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-[10px] font-bold text-white shadow-glow-purple">
-                        AI
-                    </div>
-                    <span class="text-xs font-semibold text-white">Respuesta de ATLAS Intelligence</span>
-                </div>
-                <button type="button" @onclick="() => aiAnswer = null" class="text-slate-400 hover:text-white text-xs cursor-pointer">✕</button>
-            </div>
-            <div class="text-xs text-slate-200 leading-relaxed whitespace-pre-wrap font-sans pl-8">
-                @aiAnswer
-            </div>
-        </div>
-    }
+
 
     @if (isLoading && contextSnapshot == null)
     {
@@ -465,6 +448,24 @@
                             </div>
                             <span class="text-[10px] font-mono text-violet-300 opacity-75">Obtén respuestas →</span>
                         </button>
+
+                        @if (!string.IsNullOrWhiteSpace(aiAnswer))
+                        {
+                            <div class="mt-4 p-3.5 rounded-xl bg-black/20 border border-white/[0.05] space-y-2 animate-atlas-in">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded-full bg-gradient-to-tr from-violet-600 to-cyan-400 flex items-center justify-center text-[8px] font-bold text-white shadow-glow-purple">
+                                            AI
+                                        </div>
+                                        <span class="text-[11px] font-semibold text-violet-200">Respuesta</span>
+                                    </div>
+                                    <button type="button" @onclick="() => aiAnswer = null" class="text-slate-500 hover:text-white text-[10px] cursor-pointer">✕</button>
+                                </div>
+                                <div class="text-[11px] text-slate-300 leading-relaxed whitespace-pre-wrap font-sans max-h-64 overflow-y-auto scrollbar-thin">
+                                    @aiAnswer
+                                </div>
+                            </div>
+                        }
                     </ChildContent>
                 </AtlasPanel>
 
@@ -735,24 +736,27 @@
 
     private async Task TriggerAiTool(string toolType)
     {
-        if (toolType != "resumen" && string.IsNullOrWhiteSpace(quickPromptText))
-        {
-            actionFeedback = "⚠️ Escribí o pegá un texto en la caja primero.";
-            return;
-        }
-
         isExecutingPrompt = true;
         try
         {
             CommandResult? result = null;
+            string targetText = quickPromptText;
+
+            if (string.IsNullOrWhiteSpace(targetText) && toolType != "pregunta")
+            {
+                // Inyectamos el contexto de ATLAS si no hay prompt del usuario.
+                targetText = await AtlasContextService.BuildAiSystemContextPromptAsync();
+                
+                if (toolType == "resumen")
+                {
+                    targetText = "Por favor genera un resumen ejecutivo del siguiente estado actual de mis tareas, hábitos y gastos registrados en ATLAS:\n" + targetText;
+                }
+            }
             
             switch (toolType)
             {
                 case "resumen":
-                    result = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?>
-                    {
-                        ["text"] = string.IsNullOrWhiteSpace(quickPromptText) ? "Por favor genera un resumen ejecutivo del estado actual de mis tareas, hábitos y gastos registrados en ATLAS." : quickPromptText
-                    });
+                    result = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?> { ["text"] = targetText });
                     if (result.IsSuccess && result.Data is string sumText) 
                     {
                         aiAnswer = sumText;
@@ -760,13 +764,21 @@
                     }
                     return;
                 case "explicar":
-                    result = await CommandRegistry.ExecuteAsync(AiExplainCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    result = await CommandRegistry.ExecuteAsync(AiExplainCommand.CommandId, new Dictionary<string, object?> { ["text"] = targetText });
                     break;
                 case "reescribir":
-                    result = await CommandRegistry.ExecuteAsync(AiRewriteCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    result = await CommandRegistry.ExecuteAsync(AiRewriteCommand.CommandId, new Dictionary<string, object?> { ["text"] = targetText });
                     break;
                 case "traducir":
-                    result = await CommandRegistry.ExecuteAsync(AiTranslateCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    result = await CommandRegistry.ExecuteAsync(AiTranslateCommand.CommandId, new Dictionary<string, object?> { ["text"] = targetText });
+                    break;
+                case "pregunta":
+                    if (string.IsNullOrWhiteSpace(targetText))
+                    {
+                        actionFeedback = "⚠️ Escribí una pregunta en la barra inferior primero.";
+                        return;
+                    }
+                    result = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?> { ["prompt"] = targetText, ["stream"] = true });
                     break;
             }
 
