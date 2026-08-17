@@ -22,6 +22,9 @@ public static class ServiceCollectionExtensions
         // Integrations Clients & Hub
         services.AddTransient<IGmailClient>(sp =>
             new GmailClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
+        services.AddTransient<ATLAS.Core.Integrations.Gmail.IGmailSyncService, ATLAS.Core.Integrations.Gmail.GmailSyncService>();
+        services.AddHostedService<ATLAS.Core.Integrations.Gmail.GmailListenerService>();
+        
         services.AddTransient<ATLAS.Core.Integrations.MercadoPago.IMercadoPagoClient>(sp =>
             new ATLAS.Core.Integrations.MercadoPago.MercadoPagoClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
 
@@ -58,6 +61,7 @@ public static class ServiceCollectionExtensions
         services.AddTransient<FinanceCategorizeCommand>();
         services.AddTransient<FinanceSyncMercadoPagoCommand>();
         services.AddTransient<GmailListRecentCommand>();
+        services.AddTransient<GmailSyncActivityCommand>();
         services.AddTransient<RoadmapCreateCommand>();
         services.AddTransient<RoadmapAddMilestoneCommand>();
         services.AddTransient<RoadmapCompleteMilestoneCommand>();

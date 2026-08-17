@@ -504,6 +504,9 @@ public class AtlasContextService : IAtlasContextService
         "finance" => "💳",
         "strategy" => "✓",
         "system" => "⚙️",
+        "gaming" => "🎮",
+        "education" => "📖",
+        "security" => "🛡️",
         _ => "📌"
     };
 
@@ -513,6 +516,9 @@ public class AtlasContextService : IAtlasContextService
         "finance" => "emerald",
         "strategy" => "cyan",
         "system" => "orange",
+        "gaming" => "purple",
+        "education" => "cyan",
+        "security" => "orange",
         _ => "purple"
     };
 

@@ -250,6 +250,11 @@ public class AtlasContextServiceTests
         {
             return Task.FromResult<IReadOnlyList<ActivityRecord>>(Activities.Where(a => a.RelevanceScore >= minRelevance).OrderByDescending(a => a.Timestamp).Take(count).ToList());
         }
+
+        public Task<bool> ExistsBySourceIdAsync(string sourceId, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(Activities.Any(a => a.SourceId == sourceId));
+        }
     }
 
     private class FakeServiceProvider : IServiceProvider

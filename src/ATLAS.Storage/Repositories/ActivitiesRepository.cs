@@ -41,6 +41,22 @@ public class ActivitiesRepository : IActivityRepository
         return record;
     }
 
+    public async Task<bool> ExistsBySourceIdAsync(string sourceId, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceId);
+
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+        const string sql = "SELECT 1 FROM activities WHERE source_id = @source_id LIMIT 1;";
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.AddWithValue("@source_id", sourceId);
+
+        var result = await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
+        return result != null;
+    }
+
     public async Task<IReadOnlyList<ActivityRecord>> GetRecentAsync(int minRelevance = 0, int count = 20, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection(_connectionString);

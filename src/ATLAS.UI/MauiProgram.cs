@@ -108,6 +108,7 @@ public static class MauiProgram
             commandRegistry.Register(services.GetRequiredService<FinanceCategorizeCommand>());
             commandRegistry.Register(services.GetRequiredService<FinanceSyncMercadoPagoCommand>());
             commandRegistry.Register(services.GetRequiredService<GmailListRecentCommand>());
+            commandRegistry.Register(services.GetRequiredService<GmailSyncActivityCommand>());
             commandRegistry.Register(services.GetRequiredService<RoadmapCreateCommand>());
             commandRegistry.Register(services.GetRequiredService<RoadmapAddMilestoneCommand>());
             commandRegistry.Register(services.GetRequiredService<RoadmapCompleteMilestoneCommand>());
