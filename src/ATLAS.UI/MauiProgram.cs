@@ -60,7 +60,8 @@ public static class MauiProgram
             // Security & AI
             builder.Services.AddSingleton<ISecretVault, WindowsPasswordVault>();
             builder.Services.AddSingleton<HttpClient>();
-            builder.Services.AddSingleton<IAiProvider, GeminiProvider>();
+            builder.Services.AddSingleton<IAiBackend, GeminiProvider>();
+            builder.Services.AddSingleton<IAiProvider, AiOrchestrator>();
 
             // Core, Storage & Context Services
             builder.Services.AddAtlasCore();

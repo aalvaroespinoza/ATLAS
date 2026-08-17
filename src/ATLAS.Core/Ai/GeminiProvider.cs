@@ -5,9 +5,9 @@ using ATLAS.Core.Security;
 namespace ATLAS.Core.Ai;
 
 /// <summary>
-/// Implementation of IAiProvider using the Google Gemini API (Google AI Studio).
+/// Implementation of IAiBackend using the Google Gemini API (Google AI Studio).
 /// </summary>
-public class GeminiProvider : IAiProvider
+public class GeminiProvider : IAiBackend
 {
     private readonly ISecretVault _secretVault;
     private readonly HttpClient _httpClient;
@@ -15,6 +15,9 @@ public class GeminiProvider : IAiProvider
 
     public const string SecretKeyName = SecretKeys.GeminiApiKey;
     public const string DefaultModel = "gemini-1.5-flash-latest";
+
+    public AiProviderType Type => AiProviderType.Cloud;
+    public string ProviderName => "Gemini";
 
     public GeminiProvider(ISecretVault secretVault, HttpClient? httpClient = null, string model = DefaultModel)
     {
@@ -28,6 +31,12 @@ public class GeminiProvider : IAiProvider
         }
 
         _model = cleanModel;
+    }
+
+    public Task<bool> IsAvailableAsync(CancellationToken cancellationToken = default)
+    {
+        var apiKey = _secretVault.GetSecret(SecretKeyName);
+        return Task.FromResult(!string.IsNullOrWhiteSpace(apiKey));
     }
 
     public async Task<string> SummarizeAsync(string text, CancellationToken cancellationToken = default)
