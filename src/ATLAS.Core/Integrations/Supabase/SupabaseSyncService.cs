@@ -85,154 +85,106 @@ public class SupabaseSyncService : ISupabaseSyncService
             return new SupabaseSyncResult(false, "No se encontró el identificador de usuario de Supabase.");
         }
 
+        var errors = new List<string>();
+        int notesCount = 0, goalsCount = 0, habitsCount = 0, eventsCount = 0, roadmapsCount = 0, milestonesCount = 0, txsCount = 0;
+
+        // 1. Sync Notes
         try
         {
-            // 1. Sync Notes
             var notes = (await _noteRepository.GetRecentAsync(500, cancellationToken)).ToList();
             if (notes.Count > 0)
             {
-                var notesPayload = notes.Select(n => new
-                {
-                    id = n.Id,
-                    user_id = userId,
-                    title = n.Title,
-                    content = n.Content,
-                    type = n.Type,
-                    tags = n.Tags,
-                    source = n.Source,
-                    created_at = n.CreatedAt.UtcDateTime.ToString("o")
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "notes", notesPayload, cancellationToken);
+                var payload = notes.Select(n => new { id = n.Id, user_id = userId, title = n.Title, content = n.Content, type = n.Type, tags = n.Tags, source = n.Source, created_at = n.CreatedAt.UtcDateTime.ToString("o") });
+                await UpsertTableAsync(url, anonKey, accessToken, "notes", payload, cancellationToken);
+                notesCount = notes.Count;
             }
+        } catch (Exception ex) { errors.Add($"notes: {ex.Message}"); }
 
-            // 2. Sync Goals
+        // 2. Sync Goals
+        try
+        {
             var goals = (await _goalRepository.GetAllAsync(null, cancellationToken)).ToList();
             if (goals.Count > 0)
             {
-                var goalsPayload = goals.Select(g => new
-                {
-                    id = g.Id,
-                    user_id = userId,
-                    title = g.Title,
-                    description = g.Description,
-                    status = g.Status,
-                    progress = g.Progress,
-                    target_date = g.TargetDate?.UtcDateTime.ToString("o"),
-                    created_at = g.CreatedAt.UtcDateTime.ToString("o")
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "goals", goalsPayload, cancellationToken);
+                var payload = goals.Select(g => new { id = g.Id, user_id = userId, title = g.Title, description = g.Description, status = g.Status, progress = g.Progress, target_date = g.TargetDate?.UtcDateTime.ToString("o"), created_at = g.CreatedAt.UtcDateTime.ToString("o") });
+                await UpsertTableAsync(url, anonKey, accessToken, "goals", payload, cancellationToken);
+                goalsCount = goals.Count;
             }
+        } catch (Exception ex) { errors.Add($"goals: {ex.Message}"); }
 
-            // 3. Sync Habits
+        // 3. Sync Habits
+        try
+        {
             var habits = (await _habitRepository.GetAllAsync(cancellationToken)).ToList();
             if (habits.Count > 0)
             {
-                var habitsPayload = habits.Select(h => new
-                {
-                    id = h.Id,
-                    user_id = userId,
-                    name = h.Name,
-                    description = h.Description,
-                    frequency = h.Frequency,
-                    created_at = h.CreatedAt.UtcDateTime.ToString("o")
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "habits", habitsPayload, cancellationToken);
+                var payload = habits.Select(h => new { id = h.Id, user_id = userId, name = h.Name, description = h.Description, frequency = h.Frequency, created_at = h.CreatedAt.UtcDateTime.ToString("o") });
+                await UpsertTableAsync(url, anonKey, accessToken, "habits", payload, cancellationToken);
+                habitsCount = habits.Count;
             }
+        } catch (Exception ex) { errors.Add($"habits: {ex.Message}"); }
 
-            // 4. Sync Habit Events
+        // 4. Sync Habit Events
+        try
+        {
             var events = (await _habitRepository.GetEventsAsync(null, null, cancellationToken)).ToList();
             if (events.Count > 0)
             {
-                var eventsPayload = events.Select(e => new
-                {
-                    id = e.Id,
-                    user_id = userId,
-                    habit_id = e.HabitId,
-                    completed_at = e.CompletedAt.UtcDateTime.ToString("o"),
-                    note = e.Note
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "habit_events", eventsPayload, cancellationToken);
+                var payload = events.Select(e => new { id = e.Id, user_id = userId, habit_id = e.HabitId, completed_at = e.CompletedAt.UtcDateTime.ToString("o"), note = e.Note });
+                await UpsertTableAsync(url, anonKey, accessToken, "habit_events", payload, cancellationToken);
+                eventsCount = events.Count;
             }
+        } catch (Exception ex) { errors.Add($"habit_events: {ex.Message}"); }
 
-            // 5. Sync Roadmaps
+        // 5. & 6. Sync Roadmaps & Milestones
+        try
+        {
             var roadmaps = (await _roadmapRepository.GetAllAsync(null, cancellationToken)).ToList();
-            var milestonesCount = 0;
             if (roadmaps.Count > 0)
             {
-                var roadmapsPayload = roadmaps.Select(r => new
-                {
-                    id = r.Id,
-                    user_id = userId,
-                    goal_id = r.GoalId,
-                    title = r.Title,
-                    description = r.Description,
-                    status = r.Status,
-                    created_at = r.CreatedAt.UtcDateTime.ToString("o"),
-                    updated_at = r.UpdatedAt.UtcDateTime.ToString("o")
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "roadmaps", roadmapsPayload, cancellationToken);
+                var payload = roadmaps.Select(r => new { id = r.Id, user_id = userId, goal_id = r.GoalId, title = r.Title, description = r.Description, status = r.Status, created_at = r.CreatedAt.UtcDateTime.ToString("o"), updated_at = r.UpdatedAt.UtcDateTime.ToString("o") });
+                await UpsertTableAsync(url, anonKey, accessToken, "roadmaps", payload, cancellationToken);
+                roadmapsCount = roadmaps.Count;
 
-                // 6. Sync Roadmap Milestones
                 var allMilestones = roadmaps.SelectMany(r => r.Milestones ?? new List<RoadmapMilestone>()).ToList();
-                milestonesCount = allMilestones.Count;
                 if (allMilestones.Count > 0)
                 {
-                    var milestonesPayload = allMilestones.Select(m => new
-                    {
-                        id = m.Id,
-                        user_id = userId,
-                        roadmap_id = m.RoadmapId,
-                        title = m.Title,
-                        order_index = m.OrderIndex,
-                        status = m.Status,
-                        notes = m.Notes,
-                        created_at = m.CreatedAt.UtcDateTime.ToString("o"),
-                        completed_at = m.CompletedAt?.UtcDateTime.ToString("o")
-                    });
-                    await UpsertTableAsync(url, anonKey, accessToken, "roadmap_milestones", milestonesPayload, cancellationToken);
+                    var mPayload = allMilestones.Select(m => new { id = m.Id, user_id = userId, roadmap_id = m.RoadmapId, title = m.Title, order_index = m.OrderIndex, status = m.Status, notes = m.Notes, created_at = m.CreatedAt.UtcDateTime.ToString("o"), completed_at = m.CompletedAt?.UtcDateTime.ToString("o") });
+                    await UpsertTableAsync(url, anonKey, accessToken, "roadmap_milestones", mPayload, cancellationToken);
+                    milestonesCount = allMilestones.Count;
                 }
             }
+        } catch (Exception ex) { errors.Add($"roadmaps: {ex.Message}"); }
 
-            // 7. Sync Transactions
+        // 7. Sync Transactions
+        try
+        {
             var txs = (await _transactionRepository.GetRecentAsync(500, cancellationToken)).ToList();
             if (txs.Count > 0)
             {
-                var txPayload = txs.Select(t => new
-                {
-                    id = t.Id,
-                    user_id = userId,
-                    fecha = t.Fecha.UtcDateTime.ToString("o"),
-                    monto = t.Monto,
-                    tipo = t.Tipo,
-                    origen = t.Origen,
-                    descripcion = t.Descripcion,
-                    moneda = t.Moneda,
-                    categoria = t.Categoria,
-                    subcategoria = t.Subcategoria,
-                    id_externo = t.IdExterno,
-                    estado = t.Estado,
-                    metadata = t.Metadata,
-                    created_at = t.CreatedAt.UtcDateTime.ToString("o")
-                });
-                await UpsertTableAsync(url, anonKey, accessToken, "transactions", txPayload, cancellationToken);
+                var payload = txs.Select(t => new { id = t.Id, user_id = userId, fecha = t.Fecha.UtcDateTime.ToString("o"), monto = t.Monto, tipo = t.Tipo, origen = t.Origen, descripcion = t.Descripcion, moneda = t.Moneda, categoria = t.Categoria, subcategoria = t.Subcategoria, id_externo = t.IdExterno, estado = t.Estado, metadata = t.Metadata, created_at = t.CreatedAt.UtcDateTime.ToString("o") });
+                await UpsertTableAsync(url, anonKey, accessToken, "transactions", payload, cancellationToken);
+                txsCount = txs.Count;
             }
+        } catch (Exception ex) { errors.Add($"transactions: {ex.Message}"); }
 
-            return new SupabaseSyncResult(
-                IsSuccess: true,
-                Message: "Sincronización autenticada con Supabase completada exitosamente.",
-                NotesSynced: notes.Count,
-                GoalsSynced: goals.Count,
-                HabitsSynced: habits.Count,
-                HabitEventsSynced: events.Count,
-                RoadmapsSynced: roadmaps.Count,
-                MilestonesSynced: milestonesCount,
-                TransactionsSynced: txs.Count
-            );
-        }
-        catch (Exception ex)
+        var successMessage = "Sincronización autenticada con Supabase completada.";
+        if (errors.Any())
         {
-            return new SupabaseSyncResult(false, $"Error durante la sincronización: {ex.Message}");
+            successMessage += $" Hubo errores en: {string.Join(", ", errors)}";
         }
+
+        return new SupabaseSyncResult(
+            IsSuccess: true, // Siempre consideramos exitoso el flujo principal para no frenar la UI, aunque haya errores parciales.
+            Message: successMessage,
+            NotesSynced: notesCount,
+            GoalsSynced: goalsCount,
+            HabitsSynced: habitsCount,
+            HabitEventsSynced: eventsCount,
+            RoadmapsSynced: roadmapsCount,
+            MilestonesSynced: milestonesCount,
+            TransactionsSynced: txsCount
+        );
     }
 
     private async Task UpsertTableAsync<T>(string baseUrl, string apiKey, string accessToken, string table, IEnumerable<T> records, CancellationToken cancellationToken)
@@ -240,17 +192,37 @@ public class SupabaseSyncService : ISupabaseSyncService
         var endpoint = $"{baseUrl}/rest/v1/{table}";
         var json = JsonSerializer.Serialize(records, JsonOptions);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        request.Headers.Add("apikey", apiKey);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-        request.Headers.Add("Prefer", "resolution=merge-duplicates");
-        request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+        int maxRetries = 3;
+        int delayMs = 1000;
 
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        for (int i = 0; i < maxRetries; i++)
         {
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"Error al sincronizar '{table}' (HTTP {response.StatusCode}): {errorBody}");
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(30)); // 30s max per table
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+                request.Headers.Add("apikey", apiKey);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                request.Headers.Add("Prefer", "resolution=merge-duplicates");
+                request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                using var response = await _httpClient.SendAsync(request, cts.Token);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync(cts.Token);
+                    throw new InvalidOperationException($"HTTP {response.StatusCode}: {errorBody}");
+                }
+                return; // Exito
+            }
+            catch (Exception ex) when (i < maxRetries - 1 && !(ex is OperationCanceledException && cancellationToken.IsCancellationRequested))
+            {
+                await Task.Delay(delayMs, cancellationToken);
+                delayMs *= 2;
+            }
         }
+        
+        throw new InvalidOperationException($"Error persistente al sincronizar '{table}' tras {maxRetries} intentos.");
     }
 }
