@@ -1,6 +1,14 @@
-﻿<Router AppAssembly="typeof(MauiProgram).Assembly" NotFoundPage="typeof(Pages.NotFound)">
+<Router AppAssembly="@typeof(MauiProgram).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(Layout.MainLayout)">
+            <div class="p-8 text-center text-slate-400">
+                <h2 class="text-lg font-semibold text-slate-200">Página no encontrada</h2>
+                <p class="text-sm mt-1">El recurso solicitado no existe.</p>
+            </div>
+        </LayoutView>
+    </NotFound>
 </Router>
