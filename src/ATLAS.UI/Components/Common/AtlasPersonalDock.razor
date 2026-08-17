@@ -3,18 +3,16 @@
 
 <!-- Floating Personal Dock Capsule -->
 <aside 
-    @onmouseenter="ExpandDock"
-    @onmouseleave="CollapseDock"
-    class="flex flex-col justify-between p-2 rounded-2xl atlas-dock transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none shrink-0 h-[calc(100vh-24px)] my-auto relative z-20 @(IsExpanded ? "w-52" : "w-14") @Class">
+    class="flex flex-col justify-between p-2 rounded-2xl atlas-dock transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] select-none shrink-0 h-[calc(100vh-24px)] my-auto relative z-20 w-14 @Class">
     
     <!-- TOP SECTION: Glowing Orb & Hero Quick Capture -->
     <div class="flex flex-col items-center space-y-3 pt-1">
         
         <!-- 1. Glowing 3D Orb Header / Dock Toggle -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="@(IsExpanded ? "Contraer Dock" : "Expandir Dock")" Shortcut="Alt+D" Position="right" Class="w-full flex justify-center">
+        <AtlasTooltip IsDisabled="false" Text="ATLAS OS" Shortcut="Alt+D" Position="right" Class="w-full flex justify-center">
             <button 
                 type="button" 
-                @onclick="ToggleExpand"
+                @onclick="TriggerCommandLauncher"
                 class="w-full flex items-center justify-center p-1 rounded-xl hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer group"
                 aria-label="Toggle Dock">
                 
@@ -24,22 +22,11 @@
                         ✦
                     </div>
                 </div>
-
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <div class="flex flex-col text-left">
-                            <span class="text-xs font-bold tracking-tight text-white leading-tight">ATLAS</span>
-                            <span class="text-[9px] font-mono text-violet-300">personal os</span>
-                        </div>
-                        <span class="text-[10px] text-slate-500 group-hover:text-slate-300">◀</span>
-                    </div>
-                }
             </button>
         </AtlasTooltip>
 
         <!-- 2. Hero Quick Capture Action (+) -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Captura Rápida" Shortcut="Ctrl+N" Position="right" Class="w-full flex justify-center">
+        <AtlasTooltip IsDisabled="false" Text="Captura Rápida" Shortcut="Ctrl+N" Position="right" Class="w-full flex justify-center">
             <button 
                 type="button"
                 @onclick="TriggerQuickCapture"
@@ -57,133 +44,84 @@
     <nav class="flex flex-col space-y-1.5 py-2 my-auto" aria-label="Espacios de ATLAS">
         
         <!-- 1. Inicio -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Inicio" Shortcut="Alt+1" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Inicio" Shortcut="Alt+1" Position="right" Class="w-full block">
             <NavLink href="" Match="NavLinkMatch.All" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Inicio</span>
-                        <kbd class="text-[9px] font-mono opacity-40">1</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 2. Búsqueda Universal -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Búsqueda Universal" Shortcut="Alt+2" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Búsqueda Universal" Shortcut="Alt+2" Position="right" Class="w-full block">
             <NavLink href="search" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Buscar</span>
-                        <kbd class="text-[9px] font-mono opacity-40">2</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 3. Segundo Cerebro (Notas & Conocimiento) -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Segundo Cerebro" Shortcut="Alt+3" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Segundo Cerebro" Shortcut="Alt+3" Position="right" Class="w-full block">
             <NavLink href="capture" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Cerebro</span>
-                        <kbd class="text-[9px] font-mono opacity-40">3</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 4. Metas & Hábitos -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Metas & Hábitos" Shortcut="Alt+4" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Metas & Hábitos" Shortcut="Alt+4" Position="right" Class="w-full block">
             <NavLink href="habits-goals" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Hábitos & Metas</span>
-                        <kbd class="text-[9px] font-mono opacity-40">4</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 5. Finanzas -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Finanzas" Shortcut="Alt+5" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Finanzas" Shortcut="Alt+5" Position="right" Class="w-full block">
             <NavLink href="finance" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Finanzas</span>
-                        <kbd class="text-[9px] font-mono opacity-40">5</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 6. Mensajes & Correo -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Mensajes & Correo" Shortcut="Alt+6" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Mensajes & Correo" Shortcut="Alt+6" Position="right" Class="w-full block">
             <NavLink href="settings" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Mensajes</span>
-                        <kbd class="text-[9px] font-mono opacity-40">6</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 7. Conexiones & Apps -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Integraciones" Shortcut="Alt+7" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Integraciones" Shortcut="Alt+7" Position="right" Class="w-full block">
             <NavLink href="settings" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Conexiones</span>
-                        <kbd class="text-[9px] font-mono opacity-40">7</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
         <!-- 8. Configuración -->
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Configuración & Bóveda" Shortcut="Alt+8" Position="right" Class="w-full block">
+        <AtlasTooltip IsDisabled="false" Text="Configuración & Bóveda" Shortcut="Alt+8" Position="right" Class="w-full block">
             <NavLink href="settings" class="group flex items-center justify-center p-2 rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/[0.05] [&.active]:text-violet-400 [&.active]:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] transition-all atlas-clickable">
                 <div class="w-5 h-5 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
@@ -191,13 +129,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                 </div>
-                @if (IsExpanded)
-                {
-                    <div class="flex items-center justify-between flex-1 min-w-0 pl-2.5 pr-1 animate-atlas-in">
-                        <span class="text-xs font-medium truncate">Ajustes</span>
-                        <kbd class="text-[9px] font-mono opacity-40">8</kbd>
-                    </div>
-                }
             </NavLink>
         </AtlasTooltip>
 
@@ -205,20 +136,13 @@
 
     <!-- BOTTOM SECTION: User Profile Avatar -->
     <div class="flex flex-col items-center pt-2 pb-1 border-t border-white/[0.06]">
-        <AtlasTooltip IsDisabled="@IsExpanded" Text="Álvaro — En línea" Shortcut="Perfil" Position="right" Class="w-full flex justify-center">
+        <AtlasTooltip IsDisabled="false" Text="Álvaro — En línea" Shortcut="Perfil" Position="right" Class="w-full flex justify-center">
             <button 
                 type="button" 
                 @onclick="@(() => NavigationManager.NavigateTo("settings"))" 
                 class="flex items-center justify-center p-1 rounded-xl hover:bg-white/[0.05] active:scale-95 transition-all cursor-pointer group"
                 aria-label="Perfil de usuario">
                 <AtlasAvatar Name="Álvaro Espinoza" IsOnline="true" Size="sm" />
-                @if (IsExpanded)
-                {
-                    <div class="flex flex-col text-left pl-2.5 pr-1 min-w-0 animate-atlas-in">
-                        <span class="text-xs font-semibold text-white truncate">Álvaro</span>
-                        <span class="text-[9px] font-mono text-emerald-400">en línea</span>
-                    </div>
-                }
             </button>
         </AtlasTooltip>
     </div>
@@ -226,17 +150,9 @@
 </aside>
 
 @code {
-    [Parameter] public bool IsExpanded { get; set; }
-    [Parameter] public EventCallback<bool> IsExpandedChanged { get; set; }
     [Parameter] public EventCallback OnQuickCapture { get; set; }
     [Parameter] public EventCallback OnCommandLauncher { get; set; }
     [Parameter] public string? Class { get; set; }
-
-    private async Task ToggleExpand()
-    {
-        IsExpanded = !IsExpanded;
-        await IsExpandedChanged.InvokeAsync(IsExpanded);
-    }
 
     private async Task TriggerQuickCapture()
     {
@@ -245,21 +161,12 @@
             await OnQuickCapture.InvokeAsync();
         }
     }
-    private async Task ExpandDock()
-    {
-        if (!IsExpanded)
-        {
-            IsExpanded = true;
-            await IsExpandedChanged.InvokeAsync(IsExpanded);
-        }
-    }
 
-    private async Task CollapseDock()
+    private async Task TriggerCommandLauncher()
     {
-        if (IsExpanded)
+        if (OnCommandLauncher.HasDelegate)
         {
-            IsExpanded = false;
-            await IsExpandedChanged.InvokeAsync(IsExpanded);
+            await OnCommandLauncher.InvokeAsync();
         }
     }
 }

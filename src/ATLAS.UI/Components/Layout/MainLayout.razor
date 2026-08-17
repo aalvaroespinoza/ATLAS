@@ -10,7 +10,6 @@
     
     <!-- 1. FLOATING PERSONAL DOCK (Left Island) -->
     <AtlasPersonalDock 
-        @bind-IsExpanded="isDockExpanded"
         OnQuickCapture="() => isQuickCaptureOpen = true"
         OnCommandLauncher="() => isLauncherOpen = true" />
 
@@ -32,7 +31,7 @@
         else
         {
             <!-- Scrollable View Canvas (Optimal Reading Width & Rhythm) -->
-            <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 md:p-8 md:pb-24">
+            <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-36 md:p-8 md:pb-36">
                 <div class="max-w-5xl mx-auto">
                     @Body
                 </div>
@@ -84,7 +83,6 @@
 @code {
     private bool isLauncherOpen;
     private bool isQuickCaptureOpen;
-    private bool isDockExpanded = false;
     private string quickCaptureText = string.Empty;
     private bool isCapturing;
 
@@ -150,8 +148,7 @@
                 StateHasChanged();
                 break;
             case "alt+d":
-                isDockExpanded = !isDockExpanded;
-                StateHasChanged();
+                // shortcut Alt+D is disabled as Dock is always compact
                 break;
             case "alt+1": NavigationManager.NavigateTo(""); break;
             case "alt+2": NavigationManager.NavigateTo("search"); break;
