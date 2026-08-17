@@ -55,10 +55,28 @@ Gmail / Telegram / Mercado Pago / Supabase / Windows
 - **Un commit por bloque funcional**, siempre pusheando al remoto (`git push origin main`).
 - Mantener compatibilidad estricta con la funcionalidad existente.
 
-## 5. Regla Anti-Scope-Creep
+## 5. Regla Anti-Scope-Creep (Mecanismo de Protección)
 - **Prohibido agregar funcionalidades no solicitadas explícitamente.**
 - No crear entidades, comandos, tablas o pantallas no contempladas en el plan aprobado.
 - No inventar dependencias ni servicios futuros antes de su fase correspondiente.
+
+**Evaluación Obligatoria:**
+ANTES de agregar una feature nueva debe responderse:
+1. ¿Resuelve un problema cotidiano real?
+2. ¿Se usa al menos semanalmente?
+3. ¿Puede existir como capability sin una nueva pantalla?
+4. ¿Puede reutilizar un Command existente?
+5. ¿Puede reutilizar el Context system?
+6. ¿Duplica una herramienta existente?
+7. ¿Aumenta la complejidad visual?
+8. ¿Aumenta la complejidad arquitectónica?
+9. ¿Puede esperar dos semanas de uso real?
+
+Si una feature no pasa esta evaluación:
+→ backlog.
+No implementación.
+No se crea una nueva etapa automáticamente.
+No se inventa una numeración de etapas.
 
 ## 6. Fuentes de Verdad
 - **Producto:** `@docs/ATLAS_PRODUCT.md`
@@ -70,3 +88,9 @@ Gmail / Telegram / Mercado Pago / Supabase / Windows
 Las imágenes oficiales de referencia de interfaz y arquitectura residen en `/reference/`:
 - `/reference/atlas-home-reference.png`
 - `/reference/atlas-architecture-reference.png`
+
+## 8. Modificación de Base de Datos y Entidades Core
+**REGLA ESTRICTA:** Cada vez que se modifique una entidad del Core (ej. Goals, Habits, Transactions), es obligatorio:
+1. Revisar `DatabaseInitializer.cs` y los repositorios correspondientes en `ATLAS.Storage` usando tools de lectura.
+2. NO asumir el esquema de la base de datos; consultarlo leyendo los archivos `.sql` o `.cs` correspondientes.
+3. Si hay un cambio en el modelo, actualizar el esquema y el inicializador de la base de datos local (SQLite) ANTES de tocar la UI.
