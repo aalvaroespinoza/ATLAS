@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="relative flex items-center @ContainerClass">
+<div class="relative flex items-center @ContainerClass" @attributes="AdditionalAttributes">
     <svg class="absolute left-3 w-3.5 h-3.5 text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
@@ -29,6 +29,7 @@
     [Parameter] public string Placeholder { get; set; } = "Buscar...";
     [Parameter] public string? Class { get; set; }
     [Parameter] public string? ContainerClass { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleInput(ChangeEventArgs e)
     {

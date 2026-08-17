@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="p-8 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 text-center space-y-3 select-none backdrop-blur-md animate-atlas-in @Class">
+<div class="p-8 rounded-2xl bg-gradient-to-b from-[#141a29]/90 to-[#0e1320]/90 border border-white/[0.08] shadow-lg shadow-black/40 text-center space-y-3 select-none backdrop-blur-md animate-atlas-in @Class" @attributes="AdditionalAttributes">
     @if (IconContent != null)
     {
         <div class="flex justify-center text-slate-400">
@@ -30,4 +30,5 @@
     [Parameter] public RenderFragment? IconContent { get; set; }
     [Parameter] public RenderFragment? ActionContent { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }

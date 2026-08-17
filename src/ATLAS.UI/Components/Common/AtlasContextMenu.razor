@@ -6,6 +6,7 @@
         <div 
             class="absolute z-50 min-w-[200px] atlas-floating rounded-xl p-1.5 shadow-floating border border-white/[0.12] space-y-0.5 animate-atlas-in @Class"
             style="@GetPositionStyle()"
+            @attributes="AdditionalAttributes"
             @onclick:stopPropagation="true">
             @ChildContent
         </div>
@@ -19,6 +20,7 @@
     [Parameter] public double Y { get; set; }
     [Parameter] public string? Class { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task Close()
     {

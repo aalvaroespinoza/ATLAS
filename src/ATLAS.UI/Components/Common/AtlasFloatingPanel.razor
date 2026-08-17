@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="atlas-floating rounded-2xl overflow-hidden shadow-floating animate-atlas-in @Class" @onclick:stopPropagation="@StopPropagation">
+<div class="atlas-floating rounded-2xl overflow-hidden shadow-floating animate-atlas-in @Class" @attributes="AdditionalAttributes" @onclick:stopPropagation="@StopPropagation">
     @if (HeaderContent != null)
     {
         <div class="px-5 py-3.5 border-b border-white/[0.08] bg-white/[0.02] flex items-center justify-between">
@@ -27,4 +27,5 @@
     [Parameter] public RenderFragment? HeaderContent { get; set; }
     [Parameter] public RenderFragment? FooterContent { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }

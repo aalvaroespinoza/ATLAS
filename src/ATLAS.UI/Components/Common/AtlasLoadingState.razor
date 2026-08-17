@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="py-10 px-4 flex flex-col items-center justify-center gap-3 text-center select-none animate-atlas-in @Class">
+<div class="py-10 px-4 flex flex-col items-center justify-center gap-3 text-center select-none animate-atlas-in @Class" @attributes="AdditionalAttributes">
     <div class="relative flex items-center justify-center">
         <div class="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-indigo-400 animate-spin"></div>
         <div class="w-2 h-2 rounded-full bg-indigo-400 shadow-sm shadow-indigo-400/80 absolute"></div>
@@ -12,4 +12,5 @@
 @code {
     [Parameter] public string Message { get; set; } = "Cargando...";
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }

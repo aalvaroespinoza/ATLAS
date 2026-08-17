@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="relative flex items-center w-full max-w-2xl mx-auto rounded-2xl bg-[#0f1422]/95 backdrop-blur-2xl border border-white/[0.12] shadow-floating p-1.5 transition-all duration-150 @Class">
+<div class="relative flex items-center w-full max-w-2xl mx-auto rounded-2xl bg-[#0f1422]/95 backdrop-blur-2xl border border-white/[0.12] shadow-floating p-1.5 transition-all duration-150 @Class" @attributes="AdditionalAttributes">
     <div class="pl-3.5 pr-2 flex items-center text-slate-400 font-mono text-sm select-none">
         <span>|</span>
     </div>
@@ -52,6 +52,7 @@
     [Parameter] public bool IsExecuting { get; set; }
     [Parameter] public EventCallback<string?> OnExecute { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleInput(ChangeEventArgs e)
     {

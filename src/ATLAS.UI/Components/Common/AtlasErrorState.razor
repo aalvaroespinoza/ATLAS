@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 flex items-center justify-between gap-3 shadow-md shadow-rose-950/20 backdrop-blur-md animate-atlas-in @Class">
+<div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-xs text-rose-200 flex items-center justify-between gap-3 shadow-md shadow-rose-950/20 backdrop-blur-md animate-atlas-in @Class" @attributes="AdditionalAttributes">
     <div class="flex items-center gap-2.5 min-w-0">
         <span class="w-2 h-2 rounded-full bg-rose-400 shadow-sm shadow-rose-400/80 shrink-0"></span>
         <span class="truncate font-medium">@Message</span>
@@ -21,4 +21,5 @@
     [Parameter] public string Message { get; set; } = "Ocurrió un error al procesar la solicitud.";
     [Parameter] public EventCallback OnRetry { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }

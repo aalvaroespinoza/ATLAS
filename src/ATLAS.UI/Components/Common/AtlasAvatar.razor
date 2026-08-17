@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="relative inline-flex items-center justify-center select-none @GetSizeClasses() @Class">
+<div class="relative inline-flex items-center justify-center select-none @GetSizeClasses() @Class" @attributes="AdditionalAttributes">
     <div class="w-full h-full rounded-full overflow-hidden p-0.5 bg-gradient-to-tr from-violet-600 via-indigo-500 to-cyan-400 shadow-sm">
         <div class="w-full h-full rounded-full overflow-hidden bg-[#121828] flex items-center justify-center text-white font-semibold text-xs">
             @if (!string.IsNullOrWhiteSpace(ImageUrl))
@@ -26,6 +26,7 @@
     [Parameter] public bool IsOnline { get; set; } = true;
     [Parameter] public string Size { get; set; } = "md"; // sm (28px), md (36px), lg (44px)
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private string GetSizeClasses() => Size.ToLowerInvariant() switch
     {

@@ -2,7 +2,8 @@
 
 <div 
     @onclick="HandleClick"
-    class="group px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-3 text-xs select-none transition-all duration-120 @(IsClickable ? "cursor-pointer atlas-clickable" : "") @(IsSelected ? "bg-white/[0.08] border border-violet-500/40 text-white shadow-sm shadow-violet-500/10" : "hover:bg-white/[0.04] text-slate-200 border border-transparent") @Class">
+    class="group px-3.5 py-2.5 rounded-xl flex items-center justify-between gap-3 text-xs select-none transition-all duration-120 @(IsClickable ? "cursor-pointer atlas-clickable" : "") @(IsSelected ? "bg-white/[0.08] border border-violet-500/40 text-white shadow-sm shadow-violet-500/10" : "hover:bg-white/[0.04] text-slate-200 border border-transparent") @Class"
+    @attributes="AdditionalAttributes">
     
     <!-- Left: Prefix Slot + Main Text Content -->
     <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -53,6 +54,7 @@
     [Parameter] public RenderFragment? PrefixContent { get; set; }
     [Parameter] public RenderFragment? SuffixContent { get; set; }
     [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleClick(MouseEventArgs e)
     {

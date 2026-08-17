@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="space-y-1.5 w-full @Class">
+<div class="space-y-1.5 w-full @Class" @attributes="AdditionalAttributes">
     @if (ShowPercentage)
     {
         <div class="flex items-center justify-between text-[11.5px] font-mono text-slate-400">
@@ -25,6 +25,7 @@
     [Parameter] public string Height { get; set; } = "md"; // sm (4px), md (6px), lg (8px)
     [Parameter] public bool ShowPercentage { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private int ClampedValue => Math.Clamp(Value, 0, Max);
 

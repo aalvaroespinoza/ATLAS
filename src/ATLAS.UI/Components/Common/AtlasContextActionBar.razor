@@ -3,7 +3,7 @@
 
 @if (Target != null && Actions.Count > 0)
 {
-    <div class="flex items-center gap-2 flex-wrap @Class">
+    <div class="flex items-center gap-2 flex-wrap @Class" @attributes="AdditionalAttributes">
         @foreach (var action in Actions)
         {
             var isRunningThis = runningActionId == action.Id;
@@ -31,6 +31,7 @@
     [Parameter] public object? Target { get; set; }
     [Parameter] public string? Class { get; set; }
     [Parameter] public EventCallback<ContextActionResult> OnActionExecuted { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     public record ContextActionResult(ContextActionDescriptor Action, CommandResult Result);
 

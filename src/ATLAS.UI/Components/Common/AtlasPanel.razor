@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="rounded-2xl p-5 md:p-6 transition-all duration-150 @GetVariantClasses() @Class">
+<div class="rounded-2xl p-5 md:p-6 transition-all duration-150 @GetVariantClasses() @Class" @attributes="AdditionalAttributes">
     @if (!string.IsNullOrWhiteSpace(Title) || Icon != null || !string.IsNullOrWhiteSpace(ActionText) || HeaderExtra != null)
     {
         <div class="flex items-center justify-between gap-3 mb-4 select-none">
@@ -59,6 +59,7 @@
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string Variant { get; set; } = "standard"; // standard, elevated, ai, metric
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 
     private async Task HandleActionClick()
     {

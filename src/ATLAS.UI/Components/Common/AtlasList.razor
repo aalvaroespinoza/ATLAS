@@ -1,6 +1,6 @@
 @namespace ATLAS.UI.Components.Common
 
-<div class="space-y-1.5 @Class">
+<div class="space-y-1.5 @Class" @attributes="AdditionalAttributes">
     @if (IsLoading)
     {
         @if (LoadingSlot != null)
@@ -41,4 +41,5 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
 }
