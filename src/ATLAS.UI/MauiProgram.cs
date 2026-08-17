@@ -86,9 +86,9 @@ public static class MauiProgram
     {
         try
         {
-            // 1. Initialize SQLite Database Schema
-            var dbInitializer = services.GetRequiredService<DatabaseInitializer>();
-            dbInitializer.InitializeAsync().GetAwaiter().GetResult();
+            // 1. Database schema initialization moved to MainLayout (async)
+            // var dbInitializer = services.GetRequiredService<DatabaseInitializer>();
+            // dbInitializer.InitializeAsync().GetAwaiter().GetResult();
 
             // 2. Register Commands into CommandRegistry
             var commandRegistry = services.GetRequiredService<ICommandRegistry>();
@@ -96,6 +96,9 @@ public static class MauiProgram
             commandRegistry.Register(services.GetRequiredService<KnowledgeSearchCommand>());
             commandRegistry.Register(services.GetRequiredService<AiSummarizeCommand>());
             commandRegistry.Register(services.GetRequiredService<AiAskCommand>());
+            commandRegistry.Register(services.GetRequiredService<AiExplainCommand>());
+            commandRegistry.Register(services.GetRequiredService<AiRewriteCommand>());
+            commandRegistry.Register(services.GetRequiredService<AiTranslateCommand>());
             commandRegistry.Register(services.GetRequiredService<GoalCreateCommand>());
             commandRegistry.Register(services.GetRequiredService<GoalUpdateProgressCommand>());
             commandRegistry.Register(services.GetRequiredService<HabitCreateCommand>());

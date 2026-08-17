@@ -708,27 +708,73 @@
 
     private async Task TriggerAiTool(string toolType)
     {
-        switch (toolType)
+        if (toolType != "resumen" && string.IsNullOrWhiteSpace(quickPromptText))
         {
-            case "resumen":
-                var summaryResult = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?>
+            actionFeedback = "⚠️ Escribí o pegá un texto en la caja primero.";
+            return;
+        }
+
+        isExecutingPrompt = true;
+        try
+        {
+            CommandResult? result = null;
+            
+            switch (toolType)
+            {
+                case "resumen":
+                    result = await CommandRegistry.ExecuteAsync(AiSummarizeCommand.CommandId, new Dictionary<string, object?>
+                    {
+                        ["text"] = string.IsNullOrWhiteSpace(quickPromptText) ? "Por favor genera un resumen ejecutivo del estado actual de mis tareas, hábitos y gastos registrados en ATLAS." : quickPromptText
+                    });
+                    if (result.IsSuccess && result.Data is string sumText) 
+                    {
+                        aiAnswer = sumText;
+                        quickPromptText = string.Empty;
+                    }
+                    return;
+                case "explicar":
+                    result = await CommandRegistry.ExecuteAsync(AiExplainCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    break;
+                case "reescribir":
+                    result = await CommandRegistry.ExecuteAsync(AiRewriteCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    break;
+                case "traducir":
+                    result = await CommandRegistry.ExecuteAsync(AiTranslateCommand.CommandId, new Dictionary<string, object?> { ["text"] = quickPromptText });
+                    break;
+            }
+
+            if (result != null)
+            {
+                if (result.IsSuccess && result.Data is IAsyncEnumerable<string> stream)
                 {
-                    ["text"] = "Por favor genera un resumen ejecutivo del estado actual de mis tareas, hábitos y gastos registrados en ATLAS."
-                });
-                if (summaryResult.IsSuccess && summaryResult.Data is string sumText) aiAnswer = sumText;
-                break;
-            case "explicar":
-                quickPromptText = "¿Podrías explicarme con claridad cómo estructurar...?";
-                break;
-            case "reescribir":
-                quickPromptText = "Reescribir para mayor impacto: ";
-                break;
-            case "traducir":
-                quickPromptText = "Traducir al inglés: ";
-                break;
-            default:
-                quickPromptText = "¿Qué tengo pendiente para hoy?";
-                break;
+                    aiAnswer = string.Empty;
+                    quickPromptText = string.Empty;
+                    StateHasChanged();
+                    
+                    await foreach (var chunk in stream)
+                    {
+                        aiAnswer += chunk;
+                        StateHasChanged();
+                    }
+                }
+                else if (result.IsSuccess && result.Data is string answer)
+                {
+                    aiAnswer = answer;
+                    quickPromptText = string.Empty;
+                }
+                else
+                {
+                    actionFeedback = $"⚠️ {result.ErrorMessage ?? "No se obtuvo respuesta de IA."}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            actionFeedback = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isExecutingPrompt = false;
         }
     }
 
