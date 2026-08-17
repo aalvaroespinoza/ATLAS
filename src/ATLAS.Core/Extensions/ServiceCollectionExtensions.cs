@@ -18,13 +18,24 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<TelegramMessageProcessor>();
         services.AddSingleton<ITelegramListenerService, TelegramListenerService>();
 
-        // Gmail Integration
+        // Integrations Clients & Hub
         services.AddTransient<IGmailClient>(sp =>
             new GmailClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
+        services.AddTransient<ATLAS.Core.Integrations.MercadoPago.IMercadoPagoClient>(sp =>
+            new ATLAS.Core.Integrations.MercadoPago.MercadoPagoClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
 
-        // Supabase Integration
+        // Supabase Integration Services
         services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseAuthService, ATLAS.Core.Integrations.Supabase.SupabaseAuthService>();
         services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseSyncService, ATLAS.Core.Integrations.Supabase.SupabaseSyncService>();
+
+        // Integration Adapters (IAtlasIntegration)
+        services.AddSingleton<ATLAS.Core.Integrations.IAtlasIntegration, ATLAS.Core.Integrations.Telegram.TelegramIntegration>();
+        services.AddSingleton<ATLAS.Core.Integrations.IAtlasIntegration, ATLAS.Core.Integrations.Gmail.GmailIntegration>();
+        services.AddSingleton<ATLAS.Core.Integrations.IAtlasIntegration, ATLAS.Core.Integrations.MercadoPago.MercadoPagoIntegration>();
+        services.AddSingleton<ATLAS.Core.Integrations.IAtlasIntegration, ATLAS.Core.Integrations.Supabase.SupabaseIntegration>();
+
+        // Integration Registry
+        services.AddSingleton<ATLAS.Core.Integrations.IIntegrationRegistry, ATLAS.Core.Integrations.IntegrationRegistry>();
 
         // Context Services
         services.AddTransient<ATLAS.Core.Context.IHomeContextService, ATLAS.Core.Context.HomeContextService>();
