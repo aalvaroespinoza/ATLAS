@@ -31,8 +31,8 @@ public class NotesRepository : INoteRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            INSERT INTO notes (id, title, content, type, tags, created_at, source)
-            VALUES (@id, @title, @content, @type, @tags, @created_at, @source);
+            INSERT INTO notes (id, title, content, type, tags, goal_id, created_at, source)
+            VALUES (@id, @title, @content, @type, @tags, @goal_id, @created_at, @source);
             """;
 
         await using var command = connection.CreateCommand();
@@ -42,6 +42,7 @@ public class NotesRepository : INoteRepository
         command.Parameters.AddWithValue("@content", note.Content ?? string.Empty);
         command.Parameters.AddWithValue("@type", string.IsNullOrWhiteSpace(note.Type) ? "note" : note.Type);
         command.Parameters.AddWithValue("@tags", (object?)note.Tags ?? DBNull.Value);
+        command.Parameters.AddWithValue("@goal_id", (object?)note.GoalId ?? DBNull.Value);
         command.Parameters.AddWithValue("@created_at", note.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
         command.Parameters.AddWithValue("@source", note.Source ?? "quick_capture");
 
@@ -70,7 +71,7 @@ public class NotesRepository : INoteRepository
         if (string.IsNullOrEmpty(trimmedQuery))
         {
             sql = """
-                SELECT id, title, content, type, tags, created_at, source
+                SELECT id, title, content, type, tags, created_at, source, goal_id
                 FROM notes
                 ORDER BY datetime(created_at) DESC
                 LIMIT @limit;
@@ -79,7 +80,7 @@ public class NotesRepository : INoteRepository
         else
         {
             sql = """
-                SELECT id, title, content, type, tags, created_at, source
+                SELECT id, title, content, type, tags, created_at, source, goal_id
                 FROM notes
                 WHERE title LIKE @pattern
                    OR content LIKE @pattern
@@ -109,6 +110,7 @@ public class NotesRepository : INoteRepository
             var tags = reader.IsDBNull(4) ? null : reader.GetString(4);
             var createdAtStr = reader.GetString(5);
             var source = reader.IsDBNull(6) ? "quick_capture" : reader.GetString(6);
+            var goalId = reader.FieldCount > 7 && !reader.IsDBNull(7) ? reader.GetString(7) : null;
 
             var createdAt = DateTimeOffset.TryParse(createdAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dt)
                 ? dt
@@ -121,6 +123,7 @@ public class NotesRepository : INoteRepository
                 Content = content,
                 Type = type,
                 Tags = tags,
+                GoalId = goalId,
                 CreatedAt = createdAt,
                 Source = source
             });

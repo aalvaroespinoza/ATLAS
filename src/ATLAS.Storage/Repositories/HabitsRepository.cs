@@ -36,8 +36,8 @@ public class HabitsRepository : IHabitRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            INSERT INTO habits (id, name, description, frequency, created_at)
-            VALUES (@id, @name, @description, @frequency, @created_at);
+            INSERT INTO habits (id, name, description, frequency, goal_id, created_at)
+            VALUES (@id, @name, @description, @frequency, @goal_id, @created_at);
             """;
 
         await using var command = connection.CreateCommand();
@@ -46,6 +46,7 @@ public class HabitsRepository : IHabitRepository
         command.Parameters.AddWithValue("@name", habit.Name.Trim());
         command.Parameters.AddWithValue("@description", (object?)habit.Description?.Trim() ?? DBNull.Value);
         command.Parameters.AddWithValue("@frequency", string.IsNullOrWhiteSpace(habit.Frequency) ? "daily" : habit.Frequency.Trim());
+        command.Parameters.AddWithValue("@goal_id", (object?)habit.GoalId ?? DBNull.Value);
         command.Parameters.AddWithValue("@created_at", habit.CreatedAt.ToString("O", CultureInfo.InvariantCulture));
 
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -60,7 +61,7 @@ public class HabitsRepository : IHabitRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            SELECT id, name, description, frequency, created_at
+            SELECT id, name, description, frequency, created_at, goal_id
             FROM habits
             WHERE id = @id
             LIMIT 1;
@@ -85,7 +86,7 @@ public class HabitsRepository : IHabitRepository
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         const string sql = """
-            SELECT id, name, description, frequency, created_at
+            SELECT id, name, description, frequency, created_at, goal_id
             FROM habits
             ORDER BY datetime(created_at) DESC;
             """;
@@ -209,6 +210,7 @@ public class HabitsRepository : IHabitRepository
         var description = reader.IsDBNull(2) ? null : reader.GetString(2);
         var frequency = reader.GetString(3);
         var createdAtStr = reader.GetString(4);
+        var goalId = reader.FieldCount > 5 && !reader.IsDBNull(5) ? reader.GetString(5) : null;
 
         var createdAt = DateTimeOffset.TryParse(createdAtStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var parsedCreated)
             ? parsedCreated
@@ -220,6 +222,7 @@ public class HabitsRepository : IHabitRepository
             Name = name,
             Description = description,
             Frequency = frequency,
+            GoalId = goalId,
             CreatedAt = createdAt
         };
     }

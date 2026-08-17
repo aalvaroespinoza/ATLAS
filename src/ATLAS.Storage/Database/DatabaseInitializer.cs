@@ -53,10 +53,13 @@ public class DatabaseInitializer
                 content TEXT NOT NULL,
                 type TEXT NOT NULL DEFAULT 'note',
                 tags TEXT,
+                goal_id TEXT,
                 created_at TEXT NOT NULL,
-                source TEXT NOT NULL DEFAULT 'quick_capture'
+                source TEXT NOT NULL DEFAULT 'quick_capture',
+                FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
             );
             CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_notes_goal_id ON notes(goal_id);
 
             -- Goals table
             CREATE TABLE IF NOT EXISTS goals (
@@ -77,9 +80,12 @@ public class DatabaseInitializer
                 name TEXT NOT NULL,
                 description TEXT,
                 frequency TEXT NOT NULL DEFAULT 'daily',
-                created_at TEXT NOT NULL
+                goal_id TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
             );
             CREATE INDEX IF NOT EXISTS idx_habits_created_at ON habits(created_at);
+            CREATE INDEX IF NOT EXISTS idx_habits_goal_id ON habits(goal_id);
 
             -- Habit Events table
             CREATE TABLE IF NOT EXISTS habit_events (
@@ -152,6 +158,7 @@ public class DatabaseInitializer
 
         // 2. Perform non-destructive migrations for existing databases
         await MigrateNotesTableAsync(connection, cancellationToken).ConfigureAwait(false);
+        await MigrateHabitsTableAsync(connection, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task MigrateNotesTableAsync(SqliteConnection connection, CancellationToken cancellationToken)
@@ -193,6 +200,35 @@ public class DatabaseInitializer
         {
             await using var cmd = connection.CreateCommand();
             cmd.CommandText = "ALTER TABLE notes ADD COLUMN source TEXT NOT NULL DEFAULT 'quick_capture';";
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        if (!existingColumns.Contains("goal_id"))
+        {
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = "ALTER TABLE notes ADD COLUMN goal_id TEXT;";
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task MigrateHabitsTableAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "PRAGMA table_info(habits);";
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+            while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
+            {
+                existingColumns.Add(reader.GetString(1));
+            }
+        }
+
+        if (!existingColumns.Contains("goal_id"))
+        {
+            await using var cmd = connection.CreateCommand();
+            cmd.CommandText = "ALTER TABLE habits ADD COLUMN goal_id TEXT;";
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
     }

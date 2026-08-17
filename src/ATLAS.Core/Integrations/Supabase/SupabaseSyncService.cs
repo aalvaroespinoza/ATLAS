@@ -94,7 +94,7 @@ public class SupabaseSyncService : ISupabaseSyncService
             var notes = (await _noteRepository.GetRecentAsync(500, cancellationToken)).ToList();
             if (notes.Count > 0)
             {
-                var payload = notes.Select(n => new { id = n.Id, user_id = userId, title = n.Title, content = n.Content, type = n.Type, tags = n.Tags, source = n.Source, created_at = n.CreatedAt.UtcDateTime.ToString("o") });
+                var payload = notes.Select(n => new { id = n.Id, user_id = userId, title = n.Title, content = n.Content, type = n.Type, tags = n.Tags, goal_id = n.GoalId, source = n.Source, created_at = n.CreatedAt.UtcDateTime.ToString("o") });
                 await UpsertTableAsync(url, anonKey, accessToken, "notes", payload, cancellationToken);
                 notesCount = notes.Count;
             }
@@ -118,7 +118,7 @@ public class SupabaseSyncService : ISupabaseSyncService
             var habits = (await _habitRepository.GetAllAsync(cancellationToken)).ToList();
             if (habits.Count > 0)
             {
-                var payload = habits.Select(h => new { id = h.Id, user_id = userId, name = h.Name, description = h.Description, frequency = h.Frequency, created_at = h.CreatedAt.UtcDateTime.ToString("o") });
+                var payload = habits.Select(h => new { id = h.Id, user_id = userId, name = h.Name, description = h.Description, frequency = h.Frequency, goal_id = h.GoalId, created_at = h.CreatedAt.UtcDateTime.ToString("o") });
                 await UpsertTableAsync(url, anonKey, accessToken, "habits", payload, cancellationToken);
                 habitsCount = habits.Count;
             }

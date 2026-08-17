@@ -10,6 +10,7 @@ public class Note
     public string Content { get; init; } = string.Empty;
     public string Type { get; init; } = "note";
     public string? Tags { get; init; }
+    public string? GoalId { get; init; }
     public DateTimeOffset CreatedAt { get; init; } = DateTimeOffset.UtcNow;
     public string Source { get; init; } = "quick_capture";
 }
