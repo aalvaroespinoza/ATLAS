@@ -26,6 +26,7 @@ public class ActivityEventSubscriber : BackgroundService
         _eventBus.Subscribe<TransactionCreatedEvent>(async e => await HandleTransactionCreated(e, stoppingToken));
         _eventBus.Subscribe<RoadmapMilestoneCompletedEvent>(async e => await HandleMilestoneCompleted(e, stoppingToken));
         _eventBus.Subscribe<TransactionsSyncedEvent>(async e => await HandleTransactionsSynced(e, stoppingToken));
+        _eventBus.Subscribe<IntegrationActivityDetectedEvent>(async e => await HandleIntegrationActivityDetected(e, stoppingToken));
 
         return Task.CompletedTask;
     }
@@ -105,6 +106,20 @@ public class ActivityEventSubscriber : BackgroundService
             Title = $"Sincronización: {e.Source}",
             Summary = $"Se sincronizaron {e.NewTransactionsCount} nuevos movimientos.",
             RelevanceScore = 5,
+            Timestamp = e.OccurredAt
+        };
+        await _activityRepository.CreateAsync(record, token);
+    }
+
+    private async Task HandleIntegrationActivityDetected(IntegrationActivityDetectedEvent e, CancellationToken token)
+    {
+        var record = new ActivityRecord
+        {
+            Type = e.ActivityType,
+            SourceId = e.SourceId,
+            Title = e.Title,
+            Summary = e.Summary,
+            RelevanceScore = e.RelevanceScore,
             Timestamp = e.OccurredAt
         };
         await _activityRepository.CreateAsync(record, token);
