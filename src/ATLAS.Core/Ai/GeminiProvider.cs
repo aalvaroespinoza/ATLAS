@@ -14,7 +14,7 @@ public class GeminiProvider : IAiBackend
     private readonly string _model;
 
     public const string SecretKeyName = SecretKeys.GeminiApiKey;
-    public const string DefaultModel = "gemini-1.5-flash-latest";
+    public const string DefaultModel = "gemini-2.0-flash";
 
     public AiProviderType Type => AiProviderType.Cloud;
     public string ProviderName => "Gemini";
@@ -156,5 +156,67 @@ public class GeminiProvider : IAiBackend
         }
 
         return string.Empty;
+    }
+
+    public async IAsyncEnumerable<string> AskStreamAsync(string prompt, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var apiKey = _secretVault.GetSecret(SecretKeyName);
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new InvalidOperationException("La API Key de Gemini no está configurada.");
+        }
+
+        var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:streamGenerateContent?alt=sse&key={apiKey.Trim()}";
+
+        var payload = new
+        {
+            contents = new[]
+            {
+                new { parts = new[] { new { text = prompt } } }
+            }
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        request.Content = JsonContent.Create(payload);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Error de conexión al consultar la API de Gemini: {ex.Message}", ex);
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            var errorMessage = ExtractErrorMessage(errorBody, response.StatusCode.ToString());
+            throw new InvalidOperationException($"Error de API de Gemini ({response.StatusCode}): {errorMessage}");
+        }
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        using var reader = new StreamReader(stream);
+
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (line == null) break;
+            
+            if (string.IsNullOrWhiteSpace(line)) continue;
+            if (line.StartsWith("data: "))
+            {
+                var json = line["data: ".Length..].Trim();
+                if (json == "[DONE]") break;
+                
+                var chunk = ExtractGeneratedText(json);
+                if (!string.IsNullOrEmpty(chunk))
+                {
+                    yield return chunk;
+                }
+            }
+        }
     }
 }

@@ -87,9 +87,36 @@
         </div>
     }
 
-    @if (isLoading)
+    @if (isLoading && contextSnapshot == null)
     {
-        <AtlasLoadingState Message="Cargando tu contexto personal..." />
+        <!-- SKELETON GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-pulse select-none">
+            <!-- LEFT COLUMN SKELETON -->
+            <div class="lg:col-span-8 space-y-6">
+                <!-- TOP METRICS ROW -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="h-32 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                    <div class="h-32 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                    <div class="h-32 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                </div>
+                <!-- MIDDLE ROW SKELETON -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="h-64 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                    <div class="h-64 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                </div>
+                <!-- BOTTOM ROW SKELETON -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="h-48 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                    <div class="h-48 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                </div>
+            </div>
+            
+            <!-- RIGHT COLUMN SKELETON -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="h-80 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+                <div class="h-16 rounded-2xl bg-white/[0.02] border border-white/[0.05]"></div>
+            </div>
+        </div>
     }
     else if (contextSnapshot != null)
     {
@@ -643,10 +670,23 @@
             // 3. AI Question Dispatch
             var aiResult = await CommandRegistry.ExecuteAsync(AiAskCommand.CommandId, new Dictionary<string, object?>
             {
-                ["question"] = trimmed.StartsWith('?') ? trimmed[1..].Trim() : trimmed
+                ["prompt"] = trimmed.StartsWith('?') ? trimmed[1..].Trim() : trimmed,
+                ["stream"] = true
             });
 
-            if (aiResult.IsSuccess && aiResult.Data is string answer)
+            if (aiResult.IsSuccess && aiResult.Data is IAsyncEnumerable<string> stream)
+            {
+                aiAnswer = string.Empty;
+                quickPromptText = string.Empty;
+                StateHasChanged();
+                
+                await foreach (var chunk in stream)
+                {
+                    aiAnswer += chunk;
+                    StateHasChanged();
+                }
+            }
+            else if (aiResult.IsSuccess && aiResult.Data is string answer)
             {
                 aiAnswer = answer;
                 quickPromptText = string.Empty;
@@ -706,8 +746,24 @@
         if (points == null || points.Count < 2) return $"M 0 {height/2} L {width} {height/2}";
         int max = Math.Max(1, points.Max());
         var stepX = width / (points.Count - 1);
-        var coords = points.Select((p, i) => $"{i * stepX:F1} {height - ((double)p / max * (height - 8) + 4):F1}").ToList();
-        return "M " + string.Join(" L ", coords);
+        
+        var sb = new System.Text.StringBuilder();
+        double startX = 0;
+        double startY = height - ((double)points[0] / max * (height - 8) + 4);
+        sb.Append($"M {startX:F1} {startY:F1}");
+        
+        for (int i = 1; i < points.Count; i++)
+        {
+            double endX = i * stepX;
+            double endY = height - ((double)points[i] / max * (height - 8) + 4);
+            double cpX1 = startX + (stepX / 2);
+            double cpX2 = endX - (stepX / 2);
+            sb.Append($" C {cpX1:F1} {startY:F1}, {cpX2:F1} {endY:F1}, {endX:F1} {endY:F1}");
+            startX = endX;
+            startY = endY;
+        }
+        
+        return sb.ToString();
     }
 
     private static double GetSparklineLastY(IReadOnlyList<int> points, double height)

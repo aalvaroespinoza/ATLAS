@@ -1,10 +1,12 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject ICommandRegistry CommandRegistry
+@inject IJSRuntime JSRuntime
+@inject ATLAS.Storage.Database.DatabaseInitializer DatabaseInitializer
 
 <div class="flex h-screen w-screen atlas-canvas text-slate-100 antialiased overflow-hidden font-sans select-none p-3 gap-3"
-     tabindex="0"
-     @onkeydown="HandleGlobalKeyDown">
+     tabindex="0">
     
     <!-- 1. FLOATING PERSONAL DOCK (Left Island) -->
     <AtlasPersonalDock 
@@ -15,22 +17,38 @@
     <!-- 2. MAIN APPLICATION WORKSPACE (Floating Canvas Island) -->
     <div class="flex-1 flex flex-col min-w-0 h-[calc(100vh-24px)] rounded-2xl bg-[#0c101a]/95 border border-white/[0.08] overflow-hidden shadow-2xl shadow-black/80 relative z-10">
         
-
-
-        <!-- Scrollable View Canvas (Optimal Reading Width & Rhythm) -->
-        <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-8">
-            <div class="max-w-5xl mx-auto">
-                @Body
+        @if (!isDbReady)
+        {
+            <div class="flex-1 flex items-center justify-center">
+                <div class="flex flex-col items-center gap-4">
+                    <svg class="animate-spin w-8 h-8 text-violet-500/50" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <span class="text-xs text-slate-500 animate-pulse font-mono tracking-widest uppercase">Iniciando ATLAS OS...</span>
+                </div>
             </div>
-        </main>
+        }
+        else
+        {
+            <!-- Scrollable View Canvas (Optimal Reading Width & Rhythm) -->
+            <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 pb-24 md:p-8 md:pb-24">
+                <div class="max-w-5xl mx-auto">
+                    @Body
+                </div>
+            </main>
+        }
 
     </div>
 
     <!-- 3. UNIVERSAL COMMAND LAUNCHER MODAL -->
-    <CommandLauncher @bind-IsOpen="isLauncherOpen" />
+    @if (isDbReady)
+    {
+        <CommandLauncher @bind-IsOpen="isLauncherOpen" />
+    }
 
     <!-- 4. QUICK CAPTURE MODAL OVERLAY (⚡) -->
-    @if (isQuickCaptureOpen)
+    @if (isQuickCaptureOpen && isDbReady)
     {
         <div class="fixed inset-0 z-50 flex items-start justify-center pt-24 bg-black/70 backdrop-blur-md animate-atlas-in" @onclick="() => isQuickCaptureOpen = false">
             <div class="w-full max-w-lg atlas-elevated rounded-2xl p-5 space-y-4 shadow-floating" @onclick:stopPropagation="true">
@@ -70,22 +88,28 @@
     private string quickCaptureText = string.Empty;
     private bool isCapturing;
 
-    protected override void OnInitialized()
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+    private bool isDbReady = false;
+
+    protected override async Task OnInitializedAsync()
     {
+        await DatabaseInitializer.InitializeAsync();
+        isDbReady = true;
         NavigationManager.LocationChanged += (s, e) => StateHasChanged();
     }
 
-    private string GetContextPath()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var relative = NavigationManager.ToBaseRelativePath(NavigationManager.Uri).ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(relative)) return "inicio";
-        if (relative.StartsWith("search")) return "busqueda";
-        if (relative.StartsWith("capture")) return "segundo-cerebro";
-        if (relative.StartsWith("habits-goals")) return "habitos-metas";
-        if (relative.StartsWith("finance")) return "finanzas";
-        if (relative.StartsWith("settings")) return "ajustes";
-        if (relative.StartsWith("design-preview")) return "design-system";
-        return relative;
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("atlasKeyboard.init", _dotNetRef);
+        }
+    }
+
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
     }
 
     private async Task SubmitQuickCapture()
@@ -107,46 +131,34 @@
         finally
         {
             isCapturing = false;
+            StateHasChanged();
         }
     }
 
-    private void HandleGlobalKeyDown(KeyboardEventArgs e)
+    [JSInvokable]
+    public void HandleShortcut(string shortcut)
     {
-        // 1. Command Launcher Toggle (Ctrl+Space / Ctrl+K)
-        if ((e.CtrlKey && e.Key == " ") || (e.CtrlKey && (e.Key == "k" || e.Key == "K")))
+        switch (shortcut)
         {
-            isLauncherOpen = !isLauncherOpen;
-            return;
-        }
-
-        // 2. Quick Capture (Ctrl+N)
-        if (e.CtrlKey && (e.Key == "n" || e.Key == "N"))
-        {
-            isQuickCaptureOpen = !isQuickCaptureOpen;
-            return;
-        }
-
-        // 3. Toggle Dock Expand/Compact (Alt+D)
-        if (e.AltKey && (e.Key == "d" || e.Key == "D"))
-        {
-            isDockExpanded = !isDockExpanded;
-            return;
-        }
-
-        // 4. Alt + Number Navigation (Alt+1 to Alt+8)
-        if (e.AltKey)
-        {
-            switch (e.Key)
-            {
-                case "1": NavigationManager.NavigateTo(""); break;
-                case "2": NavigationManager.NavigateTo("search"); break;
-                case "3": NavigationManager.NavigateTo("capture"); break;
-                case "4": NavigationManager.NavigateTo("habits-goals"); break;
-                case "5": NavigationManager.NavigateTo("finance"); break;
-                case "6": NavigationManager.NavigateTo("settings"); break;
-                case "7": NavigationManager.NavigateTo("settings"); break;
-                case "8": NavigationManager.NavigateTo("settings"); break;
-            }
+            case "ctrl+space":
+            case "ctrl+k":
+                isLauncherOpen = !isLauncherOpen;
+                StateHasChanged();
+                break;
+            case "ctrl+n":
+                isQuickCaptureOpen = !isQuickCaptureOpen;
+                StateHasChanged();
+                break;
+            case "alt+d":
+                isDockExpanded = !isDockExpanded;
+                StateHasChanged();
+                break;
+            case "alt+1": NavigationManager.NavigateTo(""); break;
+            case "alt+2": NavigationManager.NavigateTo("search"); break;
+            case "alt+3": NavigationManager.NavigateTo("capture"); break;
+            case "alt+4": NavigationManager.NavigateTo("habits-goals"); break;
+            case "alt+5": NavigationManager.NavigateTo("finance"); break;
+            case "alt+6": NavigationManager.NavigateTo("settings"); break;
         }
     }
 }
