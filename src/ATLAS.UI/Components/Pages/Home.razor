@@ -566,7 +566,7 @@
 
     private int GetFocusPercentage()
     {
-        if (contextSnapshot == null || contextSnapshot.Habits.TotalCount == 0) return 100;
+        if (contextSnapshot == null || contextSnapshot.Habits.TotalCount == 0) return 0;
         return (int)Math.Round((contextSnapshot.Habits.CompletedTodayCount * 100.0) / contextSnapshot.Habits.TotalCount);
     }
 
@@ -690,10 +690,6 @@
         catch (Exception ex)
         {
             actionFeedback = $"Error: {ex.Message}";
-        }
-        finally
-        {
-            isExecutingPrompt = false;
         }
     }
 
