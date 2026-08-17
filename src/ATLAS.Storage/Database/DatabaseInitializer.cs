@@ -59,7 +59,6 @@ public class DatabaseInitializer
                 FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
             );
             CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at DESC);
-            CREATE INDEX IF NOT EXISTS idx_notes_goal_id ON notes(goal_id);
 
             -- Goals table
             CREATE TABLE IF NOT EXISTS goals (
@@ -85,7 +84,6 @@ public class DatabaseInitializer
                 FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
             );
             CREATE INDEX IF NOT EXISTS idx_habits_created_at ON habits(created_at);
-            CREATE INDEX IF NOT EXISTS idx_habits_goal_id ON habits(goal_id);
 
             -- Habit Events table
             CREATE TABLE IF NOT EXISTS habit_events (
@@ -222,6 +220,13 @@ public class DatabaseInitializer
             cmd.CommandText = "ALTER TABLE notes ADD COLUMN goal_id TEXT;";
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
+
+        // Re-create indexes that might depend on migrated columns
+        await using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_notes_goal_id ON notes(goal_id);";
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     private static async Task MigrateHabitsTableAsync(SqliteConnection connection, CancellationToken cancellationToken)
@@ -242,6 +247,12 @@ public class DatabaseInitializer
         {
             await using var cmd = connection.CreateCommand();
             cmd.CommandText = "ALTER TABLE habits ADD COLUMN goal_id TEXT;";
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        await using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = "CREATE INDEX IF NOT EXISTS idx_habits_goal_id ON habits(goal_id);";
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
     }
