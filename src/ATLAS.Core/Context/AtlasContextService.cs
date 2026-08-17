@@ -19,6 +19,7 @@ public class AtlasContextService : IAtlasContextService
     private readonly IRoadmapRepository _roadmapRepository;
     private readonly INoteRepository _noteRepository;
     private readonly ITransactionRepository _transactionRepository;
+    private readonly IActivityRepository _activityRepository;
     private readonly ISecretVault _secretVault;
 
     public AtlasContextService(
@@ -27,7 +28,8 @@ public class AtlasContextService : IAtlasContextService
         IRoadmapRepository roadmapRepository,
         INoteRepository noteRepository,
         ITransactionRepository transactionRepository,
-        ISecretVault secretVault)
+        ISecretVault secretVault,
+        IActivityRepository activityRepository)
     {
         _habitRepository = habitRepository ?? throw new ArgumentNullException(nameof(habitRepository));
         _goalRepository = goalRepository ?? throw new ArgumentNullException(nameof(goalRepository));
@@ -35,6 +37,7 @@ public class AtlasContextService : IAtlasContextService
         _noteRepository = noteRepository ?? throw new ArgumentNullException(nameof(noteRepository));
         _transactionRepository = transactionRepository ?? throw new ArgumentNullException(nameof(transactionRepository));
         _secretVault = secretVault ?? throw new ArgumentNullException(nameof(secretVault));
+        _activityRepository = activityRepository ?? throw new ArgumentNullException(nameof(activityRepository));
     }
 
     public async Task<AtlasContextSnapshot> GetCurrentContextAsync(CancellationToken cancellationToken = default)
@@ -49,8 +52,9 @@ public class AtlasContextService : IAtlasContextService
         var roadmapsTask = _roadmapRepository.GetAllAsync(null, cancellationToken);
         var notesTask = _noteRepository.GetRecentAsync(20, cancellationToken);
         var transactionsTask = _transactionRepository.GetRecentAsync(50, cancellationToken);
+        var activitiesTask = _activityRepository.GetRecentAsync(minRelevance: 2, count: 12, cancellationToken);
 
-        await Task.WhenAll(habitsTask, habitEventsTask, goalsTask, roadmapsTask, notesTask, transactionsTask).ConfigureAwait(false);
+        await Task.WhenAll(habitsTask, habitEventsTask, goalsTask, roadmapsTask, notesTask, transactionsTask, activitiesTask).ConfigureAwait(false);
 
         var habits = await habitsTask.ConfigureAwait(false);
         var habitEvents = await habitEventsTask.ConfigureAwait(false);
@@ -58,6 +62,7 @@ public class AtlasContextService : IAtlasContextService
         var roadmaps = await roadmapsTask.ConfigureAwait(false);
         var notes = await notesTask.ConfigureAwait(false);
         var transactions = await transactionsTask.ConfigureAwait(false);
+        var activities = await activitiesTask.ConfigureAwait(false);
 
         // 1. Process Habits Summary
         var habitsSummary = ProcessHabits(habits, habitEvents, today);
@@ -88,7 +93,17 @@ public class AtlasContextService : IAtlasContextService
         var financeSummary = ProcessFinance(transactions, today);
 
         // 5. Build Unified Activity Feed
-        var activityFeed = BuildUnifiedActivity(notes, transactions, habitEvents, habits, roadmaps, now);
+        var activityFeed = activities.Select(a => new AtlasActivityItem(
+            Id: a.Id,
+            Type: a.Type,
+            Title: a.Title,
+            Subtitle: a.Summary,
+            Timestamp: a.Timestamp,
+            RelativeTime: FormatRelativeTime(a.Timestamp, now),
+            Source: "atlas",
+            Icon: GetActivityIcon(a.Type),
+            ColorVariant: GetActivityColor(a.Type)
+        )).ToList();
 
         // 6. Build Attention Signals
         var attentionSignals = BuildAttentionSignals(habitsSummary, nextMilestone, activeGoals);
@@ -456,74 +471,23 @@ public class AtlasContextService : IAtlasContextService
         );
     }
 
-    private static IReadOnlyList<AtlasActivityItem> BuildUnifiedActivity(
-        IReadOnlyList<Note> notes,
-        IReadOnlyList<Transaction> transactions,
-        IReadOnlyList<HabitEvent> habitEvents,
-        IReadOnlyList<Habit> habits,
-        IReadOnlyList<Roadmap> roadmaps,
-        DateTimeOffset now)
+    private static string GetActivityIcon(string type) => type.ToLowerInvariant() switch
     {
-        var habitsMap = habits.ToDictionary(h => h.Id, h => h.Name);
-        var roadmapsMap = roadmaps.ToDictionary(r => r.Id, r => r.Title);
+        "knowledge" => "📝",
+        "finance" => "💳",
+        "strategy" => "✓",
+        "system" => "⚙️",
+        _ => "📌"
+    };
 
-        var feed = new List<AtlasActivityItem>();
-
-        // Notes
-        foreach (var note in notes.Take(8))
-        {
-            feed.Add(new AtlasActivityItem(
-                Id: note.Id,
-                Type: "note",
-                Title: GetNoteTitle(note),
-                Subtitle: note.Tags,
-                Timestamp: note.CreatedAt,
-                RelativeTime: FormatRelativeTime(note.CreatedAt, now),
-                Source: note.Source,
-                Icon: "📝",
-                ColorVariant: "purple"
-            ));
-        }
-
-        // Transactions
-        foreach (var tx in transactions.Take(8))
-        {
-            var isIncome = tx.Tipo.Equals("income", StringComparison.OrdinalIgnoreCase);
-            feed.Add(new AtlasActivityItem(
-                Id: tx.Id,
-                Type: "transaction",
-                Title: tx.Descripcion,
-                Subtitle: $"{(isIncome ? "+" : "-")}${tx.Monto.ToString("N0", ArCulture)} {tx.Moneda} ({tx.Categoria ?? "Gasto"})",
-                Timestamp: tx.Fecha,
-                RelativeTime: FormatRelativeTime(tx.Fecha, now),
-                Source: tx.Origen,
-                Icon: "💳",
-                ColorVariant: isIncome ? "emerald" : "orange"
-            ));
-        }
-
-        // Habit Events
-        foreach (var he in habitEvents.Take(6))
-        {
-            habitsMap.TryGetValue(he.HabitId, out var hName);
-            feed.Add(new AtlasActivityItem(
-                Id: he.Id,
-                Type: "habit",
-                Title: $"Hábito completado: {hName ?? "Hábito"}",
-                Subtitle: "Registro de constancia diaria",
-                Timestamp: he.CompletedAt,
-                RelativeTime: FormatRelativeTime(he.CompletedAt, now),
-                Source: "atlas",
-                Icon: "✓",
-                ColorVariant: "emerald"
-            ));
-        }
-
-        return feed
-            .OrderByDescending(a => a.Timestamp)
-            .Take(12)
-            .ToList();
-    }
+    private static string GetActivityColor(string type) => type.ToLowerInvariant() switch
+    {
+        "knowledge" => "purple",
+        "finance" => "emerald",
+        "strategy" => "cyan",
+        "system" => "orange",
+        _ => "purple"
+    };
 
     private static IReadOnlyList<AtlasAttentionSignal> BuildAttentionSignals(
         AtlasHabitsSummary habits,

@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ICommandRegistry, CommandRegistry>();
         services.AddSingleton<TelegramMessageProcessor>();
         services.AddSingleton<ITelegramListenerService, TelegramListenerService>();
+        services.AddHostedService<ATLAS.Core.Services.ActivityEventSubscriber>();
 
         // Integrations Clients & Hub
         services.AddTransient<IGmailClient>(sp =>

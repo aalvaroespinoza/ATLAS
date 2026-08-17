@@ -148,6 +148,19 @@ public class DatabaseInitializer
             );
             CREATE INDEX IF NOT EXISTS idx_roadmap_milestones_roadmap_id ON roadmap_milestones(roadmap_id);
             CREATE INDEX IF NOT EXISTS idx_roadmap_milestones_order_index ON roadmap_milestones(order_index);
+
+            -- Activities table
+            CREATE TABLE IF NOT EXISTS activities (
+                id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                source_id TEXT,
+                title TEXT NOT NULL,
+                summary TEXT,
+                relevance_score INTEGER NOT NULL DEFAULT 0,
+                timestamp TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON activities(timestamp DESC);
+            CREATE INDEX IF NOT EXISTS idx_activities_type ON activities(type);
             """;
 
         await using (var command = connection.CreateCommand())
