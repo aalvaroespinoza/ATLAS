@@ -27,6 +27,7 @@ public static class ServiceCollectionExtensions
         
         services.AddTransient<ATLAS.Core.Integrations.MercadoPago.IMercadoPagoClient>(sp =>
             new ATLAS.Core.Integrations.MercadoPago.MercadoPagoClient(sp.GetService<HttpClient>() ?? new HttpClient(), sp.GetRequiredService<ISecretVault>()));
+        services.AddHostedService<ATLAS.Core.Integrations.MercadoPago.MercadoPagoListenerService>();
 
         // Supabase Integration Services
         services.AddTransient<ATLAS.Core.Integrations.Supabase.ISupabaseAuthService, ATLAS.Core.Integrations.Supabase.SupabaseAuthService>();
